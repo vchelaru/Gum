@@ -332,6 +332,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// </summary>
     internal void SetSelectedObject(object? value, bool deferIfNotFound)
     {
+        ClearDeferredSelection();
         ListBoxItem? row = value != null ? GetListBoxItemForData(value) : null;
         SelectSingleRowAndScrollIntoView(row);
         _deferredSelectedObject = deferIfNotFound && value != null && row == null ? value : null;
@@ -367,9 +368,10 @@ public class ListBox : ItemsControl, IInputReceiver
     internal void SetSelectedIndex(int value, bool deferIfPastEnd)
     {
         int count = Items?.Count ?? 0;
-        if (value == -1 || (value > -1 && value < count))
+        if (value == -1 || (value > -1 && value < count) || deferIfPastEnd)
         {
-            _deferredSelectedIndex = -1;
+            // A real change of the selection, or a newer held value, replaces whatever was held.
+            ClearDeferredSelection();
         }
 
         if (value > -1 && value < count)
@@ -385,6 +387,12 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             _deferredSelectedIndex = value;
         }
+    }
+
+    private void ClearDeferredSelection()
+    {
+        _deferredSelectedIndex = -1;
+        _deferredSelectedObject = null;
     }
 
     private void ApplyDeferredSelectedIndex()
@@ -462,6 +470,13 @@ public class ListBox : ItemsControl, IInputReceiver
     /// </summary>
     private void PushSelectionIfChanged()
     {
+        if (_isRebuildingRowsForTemplate)
+        {
+            // The rows are recreated with the same selection; the view model must not see it go
+            // away and come back.
+            return;
+        }
+
         if (IsRebindingBothSelectionBindings)
         {
             // OnBindingContextChanged resolves and pushes the selection once every binding re-attached.
@@ -474,7 +489,7 @@ public class ListBox : ItemsControl, IInputReceiver
         if (!Equals(selectedObject, _lastPushedSelectedObject))
         {
             _lastPushedSelectedObject = selectedObject;
-            _deferredSelectedObject = null;
+            ClearDeferredSelection();
             PushValueToViewModel(nameof(SelectedObject));
         }
 
@@ -482,7 +497,7 @@ public class ListBox : ItemsControl, IInputReceiver
         if (selectedIndex != _lastPushedSelectedIndex)
         {
             _lastPushedSelectedIndex = selectedIndex;
-            _deferredSelectedIndex = -1;
+            ClearDeferredSelection();
             PushValueToViewModel(nameof(SelectedIndex));
         }
     }
@@ -690,14 +705,26 @@ public class ListBox : ItemsControl, IInputReceiver
             ? _selection.SelectedRows.Select(row => row.DataObject).ToList()
             : null;
 
-        base.RebuildRowsForTemplateChange();
-
-        if (selectedData != null)
+        _isRebuildingRowsForTemplate = true;
+        try
         {
-            // The template change reported the old rows going away, so report the new ones.
-            RestoreSelectionAfterVisualChanged(selectedData, raiseSelectionChanged: true);
+            base.RebuildRowsForTemplateChange();
+
+            if (selectedData != null)
+            {
+                RestoreSelectionAfterVisualChanged(selectedData, raiseSelectionChanged: true);
+            }
         }
+        finally
+        {
+            _isRebuildingRowsForTemplate = false;
+        }
+
+        // Reports a real difference only, such as a selected row that no longer exists.
+        PushSelectionIfChanged();
     }
+
+    bool _isRebuildingRowsForTemplate;
 
     /// <inheritdoc/>
     protected override bool IsAuthoredRow(FrameworkElement control) => control is ListBoxItem;

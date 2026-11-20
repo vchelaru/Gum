@@ -6,6 +6,7 @@ using Gum.Mvvm;
 using Gum.Wireframe;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Xunit;
 
@@ -273,6 +274,99 @@ public class ListBoxBindingSetDuringConstructionTests : BaseTestClass
     }
 
     [Fact]
+    public void FrameworkElementTemplate_ChangedWithBoundSelection_ShouldNotWriteTransientValueToViewModel()
+    {
+        ListBox listBox = CreateBoundListBox();
+        TowerViewModel viewModel = new("A", "B", "C") { SelectedTower = 1, SelectedName = "B" };
+        listBox.BindingContext = viewModel;
+        List<string> writes = new();
+        viewModel.PropertyChanged += (_, args) =>
+            writes.Add($"{args.PropertyName}:{viewModel.SelectedTower}:{viewModel.SelectedName}");
+
+        listBox.FrameworkElementTemplate = new FrameworkElementTemplate(typeof(TowerItem));
+
+        writes.ShouldBeEmpty();
+        listBox.SelectedIndex.ShouldBe(1);
+    }
+
+    [Fact]
+    public void FrameworkElementTemplate_ChangedWhileRowSelected_ShouldStillRaiseSelectionChanged()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items = new ObservableCollection<string> { "A", "B", "C" };
+        listBox.SelectedIndex = 1;
+        int raised = 0;
+        listBox.SelectionChanged += (_, _) => raised++;
+
+        listBox.FrameworkElementTemplate = new FrameworkElementTemplate(typeof(TowerItem));
+
+        raised.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void SelectedIndex_ClearedWhileObjectHeld_ShouldNotSelectObjectWhenItArrives()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        ObservableCollection<string> items = new();
+        listBox.Items = items;
+        listBox.SetSelectedObject("Z", deferIfNotFound: true);
+
+        listBox.SelectedIndex = -1;
+        items.Add("Z");
+
+        listBox.SelectedIndex.ShouldBe(-1);
+    }
+
+    [Fact]
+    public void SelectedObject_ClearedWhileIndexHeld_ShouldNotSelectIndexWhenItemsArrive()
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        ObservableCollection<string> items = new();
+        listBox.Items = items;
+        listBox.SetSelectedIndex(1, deferIfPastEnd: true);
+
+        listBox.SelectedObject = null;
+        items.Add("A");
+        items.Add("B");
+
+        listBox.SelectedIndex.ShouldBe(-1);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(-1)]
+    public void SelectedIndexBinding_BindingContextReplacedWhileIndexHeld_ShouldUseNewViewModelValue(int newValue)
+    {
+        ListBox listBox = CreateBoundListBox(bindSelectedObject: false);
+        listBox.BindingContext = new TowerViewModel { SelectedTower = 5 };
+        TowerViewModel second = new("A", "B", "C") { SelectedTower = newValue };
+
+        listBox.BindingContext = second;
+        second.AvailableTowers.Add("D");
+        second.AvailableTowers.Add("E");
+        second.AvailableTowers.Add("F");
+
+        listBox.SelectedIndex.ShouldBe(newValue);
+    }
+
+    [Fact]
+    public void SelectedObjectBinding_BindingContextReplacedWhileObjectHeld_ShouldUseNewViewModelValue()
+    {
+        ListBox listBox = CreateBoundListBox();
+        listBox.BindingContext = new TowerViewModel { SelectedName = "Z" };
+        TowerViewModel second = new("A", "B") { SelectedName = "B", SelectedTower = 1 };
+
+        listBox.BindingContext = second;
+        second.AvailableTowers.Add("Z");
+
+        listBox.SelectedObject.ShouldBe("B");
+        listBox.SelectedIndex.ShouldBe(1);
+    }
+
+    [Fact]
     public void SelectedIndexBinding_ViewModelIndexStillPastEndAfterItemsArrive_ShouldSelectWhenEnoughItemsArrive()
     {
         TowerList listBox = CreateTowerList(false);
@@ -409,6 +503,19 @@ public class ListBoxBindingSetDuringConstructionTests : BaseTestClass
     #endregion
 
     #region Helpers
+
+    private static ListBox CreateBoundListBox(bool bindSelectedObject = true)
+    {
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.SetBinding(nameof(ListBox.Items), nameof(TowerViewModel.AvailableTowers));
+        listBox.SetBinding(nameof(ListBox.SelectedIndex), nameof(TowerViewModel.SelectedTower));
+        if (bindSelectedObject)
+        {
+            listBox.SetBinding(nameof(ListBox.SelectedObject), nameof(TowerViewModel.SelectedName));
+        }
+        return listBox;
+    }
 
     private static TowerList CreateTowerList(bool useVisualConstructor)
     {
