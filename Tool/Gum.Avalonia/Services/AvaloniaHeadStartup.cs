@@ -74,14 +74,20 @@ public class AvaloniaHeadStartup : IHeadStartup
     /// <remarks>
     /// Creating the device blocks the UI thread for seconds, so it is split into steps with a
     /// dispatcher pass between them: the loaded tree reaches the screen first, and clicks in it
-    /// are handled between steps instead of after all of them.
+    /// are handled between steps instead of after all of them. The post-load passes (font warm-up,
+    /// error checks, the file watch scan) wait until it is done: creating the device pumps the UI
+    /// message loop, which would otherwise run all of them inside it.
     /// </remarks>
-    public async Task RenderSurfaceReadyAsync()
+    public Task RenderSurfaceReadyAsync() =>
+        _services.GetRequiredService<AvaloniaDispatcher>().HoldPostsWhile(CreateRenderSurfaceAsync);
+
+    private async Task CreateRenderSurfaceAsync()
     {
         await LetTheUiRunAsync();
         try
         {
             await GameRenderDeviceHost.CreateSharedDeviceAsync(LetTheUiRunAsync);
+            StartupTiming.Mark("Render device created");
         }
         catch (Exception exception)
         {
