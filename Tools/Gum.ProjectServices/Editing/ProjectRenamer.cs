@@ -133,7 +133,15 @@ public class ProjectRenamer : IProjectRenamer
         // A full rename finds the references by the variable's own name; an exposed rename by the exposed one.
         VariableChangeResponse references = _referenceFinder.GetReferencesToVariable(element, variable.Name, oldName);
 
-        _applier.RenameVariable(element, oldName, newName, variable.Type, renameExposedName, references, new HashSet<ElementSave>());
+        if (renameExposedName)
+        {
+            // The tool's Edit Variable for an exposed variable: the variable keeps its name, and what set it
+            // through the exposed name follows.
+            variable.ExposedAsName = newName;
+            _applier.ApplyVariableRenameChanges(references, oldName, newName, new HashSet<ElementSave>());
+            return;
+        }
+        _applier.RenameVariable(element, oldName, newName, variable.Type, renameExposedName: false, references, new HashSet<ElementSave>());
     }
 
     /// <inheritdoc/>

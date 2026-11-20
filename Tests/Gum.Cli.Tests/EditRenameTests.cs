@@ -64,7 +64,7 @@ public class EditRenameTests : BaseTestClass
     {
         ElementAnimationsSave save = new ElementAnimationsSave();
         save.Animations.AddRange(animations);
-        string path = Path.Combine(Folder(projectPath), subfolder, elementName + ".ganx");
+        string path = Path.Combine(Folder(projectPath), subfolder, elementName + "Animations.ganx");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         save.Save(path);
     }
@@ -111,8 +111,8 @@ public class EditRenameTests : BaseTestClass
 
         Load(projectPath).FavoriteComponents.ShouldBe(new[] { "Panel" });
         string components = Path.Combine(Folder(projectPath), "Components");
-        File.Exists(Path.Combine(components, "Card.ganx")).ShouldBeFalse();
-        File.Exists(Path.Combine(components, "Panel.ganx")).ShouldBeTrue();
+        File.Exists(Path.Combine(components, "CardAnimations.ganx")).ShouldBeFalse();
+        File.Exists(Path.Combine(components, "PanelAnimations.ganx")).ShouldBeTrue();
         File.Exists(Path.Combine(components, "Card.codsj")).ShouldBeFalse();
         File.Exists(Path.Combine(components, "Panel.codsj")).ShouldBeTrue();
         ShouldBeCleanAndStable(projectPath);
@@ -124,16 +124,13 @@ public class EditRenameTests : BaseTestClass
         string projectPath = CreateEmptyProject();
         EditOk(projectPath, """
             { "op": "addComponent", "name": "Card" },
-            { "op": "addInstance", "element": "Card", "name": "Box", "type": "ColoredRectangle" },
-            { "op": "addScreen", "name": "Menu" },
-            { "op": "addInstance", "element": "Menu", "name": "Main", "type": "Card" },
-            { "op": "addInstance", "element": "Menu", "name": "Follower", "type": "ColoredRectangle" },
-            { "op": "setVariableReferences", "element": "Menu", "instance": "Follower", "lines": ["Width = Components/Card.Width"] }
+            { "op": "addComponent", "name": "Hud" },
+            { "op": "setVariableReferences", "element": "Hud", "lines": ["Width = Components/Card.Width"] }
             """);
 
         EditOk(projectPath, """{ "op": "renameElement", "name": "Card", "newName": "Panel" }""");
 
-        Load(projectPath).GetScreenSave("Menu")!.DefaultState.VariableLists
+        Load(projectPath).GetComponentSave("Hud")!.DefaultState.VariableLists
             .SelectMany(list => list.ValueAsIList.Cast<string>())
             .ShouldContain(line => line.Contains("Components/Panel.Width"));
         ShouldBeCleanAndStable(projectPath);
@@ -168,12 +165,14 @@ public class EditRenameTests : BaseTestClass
     {
         string projectPath = CreateEmptyProject();
         EditOk(projectPath, """
+            { "op": "addComponent", "name": "Panel" },
             { "op": "addComponent", "name": "Base" },
-            { "op": "addInstance", "element": "Base", "name": "Holder", "type": "Container" },
+            { "op": "addInstance", "element": "Base", "name": "Holder", "type": "Panel" },
             { "op": "addInstance", "element": "Base", "name": "Label", "type": "Text", "parent": "Holder" },
             { "op": "setVariable", "element": "Base", "name": "Label.Text", "value": "Hi" },
             { "op": "addComponent", "name": "Derived", "baseType": "Base" }
             """);
+        WriteAnimations(projectPath, "Components", "Panel", new AnimationSave { Name = "Fade" });
         WriteAnimations(projectPath, "Components", "Base",
             new AnimationSave { Name = "Intro", Animations = { new AnimationReferenceSave { Name = "Holder.Fade" } } });
 
@@ -185,7 +184,7 @@ public class EditRenameTests : BaseTestClass
         baseComponent.GetInstance("Holder").ShouldBeNull();
         baseComponent.DefaultState.GetValue("Label.Parent").ShouldBe("Frame");
         project.GetComponentSave("Derived")!.GetInstance("Frame").ShouldNotBeNull();
-        ElementAnimationsSave.Load(Path.Combine(Folder(projectPath), "Components", "Base.ganx"))
+        ElementAnimationsSave.Load(Path.Combine(Folder(projectPath), "Components", "BaseAnimations.ganx"))
             .Animations[0].Animations[0].Name.ShouldBe("Frame.Fade");
         ShouldBeCleanAndStable(projectPath);
     }
@@ -197,9 +196,8 @@ public class EditRenameTests : BaseTestClass
         EditOk(projectPath, """
             { "op": "addComponent", "name": "Card" },
             { "op": "addInstance", "element": "Card", "name": "Title", "type": "Text" },
-            { "op": "addInstance", "element": "Card", "name": "Box", "type": "ColoredRectangle" },
             { "op": "exposeVariable", "element": "Card", "instance": "Title", "variable": "Text", "name": "Caption" },
-            { "op": "setVariableReferences", "element": "Card", "instance": "Box", "lines": ["Width = Title.Width"] }
+            { "op": "setVariableReferences", "element": "Card", "lines": ["Height = Title.Width"] }
             """);
 
         EditOk(projectPath, """{ "op": "renameInstance", "element": "Card", "name": "Title", "newName": "Heading" }""");
@@ -256,7 +254,7 @@ public class EditRenameTests : BaseTestClass
         GumProjectSave project = Load(projectPath);
         project.GetScreenSave("Menu")!.DefaultState.GetValue("Switch.OnOffState").ShouldBe("Enabled");
         project.GetComponentSave("Toggle")!.Categories[0].States.Select(item => item.Name).ShouldContain("Enabled");
-        ElementAnimationsSave.Load(Path.Combine(Folder(projectPath), "Components", "Toggle.ganx"))
+        ElementAnimationsSave.Load(Path.Combine(Folder(projectPath), "Components", "ToggleAnimations.ganx"))
             .Animations[0].States.Select(item => item.StateName).ShouldBe(new[] { "OnOff/Enabled", "OnOff/Off" });
         ShouldBeCleanAndStable(projectPath);
     }
@@ -286,7 +284,7 @@ public class EditRenameTests : BaseTestClass
         variable.Type.ShouldBe("Power");
         variable.Value.ShouldBe("On");
         project.GetComponentSave("Toggle")!.DefaultState.GetVariableSave("PowerState").ShouldNotBeNull();
-        ElementAnimationsSave.Load(Path.Combine(Folder(projectPath), "Components", "Toggle.ganx"))
+        ElementAnimationsSave.Load(Path.Combine(Folder(projectPath), "Components", "ToggleAnimations.ganx"))
             .Animations[0].States[0].StateName.ShouldBe("Power/On");
         ShouldBeCleanAndStable(projectPath);
     }
