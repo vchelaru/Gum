@@ -98,6 +98,8 @@ Enum values such as `ChildrenLayout` take the value's name, for example `"TopToB
 
 `category` is optional on `addState`. Without it, the state is uncategorized.
 
+A derived component edits only its own categories, as in the tool's State tab. Naming a category that comes from the base type fails and names the base; make the edit on the base.
+
 ### exposeVariable
 
 ```json

@@ -796,7 +796,7 @@ public class ProjectEditService : IProjectEditService
 
     private static StateSaveCategory GetCategory(ElementSave element, string categoryName) =>
         element.Categories.FirstOrDefault(item => item.Name == categoryName)
-            ?? throw new EditException($"{element.Name} has no category named {categoryName}.");
+            ?? throw new EditException(InheritedCategories.DescribeMissing(element, categoryName));
 
     private static (StateSave State, StateSaveCategory? Category) GetState(ElementSave element, JsonElement operation)
     {
