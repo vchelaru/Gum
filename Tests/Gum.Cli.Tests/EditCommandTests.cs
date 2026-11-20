@@ -216,6 +216,107 @@ public class EditCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Edit_RemoveComponentThatIsFavorited_DropsItFromFavorites()
+    {
+        string projectPath = CreateEmptyProject();
+        string setup = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "StyleDemo" },
+              { "op": "addComponent", "name": "Kept" }
+            ] }
+            """);
+        CliTestHelper.Run("edit", projectPath, setup).ExitCode.ShouldBe(0);
+        GumProjectSave favorited = new ProjectLoader().Load(projectPath).Project!;
+        favorited.FavoriteComponents.AddRange(new[] { "StyleDemo", "Kept" });
+        favorited.Save(projectPath, saveElements: false);
+        string operations = WriteOperations("""
+            { "version": 1, "operations": [ { "op": "removeComponent", "name": "StyleDemo" } ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        CliTestHelper.Run("check", projectPath).ExitCode.ShouldBe(0);
+        new ProjectLoader().Load(projectPath).Project!.FavoriteComponents.ShouldBe(new[] { "Kept" });
+    }
+
+    [Fact]
+    public void Edit_AddAndRemoveBehavior_RoundTripsAndPassesCheck()
+    {
+        string projectPath = CreateEmptyProject();
+        CliTestHelper.Run("add-forms", projectPath).ExitCode.ShouldBe(0);
+        string add = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "MyButton" },
+              { "op": "addBehavior", "element": "MyButton", "behavior": "ButtonBehavior" }
+            ] }
+            """);
+
+        CliTestHelper addResult = CliTestHelper.Run("edit", projectPath, add);
+
+        addResult.ExitCode.ShouldBe(0, addResult.StandardOutput + addResult.StandardError);
+        CliTestHelper.Run("check", projectPath).ExitCode.ShouldBe(0);
+        GumProjectSave project = new ProjectLoader().Load(projectPath).Project!;
+        ComponentSave button = project.Components.Single(item => item.Name == "MyButton");
+        button.Behaviors.Select(item => item.BehaviorName).ShouldBe(new[] { "ButtonBehavior" });
+        StateSaveCategory category = button.Categories.Single(item => item.Name == "ButtonCategory");
+        category.States.Select(item => item.Name).ShouldBe(
+            project.Behaviors.Single(item => item.Name == "ButtonBehavior").Categories.Single().States.Select(item => item.Name));
+        button.GetDefaultStateOrThrow().Variables.ShouldContain(item => item.Name == "ButtonCategoryState");
+
+        string remove = WriteOperations("""
+            { "version": 1, "operations": [ { "op": "removeBehavior", "element": "MyButton", "behavior": "ButtonBehavior" } ] }
+            """);
+        CliTestHelper removeResult = CliTestHelper.Run("edit", projectPath, remove);
+
+        removeResult.ExitCode.ShouldBe(0, removeResult.StandardOutput + removeResult.StandardError);
+        CliTestHelper.Run("check", projectPath).ExitCode.ShouldBe(0);
+        new ProjectLoader().Load(projectPath).Project!.Components.Single(item => item.Name == "MyButton")
+            .Behaviors.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("""{ "op": "addBehavior", "element": "MyButton", "behavior": "NoSuchBehavior" }""", "NoSuchBehavior")]
+    [InlineData("""{ "op": "addBehavior", "element": "Game", "behavior": "ButtonBehavior" }""", "Screen")]
+    [InlineData("""{ "op": "removeBehavior", "element": "MyButton", "behavior": "ButtonBehavior" }""", "does not have")]
+    public void Edit_BehaviorOpThatCannotApply_FailsAndWritesNothing(string operation, string expectedInMessage)
+    {
+        string projectPath = CreateEmptyProject();
+        CliTestHelper.Run("add-forms", projectPath).ExitCode.ShouldBe(0);
+        string setup = WriteOperations("""
+            { "version": 1, "operations": [ { "op": "addComponent", "name": "MyButton" }, { "op": "addScreen", "name": "Game" } ] }
+            """);
+        CliTestHelper.Run("edit", projectPath, setup).ExitCode.ShouldBe(0);
+        Dictionary<string, string> before = ReadProjectFiles(projectPath);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath,
+            WriteOperations("{ \"version\": 1, \"operations\": [ " + operation + " ] }"));
+
+        result.ExitCode.ShouldNotBe(0);
+        (result.StandardOutput + result.StandardError).ShouldContain(expectedInMessage);
+        ReadProjectFiles(projectPath).ShouldBe(before);
+    }
+
+    [Fact]
+    public void Edit_AddBehaviorTwice_Fails()
+    {
+        string projectPath = CreateEmptyProject();
+        CliTestHelper.Run("add-forms", projectPath).ExitCode.ShouldBe(0);
+        string operations = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "MyButton" },
+              { "op": "addBehavior", "element": "MyButton", "behavior": "ButtonBehavior" },
+              { "op": "addBehavior", "element": "MyButton", "behavior": "ButtonBehavior" }
+            ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldNotBe(0);
+        (result.StandardOutput + result.StandardError).ShouldContain("already has the behavior");
+    }
+
+    [Fact]
     public void Edit_RemoveComponentThenAddItAgain_KeepsTheNewFile()
     {
         string projectPath = CreateEmptyProject();

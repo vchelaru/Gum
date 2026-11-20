@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.ProjectServices.Editing;
 using Gum.Services;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,10 +60,7 @@ public class FavoriteComponentManager : IFavoriteComponentManager
     {
         System.Diagnostics.Debug.Assert(component != null, "Component cannot be null when handling deletion.");
 
-        var project = ObjectFinder.Self.GumProjectSave;
-        if (project?.FavoriteComponents == null) return;
-
-        if (project.FavoriteComponents.Remove(component.Name))
+        if (FavoriteComponentList.Remove(ObjectFinder.Self.GumProjectSave, component.Name))
         {
             _projectManager.SaveProject();
         }
@@ -70,13 +68,8 @@ public class FavoriteComponentManager : IFavoriteComponentManager
 
     public void HandleComponentRenamed(string oldName, string newName)
     {
-        var project = ObjectFinder.Self.GumProjectSave;
-        if (project?.FavoriteComponents == null) return;
-
-        var index = project.FavoriteComponents.IndexOf(oldName);
-        if (index >= 0)
+        if (FavoriteComponentList.Rename(ObjectFinder.Self.GumProjectSave, oldName, newName))
         {
-            project.FavoriteComponents[index] = newName;
             _projectManager.SaveProject();
         }
     }

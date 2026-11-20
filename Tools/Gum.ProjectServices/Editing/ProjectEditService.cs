@@ -142,6 +142,7 @@ public class ProjectEditService : IProjectEditService
     private readonly IElementRemovalLogic _elementRemoval;
     private readonly IVariableReferenceValidator _referenceValidator;
     private readonly IVariableReferenceCascade _referenceCascade;
+    private readonly IComponentBehaviorLogic _componentBehaviors;
 
     public ProjectEditService(
         IElementCreationLogic elementCreation,
@@ -191,6 +192,7 @@ public class ProjectEditService : IProjectEditService
         _elementRemoval = elementRemoval;
         _referenceValidator = referenceValidator;
         _referenceCascade = referenceCascade;
+        _componentBehaviors = new ComponentBehaviorLogic(stateCreation);
 
         _operations = new Dictionary<string, OperationSpec>
         {
@@ -205,6 +207,8 @@ public class ProjectEditService : IProjectEditService
             ["unexposeVariable"] = new(Strings("element", "name"), None, UnexposeVariable),
             ["removeScreen"] = new(Strings("name"), None, RemoveScreen),
             ["removeComponent"] = new(Strings("name"), None, RemoveComponent),
+            ["addBehavior"] = new(Strings("element", "behavior"), None, AddBehavior),
+            ["removeBehavior"] = new(Strings("element", "behavior"), None, RemoveBehavior),
             ["removeInstance"] = new(Strings("element", "name"), None, RemoveInstance),
             ["removeState"] = new(Strings("element", "name"), Strings("category"), RemoveState, StandardElements: true),
             ["removeCategory"] = new(Strings("element", "name"), None, RemoveCategory, StandardElements: true),
@@ -625,6 +629,32 @@ public class ProjectEditService : IProjectEditService
         _variableClear.ClearVariable(element, state, variable, isPartOfCategory: category != null);
         ElementSaveExtensions.ApplyVariableReferences(element, state);
     }
+
+    private void AddBehavior(GumProjectSave project, JsonElement operation)
+    {
+        ComponentSave component = GetComponentForBehavior(project, operation);
+        string behaviorName = GetString(operation, "behavior");
+        if (_componentBehaviors.GetWhyCannotAdd(project, component, behaviorName) is { } whyNot)
+        {
+            throw new EditException(whyNot);
+        }
+        _componentBehaviors.AddBehavior(component, project.Behaviors.First(item => item.Name == behaviorName));
+    }
+
+    private void RemoveBehavior(GumProjectSave project, JsonElement operation)
+    {
+        ComponentSave component = GetComponentForBehavior(project, operation);
+        string behaviorName = GetString(operation, "behavior");
+        if (_componentBehaviors.GetWhyCannotRemove(component, behaviorName) is { } whyNot)
+        {
+            throw new EditException(whyNot);
+        }
+        _componentBehaviors.RemoveBehavior(component, behaviorName);
+    }
+
+    private static ComponentSave GetComponentForBehavior(GumProjectSave project, JsonElement operation) =>
+        GetElement(project, operation) as ComponentSave
+            ?? throw new EditException($"{GetString(operation, "element")} is a Screen; only Components have behaviors.");
 
     private void ExtractToComponent(GumProjectSave project, JsonElement operation)
     {

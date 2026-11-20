@@ -78,6 +78,31 @@ public class ElementCommandsTests : BaseTestClass
     }
 
     [Fact]
+    public void AddBehaviorTo_ShouldReferenceTheBehaviorAndAddItsCategoryWithTheToolsExtras()
+    {
+        BehaviorSave behavior = new() { Name = "ButtonBehavior" };
+        StateSaveCategory behaviorCategory = new() { Name = "ButtonCategory" };
+        behaviorCategory.States.Add(new StateSave { Name = "Enabled" });
+        behavior.Categories.Add(behaviorCategory);
+        GumProjectSave project = new();
+        project.Behaviors.Add(behavior);
+        _projectManager.SetupGet(x => x.GumProjectSave).Returns(project);
+        ComponentSave component = new() { Name = "MyButton" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+
+        _sut.AddBehaviorTo("ButtonBehavior", component);
+
+        component.Behaviors.Select(item => item.BehaviorName).ShouldBe(new[] { "ButtonBehavior" });
+        StateSaveCategory category = component.Categories.ShouldHaveSingleItem();
+        category.States.Select(item => item.Name).ShouldBe(new[] { "Enabled" });
+        VariableSave stateVariable = component.DefaultState.Variables.Single(item => item.Name == "ButtonCategoryState");
+        stateVariable.CustomTypeConverter.ShouldBeOfType<AvailableStatesConverter>();
+        _pluginManager.Verify(x => x.CategoryAdd(category), Times.Once);
+        _pluginManager.Verify(x => x.BehaviorReferencesChanged(component), Times.Once);
+        _fileCommands.Verify(x => x.TryAutoSaveElement(component), Times.Once);
+    }
+
+    [Fact]
     public void MoveSelectedObjectsBy_ComponentWithOnlyACategorySelected_DoesNotThrow()
     {
         // Selecting a category in the States tab leaves no state selected.
