@@ -89,11 +89,28 @@ public class BaseTypeChangeLogic : IBaseTypeChangeLogic
                 : "A Component cannot derive from the Component standard element. Use Container for a plain one.";
         }
 
-        if (newBase == element || ObjectFinder.Self.GetBaseElements(newBase).Contains(element))
+        if (DerivesFrom(newBase, element))
         {
             return $"Setting {element.Name}'s base type to {newBaseType} would create a circular reference";
         }
         return null;
+    }
+
+    // Walks the base type names itself: ObjectFinder.GetBaseElement stops at an element already in a cycle, which is
+    // the state the tool is in when it checks after assigning the typed base type.
+    private static bool DerivesFrom(ElementSave start, ElementSave target)
+    {
+        HashSet<ElementSave> visited = new HashSet<ElementSave>();
+        ElementSave? current = start;
+        while (current != null && visited.Add(current))
+        {
+            if (current == target)
+            {
+                return true;
+            }
+            current = string.IsNullOrEmpty(current.BaseType) ? null : ObjectFinder.Self.GetElementSave(current.BaseType);
+        }
+        return false;
     }
 
     /// <inheritdoc/>
