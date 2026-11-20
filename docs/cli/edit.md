@@ -58,6 +58,8 @@ A standard element has no instances, custom variables or variable references, so
 
 `baseType` applies only to `addComponent`. It is optional and defaults to `Container`.
 
+When `baseType` is a component, the new component gets a copy of each of its instances marked as defined by the base, as the tool does when you pick a base type. You can then `setVariable` and `clearVariable` on those instances.
+
 ### addInstance
 
 ```json
@@ -65,6 +67,8 @@ A standard element has no instances, custom variables or variable references, so
 ```
 
 `parent` is optional and names another instance in the same element.
+
+Components that derive from `element` get a copy of the new instance.
 
 ### addVariable
 
@@ -150,6 +154,8 @@ Takes the behavior off a Component. Like unchecking it in the **Behaviors** tab,
 ```
 
 Removes the instance and every variable that sets or names it. Its children move to the instance's own parent, like the tool's default **Delete only parent(s)**. An instance defined in a base element cannot be removed.
+
+The copy in each component that derives from `element` is removed too.
 
 ### removeState and removeCategory
 

@@ -32,7 +32,8 @@ public class InheritanceLogicTests : BaseTestClass
             _fileCommands.Object,
             _guiCommands.Object,
             new Mock<IStandardElementsManagerGumTool>().Object,
-            new Mock<IBaseTypeVariablePruner>().Object);
+            new Mock<IBaseTypeVariablePruner>().Object,
+            new Gum.ProjectServices.Editing.InheritanceSync());
     }
 
     [Fact]

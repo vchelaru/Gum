@@ -43,7 +43,8 @@ public class ToolSavedBaseInstanceTests : BaseTestClass
             new Mock<IFileCommands>().Object,
             new Mock<IGuiCommands>().Object,
             new Mock<IStandardElementsManagerGumTool>().Object,
-            new Mock<IBaseTypeVariablePruner>().Object);
+            new Mock<IBaseTypeVariablePruner>().Object,
+            new Gum.ProjectServices.Editing.InheritanceSync());
 
         // The tool path when a user picks a Base Type in the dropdown.
         ComponentSave chosenBase = AddComponent(project, "ChosenBaseButton", "Container");
