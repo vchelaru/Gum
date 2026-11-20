@@ -1,114 +1,54 @@
 using Gum.Commands;
 using Gum.DataTypes;
-using Gum.DataTypes.Variables;
-using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.ProjectServices.Editing;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Gum.Logic;
 
+/// <summary>
+/// The tool's reaction to instance and base type changes in elements others inherit from. The data change is
+/// <see cref="IInheritanceSync"/>, which gumcli runs too; this adds the saving, pruning and refreshing.
+/// </summary>
 public class InheritanceLogic
 {
     private readonly IFileCommands _fileCommands;
     private readonly IGuiCommands _guiCommands;
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IBaseTypeVariablePruner _baseTypeVariablePruner;
+    private readonly IInheritanceSync _inheritanceSync;
 
     public InheritanceLogic(IFileCommands fileCommands, IGuiCommands guiCommands,
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
-        IBaseTypeVariablePruner baseTypeVariablePruner)
+        IBaseTypeVariablePruner baseTypeVariablePruner,
+        IInheritanceSync inheritanceSync)
     {
         _fileCommands = fileCommands;
         _guiCommands = guiCommands;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
         _baseTypeVariablePruner = baseTypeVariablePruner;
+        _inheritanceSync = inheritanceSync;
     }
 
-    public void HandleInstanceAdded(ElementSave container, InstanceSave instance)
-    {
-        var elementsInheritingFromContainer =
-            ObjectFinder.Self.GetElementsInheritingFrom(container);
-
-        foreach (var inheritingElement in elementsInheritingFromContainer)
-        {
-            var existingInInheriting = inheritingElement.GetInstance(instance.Name);
-            if (existingInInheriting == null)
-            {
-                var clone = instance.Clone();
-                clone.DefinedByBase = true;
-                clone.ParentContainer = inheritingElement;
-                inheritingElement.Instances.Add(clone);
-
-                // An inheriting element's base type always exists.
-                var directBase = ObjectFinder.Self.GetElementSave(inheritingElement.BaseType)!;
-
-                AdjustInstance(directBase, inheritingElement, clone.Name);
-
-                _fileCommands.TryAutoSaveElement(inheritingElement);
-                _guiCommands.RefreshElementTreeView(inheritingElement);
-            }
-        }
-    }
+    public void HandleInstanceAdded(ElementSave container, InstanceSave instance) =>
+        SaveAndRefresh(_inheritanceSync.AddInstance(container, instance));
 
     public void HandleInstanceDeleted(ElementSave? container, InstanceSave instance)
     {
         if (container == null) return;
 
-        var elementsInheritingFromContainer =
-            ObjectFinder.Self.GetElementsInheritingFrom(container);
-
-        foreach (var inheritingElement in elementsInheritingFromContainer)
-        {
-            inheritingElement.Instances.RemoveAll(item => item.Name == instance.Name);
-
-            _fileCommands.TryAutoSaveElement(inheritingElement);
-            _guiCommands.RefreshElementTreeView(inheritingElement);
-        }
+        SaveAndRefresh(_inheritanceSync.RemoveInstance(container, instance));
     }
 
     public void HandleInstanceRenamed(ElementSave? container, InstanceSave instance, string oldName)
     {
         if (container == null) return;
 
-        var elementsInheritingFromContainer =
-            ObjectFinder.Self.GetElementsInheritingFrom(container);
-
-        foreach (var inheritingElement in elementsInheritingFromContainer)
-        {
-            var toRename = inheritingElement.GetInstance(oldName);
-
-            if (toRename != null)
-            {
-                toRename.Name = instance.Name;
-                _fileCommands.TryAutoSaveElement(inheritingElement);
-                _guiCommands.RefreshElementTreeView(inheritingElement);
-            }
-        }
+        SaveAndRefresh(_inheritanceSync.RenameInstance(container, instance, oldName));
     }
 
-    public void HandleInstanceReordered(InstanceSave instance)
-    {
-        var baseElement = instance.ParentContainer;
-
-        if (baseElement != null)
-        {
-            var elementsInheritingFromContainer =
-                ObjectFinder.Self.GetElementsInheritingFrom(baseElement);
-
-            foreach (var inheritingElement in elementsInheritingFromContainer)
-            {
-                var didShiftIndex =
-                    AdjustInstance(baseElement, inheritingElement, instance.Name);
-
-                if (didShiftIndex)
-                {
-                    _fileCommands.TryAutoSaveElement(inheritingElement);
-                    _guiCommands.RefreshElementTreeView(inheritingElement);
-                }
-            }
-        }
-    }
+    public void HandleInstanceReordered(InstanceSave instance) =>
+        SaveAndRefresh(_inheritanceSync.ReorderInstance(instance));
 
     /// <summary>
     /// Reacts to the instance's base type having changed: removes the variables the new type cannot have from the
@@ -119,18 +59,9 @@ public class InheritanceLogic
     {
         _baseTypeVariablePruner.PruneInstance(container, instance);
 
-        var elementsInheritingFromContainer =
-            ObjectFinder.Self.GetElementsInheritingFrom(container);
-
-        foreach (var inheritingElement in elementsInheritingFromContainer)
+        foreach (ElementSave inheritingElement in _inheritanceSync.SetInstanceBaseType(container, instance))
         {
-            var toChange = inheritingElement.GetInstance(instance.Name);
-
-            if (toChange != null)
-            {
-                toChange.BaseType = instance.BaseType;
-                _fileCommands.TryAutoSaveElement(inheritingElement);
-            }
+            _fileCommands.TryAutoSaveElement(inheritingElement);
         }
     }
 
@@ -141,45 +72,10 @@ public class InheritanceLogic
     /// </summary>
     public void HandleElementBaseType(ElementSave asElementSave)
     {
-        string? newValue = asElementSave.BaseType;
-
         _baseTypeVariablePruner.PruneElement(asElementSave);
 
-        asElementSave.Instances.RemoveAll(item => item.DefinedByBase);
-
-        if (!string.IsNullOrEmpty(newValue))
-        {
-            if (StandardElementsManager.Self.IsDefaultType(newValue))
-            {
-                // Intentionally empty - see comment in original plugin code.
-            }
-            else
-            {
-                var baseElement = ObjectFinder.Self.GetElementSave(asElementSave.BaseType);
-
-                StateSave stateSave = new StateSave();
-                if (baseElement != null)
-                {
-                    foreach (var instance in baseElement.Instances)
-                    {
-                        var instanceName = instance.Name;
-                        var alreadyExists = asElementSave.Instances.FirstOrDefault(item => item.Name == instanceName);
-                        if (alreadyExists != null)
-                        {
-                            alreadyExists.DefinedByBase = true;
-                        }
-                        else
-                        {
-                            var derivedInstance = instance.Clone();
-                            derivedInstance.DefinedByBase = true;
-                            asElementSave.Instances.Add(derivedInstance);
-                        }
-                    }
-                    asElementSave.Initialize(stateSave);
-                    _standardElementsManagerGumTool.FixCustomTypeConverters(asElementSave);
-                }
-            }
-        }
+        _inheritanceSync.ReplaceInheritedInstances(asElementSave);
+        _standardElementsManagerGumTool.FixCustomTypeConverters(asElementSave);
 
         const bool fullRefresh = true;
         _guiCommands.RefreshElementTreeView(asElementSave);
@@ -187,68 +83,12 @@ public class InheritanceLogic
         _guiCommands.RefreshStateTreeView();
     }
 
-    private bool AdjustInstance(ElementSave baseElement, ElementSave derivedElement, string instanceName)
+    private void SaveAndRefresh(IReadOnlyList<ElementSave> changedElements)
     {
-        var instanceInBase = baseElement.GetInstance(instanceName);
-        // Without the instance in the derived element there is nothing to move; going on would
-        // insert null into its instance list.
-        if (derivedElement.GetInstance(instanceName) is not { } instanceInDerived)
+        foreach (ElementSave element in changedElements)
         {
-            return false;
+            _fileCommands.TryAutoSaveElement(element);
+            _guiCommands.RefreshElementTreeView(element);
         }
-
-        var indexInBase = IndexOf(baseElement.Instances, instanceInBase);
-        string? nameOfObjectBefore = null;
-        if (indexInBase > 0)
-        {
-            nameOfObjectBefore = baseElement.Instances[indexInBase - 1].Name;
-        }
-
-        string? nameOfObjectAfter = null;
-        if (indexInBase < baseElement.Instances.Count - 1)
-        {
-            nameOfObjectAfter = baseElement.Instances[indexInBase + 1].Name;
-        }
-
-        int exclusiveLowerIndexInDerived = -1;
-        if (nameOfObjectBefore != null)
-        {
-            var instanceBefore = derivedElement.GetInstance(nameOfObjectBefore);
-            exclusiveLowerIndexInDerived = IndexOf(derivedElement.Instances, instanceBefore);
-        }
-
-        int exclusiveUpperIndexInDerived = derivedElement.Instances.Count;
-
-        if (nameOfObjectAfter != null)
-        {
-            var instanceAfter = derivedElement.GetInstance(nameOfObjectAfter);
-            exclusiveUpperIndexInDerived = IndexOf(derivedElement.Instances, instanceAfter);
-        }
-
-        int currentDerivedIndex = derivedElement.Instances.IndexOf(instanceInDerived);
-
-        var desiredIndex = System.Math.Min(currentDerivedIndex, exclusiveUpperIndexInDerived - 1);
-        desiredIndex = System.Math.Max(desiredIndex, exclusiveLowerIndexInDerived + 1);
-
-        bool didAdjust = false;
-        if (desiredIndex != currentDerivedIndex)
-        {
-            didAdjust = true;
-            derivedElement.Instances.Remove(instanceInDerived);
-            if (currentDerivedIndex < desiredIndex)
-            {
-                derivedElement.Instances.Insert(desiredIndex - 1, instanceInDerived);
-            }
-            else
-            {
-                derivedElement.Instances.Insert(desiredIndex, instanceInDerived);
-            }
-        }
-
-        return didAdjust;
     }
-
-    // List.IndexOf returns -1 for a missing (null) instance, the same as for one not in the list.
-    private static int IndexOf(List<InstanceSave> instances, InstanceSave? instance) =>
-        instance == null ? -1 : instances.IndexOf(instance);
 }

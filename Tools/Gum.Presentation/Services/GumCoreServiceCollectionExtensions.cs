@@ -236,6 +236,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IVariableDefinedByTypeLogic, VariableDefinedByTypeLogic>();
         services.AddSingleton<IElementCreationLogic, ElementCreationLogic>();
         services.AddSingleton<IInstanceCreationLogic, InstanceCreationLogic>();
+        services.AddSingleton<IInheritanceSync, InheritanceSync>();
         services.AddSingleton<IStateCreationLogic, StateCreationLogic>();
         services.AddSingleton<ICategoryVariablePropagator, CategoryVariablePropagator>();
         services.AddSingleton<IStateVariableSorter, StateVariableSorter>();

@@ -225,7 +225,8 @@ public static class EditCommand
             new MovedInstanceReferenceDropLogic(referenceFinder),
             new ElementRemovalLogic(),
             new VariableReferenceValidator(),
-            new VariableReferenceCascade());
+            new VariableReferenceCascade(),
+            new InheritanceSync());
     }
 
     /// <summary>

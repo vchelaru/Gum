@@ -63,7 +63,8 @@ public class LeftoverVariablesBaseTypeChangeTests : BaseTestClass
             new Mock<IFileCommands>().Object,
             new Mock<IGuiCommands>().Object,
             new Mock<IStandardElementsManagerGumTool>().Object,
-            _mocker.CreateInstance<BaseTypeVariablePruner>());
+            _mocker.CreateInstance<BaseTypeVariablePruner>(),
+            new InheritanceSync());
         // The real check: the mock answers false, which makes the tool revert an instance's base type.
         _mocker.Use<ICircularReferenceManager>(new CircularReferenceManager(ObjectFinder.Self));
         _setVariableLogic = _mocker.CreateInstance<SetVariableLogic>();

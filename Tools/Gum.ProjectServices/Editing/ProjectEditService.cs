@@ -143,6 +143,7 @@ public class ProjectEditService : IProjectEditService
     private readonly IVariableReferenceValidator _referenceValidator;
     private readonly IVariableReferenceCascade _referenceCascade;
     private readonly IComponentBehaviorLogic _componentBehaviors;
+    private readonly IInheritanceSync _inheritanceSync;
 
     public ProjectEditService(
         IElementCreationLogic elementCreation,
@@ -167,7 +168,8 @@ public class ProjectEditService : IProjectEditService
         IMovedInstanceReferenceDropLogic movedReferenceDrop,
         IElementRemovalLogic elementRemoval,
         IVariableReferenceValidator referenceValidator,
-        IVariableReferenceCascade referenceCascade)
+        IVariableReferenceCascade referenceCascade,
+        IInheritanceSync inheritanceSync)
     {
         _elementCreation = elementCreation;
         _instanceCreation = instanceCreation;
@@ -193,6 +195,7 @@ public class ProjectEditService : IProjectEditService
         _referenceValidator = referenceValidator;
         _referenceCascade = referenceCascade;
         _componentBehaviors = new ComponentBehaviorLogic(stateCreation);
+        _inheritanceSync = inheritanceSync;
 
         _operations = new Dictionary<string, OperationSpec>
         {
@@ -392,6 +395,7 @@ public class ProjectEditService : IProjectEditService
         ComponentSave component = new ComponentSave();
         _elementCreation.PrepareNewComponent(component, name, GetOptionalString(operation, "baseType") ?? "Container");
         _elementCreation.AddComponent(project, component);
+        _inheritanceSync.ReplaceInheritedInstances(component);
     }
 
     private void AddInstance(GumProjectSave project, JsonElement operation)
@@ -412,6 +416,7 @@ public class ProjectEditService : IProjectEditService
 
         InstanceSave instance = new InstanceSave { Name = name, BaseType = type, ParentContainer = element };
         _instanceCreation.AddInstance(element, instance, GetOptionalString(operation, "parent"), desiredIndex: null);
+        _inheritanceSync.AddInstance(element, instance);
     }
 
     private void AddVariable(GumProjectSave project, JsonElement operation)
@@ -564,6 +569,7 @@ public class ProjectEditService : IProjectEditService
         // The tool's default "Delete only parent(s)": children move up to the removed instance's parent.
         _childDetacher.DetachChildren(instance, element);
         _instanceRemoval.RemoveInstance(instance, element);
+        _inheritanceSync.RemoveInstance(element, instance);
     }
 
     private void RemoveState(GumProjectSave project, JsonElement operation)
@@ -673,11 +679,17 @@ public class ProjectEditService : IProjectEditService
             throw new EditException(whyNot);
         }
         _elementCreation.AddComponent(project, extraction.Component);
+        _inheritanceSync.ReplaceInheritedInstances(extraction.Component);
         if (replace)
         {
             // Runs while the moved instances are still in the element, so their references still resolve.
             _movedReferenceDrop.Drop(_movedReferenceDrop.Find(element, instance, extraction.MovedInstances, animations: null));
-            _componentExtraction.ReplaceWithComponentInstance(extraction, moved => _instanceRemoval.RemoveInstance(moved, element));
+            InstanceSave replacement = _componentExtraction.ReplaceWithComponentInstance(extraction, moved =>
+            {
+                _instanceRemoval.RemoveInstance(moved, element);
+                _inheritanceSync.RemoveInstance(element, moved);
+            });
+            _inheritanceSync.AddInstance(element, replacement);
         }
     }
 
