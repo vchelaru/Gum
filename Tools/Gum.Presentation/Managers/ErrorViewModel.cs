@@ -73,6 +73,11 @@ public class ErrorViewModel : ViewModel
     public string? ActionName { get; set; }
 
     /// <summary>
+    /// Tooltip for the action button, for a short <see cref="ActionName"/> that needs explaining. Null for none.
+    /// </summary>
+    public string? ActionToolTip { get; set; }
+
+    /// <summary>
     /// Command the per-error action button runs. Errors that can only be fixed by editing the
     /// project leave this null; errors with a single obvious resolution (removing an orphaned file,
     /// for instance) set it so the Errors tab can offer a one-click fix.

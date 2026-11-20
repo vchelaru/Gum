@@ -250,6 +250,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IVariableReferenceCascade, VariableReferenceCascade>();
         services.AddSingleton<IVariableReferenceLogic, VariableReferenceLogic>();
         services.AddSingleton<IVariableReferenceConflictFixer, VariableReferenceConflictFixer>();
+        services.AddSingleton<Gum.Plugins.Errors.IFileCaseMismatchFixer, Gum.Plugins.Errors.FileCaseMismatchFixer>();
         services.AddSingleton<IReferenceFinder, ReferenceFinder>();
         services.AddSingleton<IMovedInstanceReferenceDropLogic, MovedInstanceReferenceDropLogic>();
         services.AddSingleton<IMovedInstanceReferenceDropper, MovedInstanceReferenceDropper>();

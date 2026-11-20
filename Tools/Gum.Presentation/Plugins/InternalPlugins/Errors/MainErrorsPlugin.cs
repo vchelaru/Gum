@@ -96,6 +96,10 @@ public class MainErrorsPlugin : CorePriorityPlugin
         else
         {
             UpdateErrorsForElement(_selectedState.SelectedElement);
+            if (message.IncludesProject)
+            {
+                ScheduleProjectErrorRefresh();
+            }
         }
     }
 

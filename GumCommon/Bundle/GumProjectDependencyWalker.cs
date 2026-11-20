@@ -114,7 +114,7 @@ public class GumProjectDependencyWalker
         HashSet<string> core = new HashSet<string>(StringComparer.Ordinal);
         HashSet<string> fontCache = new HashSet<string>(StringComparer.Ordinal);
         HashSet<string> external = new HashSet<string>(StringComparer.Ordinal);
-        List<DependencyWarning> missing = new List<DependencyWarning>();
+        WalkMissingFiles missing = new WalkMissingFiles();
         // Every step that reads the disk or adds to the sets the disk decides, in walk order, so running
         // them in order later gives the same sets, missing list and order as running them inline.
         List<Action> diskSteps = new List<Action>();
@@ -202,7 +202,8 @@ public class GumProjectDependencyWalker
                 coreFiles: core.OrderBy(p => p, StringComparer.Ordinal).ToList(),
                 fontCacheFiles: fontCache.OrderBy(p => p, StringComparer.Ordinal).ToList(),
                 externalFiles: external.OrderBy(p => p, StringComparer.Ordinal).ToList(),
-                missingFiles: missing);
+                missingFiles: missing,
+                referencedFrom: missing.ReferencedFrom);
         });
     }
 
@@ -648,6 +649,29 @@ public class GumProjectDependencyWalker
             ?? element.DefaultState?.GetVariableSave(variableName)?.Value;
     }
 
+    /// <summary>
+    /// True when <paramref name="variable"/> (a variable of one of <paramref name="element"/>'s states, named
+    /// <c>Variable</c> or <c>Instance.Variable</c>) holds a file path, the way the walk decides it does.
+    /// </summary>
+    public static bool IsFileVariable(VariableSave variable, ElementSave element)
+    {
+        string leafName = variable.Name;
+        InstanceSave? instance = null;
+        int dot = leafName.IndexOf('.');
+        if (dot >= 0)
+        {
+            instance = element.GetInstance(leafName.Substring(0, dot));
+            if (instance == null)
+            {
+                return false;
+            }
+            leafName = leafName.Substring(dot + 1);
+        }
+
+        return string.Equals(leafName, "CustomFontFile", StringComparison.Ordinal)
+            || IsFileVariable(variable, leafName, element, instance);
+    }
+
     private static bool IsFileVariable(VariableSave variable, string leafName, ElementSave element, InstanceSave? instance)
     {
         // Most authoritative source first: the variable on the state itself may already carry
@@ -752,6 +776,7 @@ public class GumProjectDependencyWalker
         }
 
         string relative = NormalizeRelative(referencedPath);
+        (missing as WalkMissingFiles)?.RecordOwner(relative, ownerName);
         bool isFontCache = relative.StartsWith("FontCache/", StringComparison.OrdinalIgnoreCase);
 
         if (isFontCache && includeFontCache)
@@ -945,6 +970,24 @@ public class GumProjectDependencyWalker
         // drive; only a stray leading separator on a relative path is dropped.
         bool rootedUnixPath = Path.DirectorySeparatorChar == '/' && Path.IsPathRooted(path);
         return rootedUnixPath ? normalized : normalized.TrimStart('/');
+    }
+}
+
+/// <summary>
+/// The walk's missing-file list, which also remembers who referenced each path so a
+/// <see cref="WalkResult"/> can name the owner of any file, not only the missing ones.
+/// </summary>
+internal sealed class WalkMissingFiles : List<DependencyWarning>
+{
+    public Dictionary<string, string> ReferencedFrom { get; } = new Dictionary<string, string>(StringComparer.Ordinal);
+
+    /// <summary>Keeps the first owner seen for <paramref name="relativePath"/>.</summary>
+    public void RecordOwner(string relativePath, string ownerName)
+    {
+        if (!ReferencedFrom.ContainsKey(relativePath))
+        {
+            ReferencedFrom[relativePath] = ownerName;
+        }
     }
 }
 

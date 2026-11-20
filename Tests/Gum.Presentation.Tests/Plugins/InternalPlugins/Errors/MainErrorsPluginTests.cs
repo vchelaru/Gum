@@ -298,7 +298,8 @@ public class MainErrorsPluginTests : BaseTestClass
             .Returns(new ErrorResult[0]);
         ErrorChecker errorChecker = new ErrorChecker(headlessErrorChecker.Object, pluginManager.Object,
             new ErrorDocsRegistry(), Mock.Of<IFileSystemRevealService>(),
-            Mock.Of<Gum.Plugins.InternalPlugins.VariableGrid.IVariableReferenceConflictFixer>());
+            Mock.Of<Gum.Plugins.InternalPlugins.VariableGrid.IVariableReferenceConflictFixer>(),
+            Mock.Of<Gum.Plugins.Errors.IFileCaseMismatchFixer>());
         List<ErrorViewModel[]> elementChecks = new();
         errorChecker.ErrorsChecked += (_, errors) => elementChecks.Add(errors);
         AllErrorsViewModel viewModel = null!;

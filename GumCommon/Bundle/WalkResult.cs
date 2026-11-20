@@ -28,6 +28,13 @@ public class WalkResult
     /// <summary>References to files that were not present on disk during the walk.</summary>
     public IReadOnlyList<DependencyWarning> MissingFiles { get; }
 
+    /// <summary>
+    /// Who referenced each collected path, keyed by the path: <c>Element</c> or <c>Element.Instance</c> for a
+    /// variable, <c>(project)</c> for the project's single pixel texture, or the path of the file (a
+    /// <c>.fnt</c> or <c>.achx</c>) that loads it. The first reference wins. Empty for a result built by hand.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> ReferencedFrom { get; }
+
     /// <summary>Convenience: all included files across all three categories, in the same per-category order.</summary>
     public IEnumerable<string> AllIncludedFiles => CoreFiles.Concat(FontCacheFiles).Concat(ExternalFiles);
 
@@ -36,8 +43,10 @@ public class WalkResult
         IReadOnlyList<string> coreFiles,
         IReadOnlyList<string> fontCacheFiles,
         IReadOnlyList<string> externalFiles,
-        IReadOnlyList<DependencyWarning> missingFiles)
+        IReadOnlyList<DependencyWarning> missingFiles,
+        IReadOnlyDictionary<string, string>? referencedFrom = null)
     {
+        ReferencedFrom = referencedFrom ?? new Dictionary<string, string>();
         CoreFiles = coreFiles;
         FontCacheFiles = fontCacheFiles;
         ExternalFiles = externalFiles;

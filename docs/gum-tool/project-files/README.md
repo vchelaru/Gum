@@ -170,9 +170,15 @@ Available in October 2026, or now if building Gum from source.
 
 A project can reference a file whose name differs from the file on disk only by letter case: a Sprite's `SourceFile` set to `Textures/Hero.png` when the file is saved as `Textures/hero.png`, or a component named `Button` whose file is `Components/button.gucx`. Windows ignores the difference, so the project works there, but on a case-sensitive file system such as Linux the file is not found.
 
-When this happens the Gum tool reports a **GUM0008** entry in the [Errors tab](../editor-tab.md), naming what referenced the file, the name it used, and the name on disk. It is a warning on a file system where the file still loads and an error where it does not. To resolve it, rename the file to match the reference, or change the reference to match the file.
+When this happens the Gum tool reports a **GUM0008** entry in the [Errors tab](../editor-tab.md), naming what referenced the file, the name it used, and the name on disk. It is a warning on a file system where the file still loads and an error where it does not. The entry names where the reference lives: the element and instance (such as `Menu.Logo`), the `.achx` or `.fnt` file that loads the texture and the element that uses it, or the project setting (single pixel texture, localization file, behavior). To resolve it, rename the file to match the reference, or change the reference to match the file.
 
-`gumcli check` reports GUM0008 for every file the project loads at runtime. Besides element files and the files elements reference, this covers behavior files, localization files, element animation files, and the textures that a `.fnt` or `.achx` file names. These belong to the whole project rather than one element, so the Errors tab does not list them. A mismatched animation file is always an error, because the game never connects its animations to the element, on any file system.
+When the project itself stores the reference (a Sprite's `SourceFile`, the single pixel texture, or a localization file), the entry has a **Fix** button that changes every such reference to the name on disk. It can be undone with Ctrl+Z for element changes. If two files differ only by letter case, Fix explains this and changes nothing; delete or rename one of them first. A reference inside another file, such as an `.achx` frame, has no Fix button and must be edited in that file.
+
+{% hint style="info" %}
+Available in November 2026, or now if building Gum from source.
+{% endhint %}
+
+`gumcli check` reports GUM0008 for every file the project loads at runtime. Besides element files and the files elements reference, this covers behavior files, localization files, element animation files, and the textures that a `.fnt` or `.achx` file names. These belong to the whole project rather than one element, so the Errors tab lists them whichever element is selected. A mismatched animation file is always an error, because the game never connects its animations to the element, on any file system.
 
 ## Font Range Entry That Matches No Font (GUM0010)
 
