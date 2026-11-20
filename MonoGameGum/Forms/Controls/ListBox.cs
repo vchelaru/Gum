@@ -319,8 +319,23 @@ public class ListBox : ItemsControl, IInputReceiver
             // specific occurrence can't be disambiguated - resolve to a single (first-match) row,
             // same as GetListBoxItemForData's other callers. This still guarantees only ONE row
             // ends up selected, never every row sharing the value (issue #3509).
-            SelectSingleRowAndScrollIntoView(value != null ? GetListBoxItemForData(value) : null);
+            SetSelectedObject(value, deferIfNotFound: IsDataBound(nameof(SelectedObject)));
         }
+    }
+
+    // Like _deferredSelectedIndex, for a bound SelectedObject that is not in Items yet.
+    object? _deferredSelectedObject;
+
+    /// <summary>
+    /// Selects the row for <paramref name="value"/>, or clears the selection when it is not in Items.
+    /// <paramref name="deferIfNotFound"/> also holds the value until it appears in Items.
+    /// </summary>
+    internal void SetSelectedObject(object? value, bool deferIfNotFound)
+    {
+        ClearDeferredSelection();
+        ListBoxItem? row = value != null ? GetListBoxItemForData(value) : null;
+        SelectSingleRowAndScrollIntoView(row);
+        _deferredSelectedObject = deferIfNotFound && value != null && row == null ? value : null;
     }
 
     public int SelectedIndex
@@ -337,19 +352,66 @@ public class ListBox : ItemsControl, IInputReceiver
 
             return -1;
         }
-        set
+        set => SetSelectedIndex(value, deferIfPastEnd: IsDataBound(nameof(SelectedIndex)));
+    }
+
+    // A SelectedIndex binding can deliver the view model's index before the view model's items have
+    // reached Items (the collection is filled after the context is assigned). The index is held and
+    // applied once Items has that many entries; any other selection change drops it.
+    int _deferredSelectedIndex = -1;
+
+    /// <summary>
+    /// Sets the selection by Items index. An index past the end is ignored, keeping the selection, as
+    /// WPF's Selector does (#6737; WPF throws below -1, Gum ignores that too), except that
+    /// <paramref name="deferIfPastEnd"/> holds it until Items grows to include it.
+    /// </summary>
+    internal void SetSelectedIndex(int value, bool deferIfPastEnd)
+    {
+        int count = Items?.Count ?? 0;
+        if (value == -1 || (value > -1 && value < count) || deferIfPastEnd)
         {
-            if (value > -1 && value < (Items?.Count ?? 0))
+            // A real change of the selection, or a newer held value, replaces whatever was held.
+            ClearDeferredSelection();
+        }
+
+        if (value > -1 && value < count)
+        {
+            SelectSingleRowAndScrollIntoView(GetRowForItemsIndex(value));
+        }
+        else if (value == -1)
+        {
+            // Clear all selections
+            SelectSingleRowAndScrollIntoView(null);
+        }
+        else if (deferIfPastEnd && value >= count)
+        {
+            _deferredSelectedIndex = value;
+        }
+    }
+
+    private void ClearDeferredSelection()
+    {
+        _deferredSelectedIndex = -1;
+        _deferredSelectedObject = null;
+    }
+
+    private void ApplyDeferredSelectedIndex()
+    {
+        if (_deferredSelectedObject != null)
+        {
+            ListBoxItem? row = GetListBoxItemForData(_deferredSelectedObject);
+            if (row != null)
             {
-                SelectSingleRowAndScrollIntoView(GetRowForItemsIndex(value));
+                _deferredSelectedObject = null;
+                SelectSingleRowAndScrollIntoView(row);
             }
-            else if (value == -1)
-            {
-                // Clear all selections
-                SelectSingleRowAndScrollIntoView(null);
-            }
-            // Any other index is out of range and ignored, keeping the selection, as WPF's Selector
-            // does for an index past the end (#6737). WPF throws below -1; Gum ignores that too.
+        }
+
+        int deferred = _deferredSelectedIndex;
+        if (deferred >= 0 && deferred < (Items?.Count ?? 0))
+        {
+            _deferredSelectedIndex = -1;
+            SetSelectedIndex(deferred, deferIfPastEnd: false);
         }
     }
 
@@ -408,6 +470,13 @@ public class ListBox : ItemsControl, IInputReceiver
     /// </summary>
     private void PushSelectionIfChanged()
     {
+        if (_isRebuildingRowsForTemplate)
+        {
+            // The rows are recreated with the same selection; the view model must not see it go
+            // away and come back.
+            return;
+        }
+
         if (IsRebindingBothSelectionBindings)
         {
             // OnBindingContextChanged resolves and pushes the selection once every binding re-attached.
@@ -420,6 +489,7 @@ public class ListBox : ItemsControl, IInputReceiver
         if (!Equals(selectedObject, _lastPushedSelectedObject))
         {
             _lastPushedSelectedObject = selectedObject;
+            ClearDeferredSelection();
             PushValueToViewModel(nameof(SelectedObject));
         }
 
@@ -427,6 +497,7 @@ public class ListBox : ItemsControl, IInputReceiver
         if (selectedIndex != _lastPushedSelectedIndex)
         {
             _lastPushedSelectedIndex = selectedIndex;
+            ClearDeferredSelection();
             PushValueToViewModel(nameof(SelectedIndex));
         }
     }
@@ -627,6 +698,35 @@ public class ListBox : ItemsControl, IInputReceiver
     }
 
     /// <inheritdoc/>
+    internal override void RebuildRowsForTemplateChange()
+    {
+        // Rows are recreated for the new template, so remember what was selected by data object.
+        List<object?>? selectedData = _selection.Count > 0
+            ? _selection.SelectedRows.Select(row => row.DataObject).ToList()
+            : null;
+
+        _isRebuildingRowsForTemplate = true;
+        try
+        {
+            base.RebuildRowsForTemplateChange();
+
+            if (selectedData != null)
+            {
+                RestoreSelectionAfterVisualChanged(selectedData, raiseSelectionChanged: true);
+            }
+        }
+        finally
+        {
+            _isRebuildingRowsForTemplate = false;
+        }
+
+        // Reports a real difference only, such as a selected row that no longer exists.
+        PushSelectionIfChanged();
+    }
+
+    bool _isRebuildingRowsForTemplate;
+
+    /// <inheritdoc/>
     protected override bool IsAuthoredRow(FrameworkElement control) => control is ListBoxItem;
 
     /// <inheritdoc/>
@@ -657,7 +757,7 @@ public class ListBox : ItemsControl, IInputReceiver
             HandleListBoxItemDragging);
     }
 
-    private void RestoreSelectionAfterVisualChanged(List<object?> selectedData)
+    private void RestoreSelectionAfterVisualChanged(List<object?> selectedData, bool raiseSelectionChanged = false)
     {
         _selection.Clear();
         SelectionChangedEventArgs droppedArgs = new SelectionChangedEventArgs();
@@ -675,7 +775,7 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 
         RebuildSelectedItemsCollectionFromRows();
-        SyncIsSelectedFromSelectedItems(raiseSelectionChanged: false);
+        SyncIsSelectedFromSelectedItems(raiseSelectionChanged);
 
         if (droppedArgs.RemovedItems.Count > 0)
         {
@@ -1432,6 +1532,8 @@ public class ListBox : ItemsControl, IInputReceiver
                 _suppressSelectionSync = wasSuppressed;
             }
         }
+
+        ApplyDeferredSelectedIndex();
 
         // Any Items edit can move the selected row (an Insert or Move above it shifts it without a
         // selection change), so check the selection after every action (#7849).

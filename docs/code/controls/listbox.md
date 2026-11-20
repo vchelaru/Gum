@@ -175,6 +175,12 @@ listBox.SelectionChanged += (sender, args) =>
 };
 ```
 
+Assigning a new `VisualTemplate` or `FrameworkElementTemplate` keeps the selected item selected.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Multi-Selection
 
 Multi-selection can be controlled through the SelectionMode property.

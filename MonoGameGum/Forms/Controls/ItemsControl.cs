@@ -151,18 +151,7 @@ public class ItemsControl : ScrollViewer
             if(value != _frameworkElementTemplate)
             {
                 _frameworkElementTemplate = value;
-                RunWithAllLayoutSuspended(() =>
-                {
-                    ClearVisualsInternal();
-
-                    if (items?.Count > 0)
-                    {
-                        // refresh!
-                        var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
-                            items, startingIndex: 0);
-                        HandleItemsCollectionChanged(this, args);
-                    }
-                }, Visual);
+                RunWithAllLayoutSuspended(RebuildRowsForTemplateChange, Visual);
             }
         }
     }
@@ -179,16 +168,26 @@ public class ItemsControl : ScrollViewer
 
                 if (items != null)
                 {
-                    ClearVisualsInternal();
-
-                    if (items.Count > 0)
-                    {
-                        // refresh!
-                        var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items, startingIndex: 0);
-                        HandleItemsCollectionChanged(this, args);
-                    }
+                    RebuildRowsForTemplateChange();
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Clears the rows and recreates one per item after a template changes. Overridden by selectors
+    /// to carry their selection over to the new rows.
+    /// </summary>
+    internal virtual void RebuildRowsForTemplateChange()
+    {
+        ClearVisualsInternal();
+
+        if (items?.Count > 0)
+        {
+            // refresh!
+            var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
+                items, startingIndex: 0);
+            HandleItemsCollectionChanged(this, args);
         }
     }
 

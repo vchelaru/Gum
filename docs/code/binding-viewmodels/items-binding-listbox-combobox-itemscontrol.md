@@ -12,6 +12,12 @@ Although binding can be performed to any collection, `ObservableCollection` is c
 
 Binding can be performed to any type which implements `INotifyCollectionChanged`, so developers familiar with MVVM can use any view model implementation. This document uses Gum's `ViewModel` for simplicity.
 
+A bound `SelectedIndex` or `SelectedObject` can arrive before the items it refers to. The control holds that value and selects the item once it appears in `Items`.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ## ItemsControl Binding
 
 `ItemsControl` is similar to `ListBox`, but it does not have any restrictions on visual types since `ItemControl` does not support the concept of selection. This makes `ItemsControl` suitable for general usage.
