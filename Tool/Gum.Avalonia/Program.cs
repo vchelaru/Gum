@@ -40,7 +40,6 @@ public static class Program
 
         // Before anything reads or writes a per-user file.
         ApplyUserDataFolder(options);
-        StartupJitProfile.Start(GetAppDataDirectory());
 
         // Before a window or a project load: a launch that finds the project already owned hands
         // its request over and exits, and the owner's pipe exists before the slow startup begins.
@@ -50,6 +49,9 @@ public static class Program
             Console.Out.WriteLine("Handed " + options.HandoffRequest!.Project + " to the running Gum.");
             return 0;
         }
+
+        // Only a launch that starts the tool records the profile; a handoff's would replace it with a tiny one.
+        StartupJitProfile.Start(GetAppDataDirectory());
 
         if (options.ExitAfterSeconds is double exitAfterSeconds)
         {
