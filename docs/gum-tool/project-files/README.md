@@ -318,6 +318,14 @@ An instance's `Parent` names another instance in the same element. When no insta
 Available in December 2026, or now if building Gum from source.
 {% endhint %}
 
+## Stale Parent Variable (GUM0048)
+
+A state can hold a `Parent` variable for an instance the element no longer has, for example after the instance was deleted or the element was copied or merged. When that variable also names a parent that does not exist, `gumcli check` reports **GUM0048** as an error naming the element, the variable, and the state. To resolve it, remove the variable from the element's file.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Instance of a Missing Type (GUM0035)
 
 Each instance has a type, which is a component or standard element in the project. When the project has no element with that name, the instance cannot be created. `gumcli check` reports **GUM0035** as an error naming the instance and its type. To resolve it, add the missing element or change the instance's type.
