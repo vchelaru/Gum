@@ -37,6 +37,32 @@ public class AvaloniaDispatcherTests
     }
 
     [Fact]
+    public void HoldPostsWhile_Nested_ReleasesEveryPostInOrderWhenTheOuterHoldEnds()
+    {
+        List<Action> posted = new List<Action>();
+        AvaloniaDispatcher dispatcher = new AvaloniaDispatcher(posted.Add);
+        List<string> ran = new List<string>();
+        int postedAfterInner = -1;
+
+        Task held = dispatcher.HoldPostsWhile(async () =>
+        {
+            dispatcher.Post(() => ran.Add("outer before"));
+            await dispatcher.HoldPostsWhile(() =>
+            {
+                dispatcher.Post(() => ran.Add("inner"));
+                return Task.CompletedTask;
+            });
+            postedAfterInner = posted.Count;
+            dispatcher.Post(() => ran.Add("outer after"));
+        });
+        held.IsCompletedSuccessfully.ShouldBeTrue();
+
+        postedAfterInner.ShouldBe(0);
+        posted.ForEach(action => action());
+        ran.ShouldBe(new[] { "outer before", "inner", "outer after" });
+    }
+
+    [Fact]
     public void HoldPostsWhile_WorkThrows_StillReleasesThePosts()
     {
         List<Action> posted = new List<Action>();

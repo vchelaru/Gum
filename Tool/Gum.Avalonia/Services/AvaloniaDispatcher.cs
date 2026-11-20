@@ -12,6 +12,7 @@ public class AvaloniaDispatcher : IDispatcher
     private readonly Action<Action> _post;
     private readonly object _gate = new object();
     private List<Action>? _held;
+    private int _holdDepth;
 
     /// <summary>Posts to Avalonia's UI thread at Background priority.</summary>
     public AvaloniaDispatcher()
@@ -61,7 +62,9 @@ public class AvaloniaDispatcher : IDispatcher
     {
         lock (_gate)
         {
-            _held = new List<Action>();
+            // A nested hold shares the outer queue, which is released when the outermost hold ends.
+            _holdDepth++;
+            _held ??= new List<Action>();
         }
         try
         {
@@ -72,8 +75,16 @@ public class AvaloniaDispatcher : IDispatcher
             List<Action> held;
             lock (_gate)
             {
-                held = _held!;
-                _held = null;
+                _holdDepth--;
+                if (_holdDepth > 0)
+                {
+                    held = new List<Action>();
+                }
+                else
+                {
+                    held = _held!;
+                    _held = null;
+                }
             }
             foreach (Action action in held)
             {
