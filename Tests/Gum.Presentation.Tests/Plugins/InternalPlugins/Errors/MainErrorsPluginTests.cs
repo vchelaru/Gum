@@ -298,7 +298,8 @@ public class MainErrorsPluginTests : BaseTestClass
             .Returns(new ErrorResult[0]);
         ErrorChecker errorChecker = new ErrorChecker(headlessErrorChecker.Object, pluginManager.Object,
             new ErrorDocsRegistry(), Mock.Of<IFileSystemRevealService>(),
-            Mock.Of<Gum.Plugins.InternalPlugins.VariableGrid.IVariableReferenceConflictFixer>());
+            Mock.Of<Gum.Plugins.InternalPlugins.VariableGrid.IVariableReferenceConflictFixer>(),
+            Mock.Of<Gum.Plugins.Errors.IFileCaseMismatchFixer>());
         List<ErrorViewModel[]> elementChecks = new();
         errorChecker.ErrorsChecked += (_, errors) => elementChecks.Add(errors);
         AllErrorsViewModel viewModel = null!;
@@ -324,6 +325,30 @@ public class MainErrorsPluginTests : BaseTestClass
         plugin.CallElementSelected(_screen);
         viewModel.Errors.ShouldBe(new[] { orphanRow });
         elementChecks.ShouldHaveSingleItem().ShouldBeEmpty();
+    }
+
+    // A fix that changes a stored file reference asks for the project rows too; every other request leaves
+    // them alone, since that pass walks the whole project.
+    [Theory]
+    [InlineData(true, 1)]
+    [InlineData(false, 0)]
+    public void RequestErrorRefreshMessage_QueuesTheProjectPass_OnlyWhenItIncludesTheProject(bool includesProject, int expectedPasses)
+    {
+        List<Action> posted = new();
+        Mock<IDispatcher> dispatcher = new();
+        dispatcher.Setup(d => d.Post(It.IsAny<Action>())).Callback<Action>(posted.Add);
+        IMessenger messenger = new WeakReferenceMessenger();
+        MainErrorsPlugin plugin = new MainErrorsPlugin(_errorChecker.Object, messenger,
+            _selectedState.Object, Mock.Of<IClipboardService>(), Mock.Of<IFileSystemRevealService>(),
+            _projectState.Object, dispatcher.Object, _fileWatchManager.Object)
+        {
+            TabManager = Mock.Of<ITabManager>(),
+        };
+        plugin.StartUp();
+
+        messenger.Send(new RequestErrorRefreshMessage { IncludesProject = includesProject });
+
+        posted.Count.ShouldBe(expectedPasses);
     }
 
     // After a load the project pass waits for the project's fonts to be collected, so it doesn't spend

@@ -21,7 +21,7 @@ public class ErrorCheckerTests : BaseTestClass
         IHeadlessErrorChecker headlessErrorChecker = new HeadlessErrorChecker(typeResolver);
         Mock<IPluginManager> mockPluginManager = new Mock<IPluginManager>();
         IErrorDocsRegistry errorDocsRegistry = new ErrorDocsRegistry();
-        _sut = new ErrorChecker(headlessErrorChecker, mockPluginManager.Object, errorDocsRegistry, Mock.Of<IFileSystemRevealService>(), Mock.Of<IVariableReferenceConflictFixer>());
+        _sut = new ErrorChecker(headlessErrorChecker, mockPluginManager.Object, errorDocsRegistry, Mock.Of<IFileSystemRevealService>(), Mock.Of<IVariableReferenceConflictFixer>(), Mock.Of<Gum.Plugins.Errors.IFileCaseMismatchFixer>());
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public class ErrorCheckerTests : BaseTestClass
             .Callback<List<ErrorViewModel>, object?>(
                 (list, _) => list.Add(new ErrorViewModel { Code = "GUM0005", Message = "plugin error" }));
         ErrorChecker sut = new ErrorChecker(Mock.Of<IHeadlessErrorChecker>(), mockPluginManager.Object,
-            new ErrorDocsRegistry(), Mock.Of<IFileSystemRevealService>(), Mock.Of<IVariableReferenceConflictFixer>());
+            new ErrorDocsRegistry(), Mock.Of<IFileSystemRevealService>(), Mock.Of<IVariableReferenceConflictFixer>(), Mock.Of<Gum.Plugins.Errors.IFileCaseMismatchFixer>());
         int raisedCount = 0;
         sut.ErrorsChecked += (_, _) => raisedCount++;
 
@@ -148,7 +148,7 @@ public class ErrorCheckerTests : BaseTestClass
         });
         Mock<IFileSystemRevealService> revealService = new Mock<IFileSystemRevealService>();
         ErrorChecker sut = new ErrorChecker(headlessErrorChecker.Object, new Mock<IPluginManager>().Object,
-            new ErrorDocsRegistry(), revealService.Object, Mock.Of<IVariableReferenceConflictFixer>());
+            new ErrorDocsRegistry(), revealService.Object, Mock.Of<IVariableReferenceConflictFixer>(), Mock.Of<Gum.Plugins.Errors.IFileCaseMismatchFixer>());
 
         ErrorViewModel[] errors = sut.GetProjectErrors(project);
 
@@ -178,7 +178,7 @@ public class ErrorCheckerTests : BaseTestClass
         Mock<IVariableReferenceConflictFixer> fixer = new Mock<IVariableReferenceConflictFixer>();
         fixer.Setup(f => f.GetActionLabel(conflict)).Returns("Set X to 6");
         ErrorChecker sut = new ErrorChecker(headlessErrorChecker.Object, new Mock<IPluginManager>().Object,
-            new ErrorDocsRegistry(), Mock.Of<IFileSystemRevealService>(), fixer.Object);
+            new ErrorDocsRegistry(), Mock.Of<IFileSystemRevealService>(), fixer.Object, Mock.Of<Gum.Plugins.Errors.IFileCaseMismatchFixer>());
 
         ErrorViewModel[] errors = sut.GetErrorsFor(component, project);
 
@@ -187,5 +187,30 @@ public class ErrorCheckerTests : BaseTestClass
         fixer.Verify(f => f.Fix(It.IsAny<VariableReferenceConflict>()), Times.Never);
         errors[0].ActionCommand!.Execute(null);
         fixer.Verify(f => f.Fix(conflict), Times.Once);
+    }
+
+    [Fact]
+    public void GetProjectErrors_OffersFixInPlaceOfShowFile_WhenTheCaseMismatchCanBeFixed()
+    {
+        GumProjectSave project = new GumProjectSave();
+        FileNameCaseMismatchDetails details = new FileNameCaseMismatchDetails { ReferencedPath = "../ui_sheet.png", OnDiskPath = "../UI_Sheet.png" };
+        Mock<IHeadlessErrorChecker> headlessErrorChecker = new Mock<IHeadlessErrorChecker>();
+        headlessErrorChecker.Setup(c => c.GetProjectErrors(project)).Returns(new[]
+        {
+            new ErrorResult { ElementName = "Menu", Code = "GUM0008", Message = "case", FilePath = "C:/Game/UI_Sheet.png", Details = details },
+        });
+        Mock<Gum.Plugins.Errors.IFileCaseMismatchFixer> fixer = new Mock<Gum.Plugins.Errors.IFileCaseMismatchFixer>();
+        fixer.Setup(f => f.CanFix(details)).Returns(true);
+        Mock<IFileSystemRevealService> revealService = new Mock<IFileSystemRevealService>();
+        ErrorChecker sut = new ErrorChecker(headlessErrorChecker.Object, new Mock<IPluginManager>().Object,
+            new ErrorDocsRegistry(), revealService.Object, Mock.Of<IVariableReferenceConflictFixer>(), fixer.Object);
+
+        ErrorViewModel[] errors = sut.GetProjectErrors(project);
+
+        errors[0].ActionName.ShouldBe("Fix");
+        errors[0].ActionToolTip.ShouldBe("Change the reference to match the file on disk");
+        errors[0].ActionCommand!.Execute(null);
+        fixer.Verify(f => f.Fix(details), Times.Once);
+        revealService.Verify(r => r.RevealFile(It.IsAny<string>()), Times.Never);
     }
 }

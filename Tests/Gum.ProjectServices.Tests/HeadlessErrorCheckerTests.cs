@@ -1400,6 +1400,77 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetProjectErrors_ShouldNameTheElementAndInstance_WhenAnAchxFrameTextureDiffersOnlyByCase()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "ui_sheet.png");
+            AnimationChainListSave achx = new AnimationChainListSave();
+            AnimationChainSave chain = new AnimationChainSave { Name = "Walk" };
+            chain.Frames.Add(new AnimationFrameSave { TextureName = "UI_Sheet.png", FrameLength = 0.1f });
+            achx.AnimationChains.Add(chain);
+            FileManager.XmlSerialize(achx, Path.Combine(projectDirectory, "walk.achx"));
+            AddComponentWithSpriteSourceFile("HeroHolder", "walk.achx");
+
+            ErrorResult error = _sut.GetProjectErrors(Project).Where(e => e.Code == "GUM0008").ShouldHaveSingleItem();
+
+            error.ElementName.ShouldBe("HeroHolder");
+            error.Message.ShouldContain("walk.achx");
+            error.Message.ShouldContain("HeroHolder.MySprite");
+            error.Message.ShouldContain("\"UI_Sheet.png\"");
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Fact]
+    public void GetProjectErrors_ShouldNameTheSinglePixelTextureSetting_WhenItsFileDiffersOnlyByCase()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "ui_sheet.png");
+            Project.SinglePixelTextureFile = "UI_Sheet.png";
+
+            ErrorResult error = _sut.GetProjectErrors(Project).Where(e => e.Code == "GUM0008").ShouldHaveSingleItem();
+
+            error.Message.ShouldContain("single pixel texture");
+            error.Message.ShouldNotStartWith("The project references");
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Fact]
+    public void GetProjectErrors_ShouldNameTheBehaviorAndTheLocalizationList_WhenTheirFilesDifferOnlyByCase()
+    {
+        string projectDirectory = CreateTempProjectDirectory();
+        try
+        {
+            WriteEmptyFile(projectDirectory, "Behaviors/buttonbehavior.behx");
+            Project.BehaviorReferences.Add(new BehaviorReference { Name = "ButtonBehavior" });
+            WriteEmptyFile(projectDirectory, "Localization/strings.csv");
+            Project.LocalizationFiles.Add("Localization/Strings.csv");
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetProjectErrors(Project).Where(e => e.Code == "GUM0008").ToList();
+
+            errors.Count.ShouldBe(2);
+            errors.ShouldContain(e => e.ElementName == "ButtonBehavior" && e.Message.Contains("ButtonBehavior"));
+            errors.ShouldContain(e => e.Message.Contains("localization"));
+            errors.ShouldNotContain(e => e.Message.StartsWith("The project references"));
+        }
+        finally
+        {
+            DeleteTempProjectDirectory(projectDirectory);
+        }
+    }
+
+    [Fact]
     public void GetAllErrors_ShouldReportGum0008_WhenLocalizationFileDiffersOnlyByCase()
     {
         string projectDirectory = CreateTempProjectDirectory();

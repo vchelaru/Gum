@@ -103,6 +103,7 @@ public sealed class ErrorsView : ListBox
         action.ContentTemplate = new FuncDataTemplate<string>((text, _) => new TextBlock { Text = text, TextAlignment = TextAlignment.Center });
         action.HorizontalContentAlignment = HorizontalAlignment.Center;
         action.Bind(Button.CommandProperty, new Binding(nameof(ErrorViewModel.ActionCommand)));
+        action.Bind(ToolTip.TipProperty, new Binding(nameof(ErrorViewModel.ActionToolTip)));
         action.Bind(IsVisibleProperty, new Binding(nameof(ErrorViewModel.HasAction)));
         Grid.SetColumn(action, 2);
         row.Children.Add(action);

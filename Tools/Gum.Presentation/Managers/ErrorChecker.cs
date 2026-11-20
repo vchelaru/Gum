@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
+using Gum.Plugins.Errors;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using CommunityToolkit.Mvvm.Input;
 using Gum.ProjectServices;
@@ -21,19 +22,22 @@ public class ErrorChecker : IErrorChecker
     private readonly IErrorDocsRegistry _errorDocsRegistry;
     private readonly IFileSystemRevealService _fileSystemRevealService;
     private readonly IVariableReferenceConflictFixer _variableReferenceConflictFixer;
+    private readonly IFileCaseMismatchFixer _fileCaseMismatchFixer;
 
     public ErrorChecker(
         IHeadlessErrorChecker headlessErrorChecker,
         IPluginManager pluginManager,
         IErrorDocsRegistry errorDocsRegistry,
         IFileSystemRevealService fileSystemRevealService,
-        IVariableReferenceConflictFixer variableReferenceConflictFixer)
+        IVariableReferenceConflictFixer variableReferenceConflictFixer,
+        IFileCaseMismatchFixer fileCaseMismatchFixer)
     {
         _headlessErrorChecker = headlessErrorChecker;
         _pluginManager = pluginManager;
         _errorDocsRegistry = errorDocsRegistry;
         _fileSystemRevealService = fileSystemRevealService;
         _variableReferenceConflictFixer = variableReferenceConflictFixer;
+        _fileCaseMismatchFixer = fileCaseMismatchFixer;
     }
 
     /// <inheritdoc/>
@@ -118,6 +122,13 @@ public class ErrorChecker : IErrorChecker
         {
             vm.ActionName = "Show File";
             vm.ActionCommand = new RelayCommand(() => _fileSystemRevealService.RevealFile(filePath));
+        }
+        if (errorResult.Details is FileNameCaseMismatchDetails caseMismatch && _fileCaseMismatchFixer.CanFix(caseMismatch))
+        {
+            // Replaces Show File: the reference is the thing to change, and the file is the one already named.
+            vm.ActionName = "Fix";
+            vm.ActionToolTip = "Change the reference to match the file on disk";
+            vm.ActionCommand = new RelayCommand(() => _fileCaseMismatchFixer.Fix(caseMismatch));
         }
         if (errorResult.ReferenceConflict is { } conflict)
         {

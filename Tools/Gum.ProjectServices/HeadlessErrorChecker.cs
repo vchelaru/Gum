@@ -1302,7 +1302,8 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         foreach (var includedFile in result.ExternalFiles.Concat(result.FontCacheFiles))
         {
             if (!caseMismatchPaths.Contains(includedFile)
-                && TryGetCaseMismatchError(elementName, projectFullFileName, caseChecker, elementName, includedFile, reportedCaseMismatchPaths, out var caseMismatch))
+                && TryGetCaseMismatchError(elementName, projectFullFileName, caseChecker,
+                    result.ReferencedFrom.GetValueOrDefault(includedFile, elementName), includedFile, reportedCaseMismatchPaths, out var caseMismatch))
             {
                 caseMismatchPaths.Add(includedFile);
                 errors.Add(caseMismatch);
@@ -1332,6 +1333,17 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         out ErrorResult error,
         bool failsOnEveryFileSystem = false) =>
         TryGetCaseMismatchError(elementName, project?.FullFileName, _caseChecker, referencedFrom, relativePath, reportedPaths,
+            out error, failsOnEveryFileSystem);
+
+    private static bool TryGetCaseMismatchError(
+        (string ElementName, string ReferencedFrom) owner,
+        string? projectFullFileName,
+        IFileNameCaseChecker caseChecker,
+        string relativePath,
+        ISet<string>? reportedPaths,
+        out ErrorResult error,
+        bool failsOnEveryFileSystem = false) =>
+        TryGetCaseMismatchError(owner.ElementName, projectFullFileName, caseChecker, owner.ReferencedFrom, relativePath, reportedPaths,
             out error, failsOnEveryFileSystem);
 
     internal static bool TryGetCaseMismatchError(
@@ -1392,16 +1404,25 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
     /// <summary>What <see cref="GetProjectFileCaseMismatchErrors"/> reads from the project.</summary>
     internal sealed class PreparedProjectFiles
     {
-        public PreparedProjectFiles(string projectFullFileName, PreparedWalk walk, HashSet<string> animationFiles)
+        public PreparedProjectFiles(string projectFullFileName, PreparedWalk walk, HashSet<string> animationFiles,
+            Dictionary<string, (string ElementName, string ReferencedFrom)> owners, HashSet<string> elementNames)
         {
             ProjectFullFileName = projectFullFileName;
             Walk = walk;
             AnimationFiles = animationFiles;
+            Owners = owners;
+            ElementNames = elementNames;
         }
 
         public string ProjectFullFileName { get; }
         public PreparedWalk Walk { get; }
         public HashSet<string> AnimationFiles { get; }
+
+        /// <summary>Who owns the files the walk does not attribute: element animations, behaviors and localization files.</summary>
+        public Dictionary<string, (string ElementName, string ReferencedFrom)> Owners { get; }
+
+        /// <summary>Every element name, to split a walk owner (<c>Element.Instance</c>) back into its element.</summary>
+        public HashSet<string> ElementNames { get; }
     }
 
     internal static PreparedProjectFiles? PrepareProjectFiles(GumProjectSave project, FontReferenceCache fontReferences)
@@ -1423,7 +1444,76 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         var animationFiles = new HashSet<string>(
             project.AllElements.Select(element => $"{element.Subfolder}/{element.Name}{animationSuffix}"),
             StringComparer.Ordinal);
-        return new PreparedProjectFiles(project.FullFileName!, walk, animationFiles);
+
+        var owners = new Dictionary<string, (string ElementName, string ReferencedFrom)>(StringComparer.Ordinal);
+        foreach (var element in project.AllElements)
+        {
+            owners[$"{element.Subfolder}/{element.Name}{animationSuffix}"] = (element.Name, $"The animations of \"{element.Name}\"");
+        }
+        bool isJson = GumProjectSave.IsJsonFormat(project.FullFileName);
+        foreach (var behavior in project.BehaviorReferences)
+        {
+            owners[behavior.GetRelativeFilePath(isJson)] = (behavior.Name, $"Behavior \"{behavior.Name}\"");
+        }
+        foreach (var localizationFile in project.LocalizationFiles)
+        {
+            owners[localizationFile.Replace('\\', '/')] = ("(project)", "The project's localization list");
+        }
+
+        return new PreparedProjectFiles(project.FullFileName!, walk, animationFiles, owners,
+            new HashSet<string>(project.AllElements.Select(element => element.Name), StringComparer.Ordinal));
+    }
+
+    /// <summary>
+    /// Where a project-level path is referenced from, as the element it belongs to (or "(project)") and
+    /// text for the message. A file loaded by another file (<c>.fnt</c> page, <c>.achx</c> frame) is named
+    /// with the file that loads it, then the owner of that file.
+    /// </summary>
+    private static (string ElementName, string ReferencedFrom) DescribeOwner(PreparedProjectFiles prepared,
+        WalkResult result, string relativePath)
+    {
+        if (prepared.Owners.TryGetValue(relativePath, out var known))
+        {
+            return known;
+        }
+
+        if (!result.ReferencedFrom.TryGetValue(relativePath, out string? owner))
+        {
+            return ("(project)", "The project");
+        }
+
+        string? viaFile = null;
+        for (int hops = 0; hops < 8 && result.ReferencedFrom.TryGetValue(owner, out string? next); hops++)
+        {
+            viaFile ??= owner;
+            owner = next;
+        }
+
+        string elementName = "(project)";
+        string display = owner;
+        if (owner == "(project)")
+        {
+            display = "the project's single pixel texture file";
+        }
+        else if (prepared.ElementNames.Contains(owner))
+        {
+            elementName = owner;
+        }
+        else
+        {
+            string? element = prepared.ElementNames.Where(name => owner.StartsWith(name + ".", StringComparison.Ordinal))
+                .OrderByDescending(name => name.Length).FirstOrDefault();
+            if (element != null)
+            {
+                elementName = element;
+            }
+        }
+
+        if (viaFile != null)
+        {
+            return (elementName, $"{viaFile} (used by {display})");
+        }
+        return (elementName, owner == "(project)" ? "The project's single pixel texture file" : display);
     }
 
     /// <summary>The disk half of <see cref="GetProjectFileCaseMismatchErrors"/>, which uses only strings.</summary>
@@ -1446,7 +1536,7 @@ public partial class HeadlessErrorChecker : IHeadlessErrorChecker
         {
             if (relativePath != projectFileName
                 && !reportedPaths.Contains(relativePath)
-                && TryGetCaseMismatchError("(project)", prepared.ProjectFullFileName, caseChecker, "The project", relativePath, reportedPaths, out var caseMismatch,
+                && TryGetCaseMismatchError(DescribeOwner(prepared, result, relativePath), prepared.ProjectFullFileName, caseChecker, relativePath, reportedPaths, out var caseMismatch,
                     failsOnEveryFileSystem: animationFiles.Contains(relativePath)))
             {
                 errors.Add(caseMismatch);
