@@ -52,7 +52,7 @@ public static class EditCommand
 
         Command command = new Command(
             "edit",
-            "Apply an operations file to a Gum project. Nothing is saved if an operation fails or the edit adds an error.")
+            "Apply an operations file to a Gum project's Screens, Components and standard elements. Nothing is saved if an operation fails or the edit adds an error.")
         {
             projectArgument,
             operationsArgument,
@@ -173,6 +173,7 @@ public static class EditCommand
                 operations = schemas.Select(schema => new
                 {
                     op = schema.Op,
+                    standardElements = schema.AppliesToStandardElements,
                     required = schema.Required.Select(field => new { name = field.Name, type = field.TypeName }),
                     optional = schema.Optional.Select(field => new { name = field.Name, type = field.TypeName })
                 })
@@ -182,12 +183,13 @@ public static class EditCommand
         }
 
         Console.WriteLine($"Operations file version {ProjectEditService.SupportedVersion}. Fields in [brackets] are optional.");
-        int width = schemas.Max(schema => schema.Op.Length);
+        Console.WriteLine("Operations marked * also accept a standard element such as Text as their element.");
+        int width = schemas.Max(schema => schema.Op.Length) + 1;
         foreach (EditOperationSchema schema in schemas)
         {
             IEnumerable<string> fields = schema.Required.Select(field => $"{field.Name}: {field.TypeName}")
                 .Concat(schema.Optional.Select(field => $"[{field.Name}: {field.TypeName}]"));
-            Console.WriteLine($"  {schema.Op.PadRight(width)}  {string.Join(", ", fields)}");
+            Console.WriteLine($"  {(schema.Op + (schema.AppliesToStandardElements ? "*" : "")).PadRight(width)}  {string.Join(", ", fields)}");
         }
         return 0;
     }

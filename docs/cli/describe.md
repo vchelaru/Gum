@@ -4,7 +4,7 @@
 gumcli describe <project.gumj> <element> [--instance <name>] [--json]
 ```
 
-Lists the variables a Screen or Component can set with [edit](edit.md)'s `setVariable`, with each variable's type, followed by the element's states and categories. `setVariable` accepts exactly the names `describe` lists.
+Lists the variables a Screen, Component or standard element can set with [edit](edit.md)'s `setVariable`, with each variable's type, followed by the element's states and categories. `setVariable` accepts exactly the names `describe` lists.
 
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source.
@@ -13,7 +13,7 @@ Available in December 2026, or now if building Gum from source.
 ## Options
 
 - `<project.gumj>`: Path to the `.gumj` or `.gumx` project file
-- `<element>`: The Screen or Component, including its folder, such as `Controls/Counter`
+- `<element>`: The Screen, Component or standard element, including its folder, such as `Controls/Counter` or `Text`
 - `--instance <name>`: List the variables of this instance instead of the element's own. Each name is written `InstanceName.VariableName`, as `setVariable` takes it.
 - `--json`: Output the description as a JSON document
 

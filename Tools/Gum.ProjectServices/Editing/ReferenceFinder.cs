@@ -380,7 +380,11 @@ public class ReferenceFinder : IReferenceFinder
             CollectCategoryReferencesInElement(category, oldName, inheritingElements, component, changes);
         }
 
-        // Standards cannot include instances so no need to loop through them
+        // Standards have no instances, but a standard that owns the category holds its category state variable.
+        foreach (var standard in project.StandardElements)
+        {
+            CollectCategoryReferencesInElement(category, oldName, inheritingElements, standard, changes);
+        }
 
         return changes;
     }

@@ -16,7 +16,7 @@ Available in December 2026, or now if building Gum from source.
 - `<project.gumj>`: Path to the `.gumj` or `.gumx` project file
 - `<operations.json>`: Path to the operations file
 - `--json`: Report new errors as a JSON array, in the same format as [check](check.md)
-- `--schema`: Print every operation with its required and optional fields and the JSON type each field takes (`string`, `bool`, or `any` for a field such as `value` that takes any JSON value) instead of editing. It takes no project or operations file. With `--json` it prints `{ "version": 1, "operations": [ { "op": "setVariable", "required": [ { "name": "element", "type": "string" }, ... ], "optional": [ ... ] } ] }`.
+- `--schema`: Print every operation with its required and optional fields and the JSON type each field takes (`string`, `bool`, or `any` for a field such as `value` that takes any JSON value) instead of editing. It takes no project or operations file. The text output marks operations that accept a standard element with `*`. With `--json` it prints `{ "version": 1, "operations": [ { "op": "setVariable", "standardElements": true, "required": [ { "name": "element", "type": "string" }, ... ], "optional": [ ... ] } ] }`.
 
 ## The Operations File
 
@@ -32,7 +32,22 @@ Available in December 2026, or now if building Gum from source.
 
 `version` is the file format version, which is `1`. Each entry in `operations` names its operation in `op` and runs in order. An unknown `version`, `op` or field is an error.
 
-`element` names a Screen or Component, including its folder, such as `Controls/Counter`.
+`element` names a Screen, Component or standard element, including its folder, such as `Controls/Counter` or `Text`.
+
+## Standard Elements
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+`addState`, `addCategory`, `setVariable`, `clearVariable`, `removeState` and `removeCategory` also edit a standard element such as `Text` or `Sprite`, like editing it in the tool. The example adds a `Gold` state to the `ColorCategory` that `Text` already has.
+
+```json
+{ "op": "addState", "element": "Text", "name": "Gold", "category": "ColorCategory" }
+{ "op": "setVariable", "element": "Text", "name": "Red", "value": 255, "state": "Gold", "category": "ColorCategory" }
+```
+
+A standard element has no instances, custom variables or variable references, so the other operations that take an `element` fail on one and name the Screen or Component to use instead. A standard element cannot be added or removed.
 
 ### addScreen and addComponent
 
