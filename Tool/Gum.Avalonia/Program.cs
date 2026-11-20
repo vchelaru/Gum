@@ -50,6 +50,9 @@ public static class Program
             return 0;
         }
 
+        // Only a launch that starts the tool records the profile; a handoff's would replace it with a tiny one.
+        StartupJitProfile.Start(GetAppDataDirectory());
+
         if (options.ExitAfterSeconds is double exitAfterSeconds)
         {
             _exitDeadline = UnattendedExitDeadline.Start(UnattendedExitDeadline.For(exitAfterSeconds), ForceExit);
