@@ -9,6 +9,7 @@ using Gum.Input;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.StatePlugin;
+using Gum.ProjectServices.Editing;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -290,14 +291,12 @@ public class StateTreeRightClickViewModel
 
             if (direction == -1 && GetIfCanMoveUp(state, _selectedState.SelectedStateCategorySave))
             {
-                list.RemoveAt(oldIndex);
-                list.Insert(oldIndex - 1, state);
+                ListMover.Move(list, state, ReorderPlacement.Before, list[oldIndex - 1]);
                 didMove = true;
             }
             else if (direction == 1 && GetIfCanMoveDown(state, _selectedState.SelectedStateCategorySave))
             {
-                list.RemoveAt(oldIndex);
-                list.Insert(oldIndex + 1, state);
+                ListMover.Move(list, state, ReorderPlacement.After, list[oldIndex + 1]);
                 didMove = true;
             }
 

@@ -149,6 +149,7 @@ public class ProjectEditService : IProjectEditService
     private readonly IVariableReferenceCascade _referenceCascade;
     private readonly IComponentBehaviorLogic _componentBehaviors;
     private readonly IInheritanceSync _inheritanceSync;
+    private readonly ReorderEditOperations _reorder;
 
     public ProjectEditService(
         IElementCreationLogic elementCreation,
@@ -177,6 +178,7 @@ public class ProjectEditService : IProjectEditService
         IInheritanceSync inheritanceSync,
         AnimationEditOperations animationOperations)
     {
+        _reorder = new ReorderEditOperations(inheritanceSync, stateRemoval, propagator, nameValidator);
         _elementCreation = elementCreation;
         _instanceCreation = instanceCreation;
         _instanceAddRules = instanceAddRules;
@@ -214,6 +216,10 @@ public class ProjectEditService : IProjectEditService
             ["addState"] = new(Strings("element", "name"), Strings("category"), AddState, StandardElements: true),
             ["exposeVariable"] = new(Strings("element", "instance", "variable", "name"), None, ExposeVariable),
             ["unexposeVariable"] = new(Strings("element", "name"), None, UnexposeVariable),
+            ["moveInstance"] = new(Strings("element", "name"), Fields(Str("before"), Str("after"),
+                new EditField("toFront", EditFieldType.Bool), new EditField("toBack", EditFieldType.Bool)), _reorder.MoveInstance),
+            ["moveState"] = new(Strings("element", "name"), Fields(Str("category"), Str("toCategory"), Str("before"), Str("after"),
+                new EditField("toStart", EditFieldType.Bool), new EditField("toEnd", EditFieldType.Bool)), _reorder.MoveState),
             ["removeScreen"] = new(Strings("name"), None, RemoveScreen),
             ["removeComponent"] = new(Strings("name"), None, RemoveComponent),
             ["addBehavior"] = new(Strings("element", "behavior"), None, AddBehavior),

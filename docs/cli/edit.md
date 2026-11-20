@@ -125,6 +125,25 @@ Available in December 2026, or now if building Gum from source.
 
 Makes a Component implement a behavior, like checking it in the **Behaviors** tab: it adds the reference and copies the behavior's categories and their states into the component, creating the ones it lacks. The behavior must already be in the project (for example after `add-forms`). The op fails if the project has no behavior of that name (the message lists the project's behaviors), if `element` is a Screen, or if the component already has the behavior. Required instances are not added, the same as in the tool, so a behavior that requires instances needs its own `addInstance` ops; `check` reports any that are missing.
 
+## Reordering
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+Instance order is draw order: the last instance draws in front. State order is the order the tool lists the states in.
+
+```json
+{ "op": "moveInstance", "element": "Hud", "name": "Panel", "toFront": true }
+{ "op": "moveInstance", "element": "Hud", "name": "Panel", "before": "Label" }
+{ "op": "moveState", "element": "Hud", "category": "Size", "name": "Big", "after": "Small" }
+{ "op": "moveState", "element": "Hud", "category": "Size", "name": "Big", "toCategory": "Mood" }
+```
+
+Give exactly one position: `before` or `after` naming a sibling, or `toFront` / `toBack` for an instance and `toStart` / `toEnd` for a state. `moveInstance` orders against siblings that share a parent, and an instance defined in a base element cannot be moved; components that derive from `element` follow the new order. A variable reference that reads `Index` is not recalculated, so open the project in the tool after reordering.
+
+`moveState` takes `category` for the category the state is in (leave it out for an uncategorized state). With `toCategory` the state moves to that category's end, or to the `before` / `after` position, and the category's variables are added to it as in the tool. Uncategorized states can be reordered but not moved into a category, the default state stays first, and a state a behavior needs cannot change category.
+
 ## Removing
 
 {% hint style="info" %}
