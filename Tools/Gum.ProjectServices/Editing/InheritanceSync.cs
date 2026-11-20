@@ -96,6 +96,8 @@ public class InheritanceSync : IInheritanceSync
             if (inheritingElement.GetInstance(oldName) is { } toRename)
             {
                 toRename.Name = instance.Name;
+                // What the inheriting element set on the inherited instance is keyed by its name.
+                new RenameReferenceApplier().RenameInstanceInContainer(inheritingElement, toRename, oldName);
                 changed.Add(inheritingElement);
             }
         }

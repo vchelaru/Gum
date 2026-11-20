@@ -290,6 +290,90 @@ public class EditRenameTests : BaseTestClass
     }
 
     [Fact]
+    public void RenameState_InBase_UpdatesDerivedSelectorsAndTheDerivedKeepsItsOwnCopy()
+    {
+        string projectPath = CreateEmptyProject();
+        EditOk(projectPath, """
+            { "op": "addComponent", "name": "Toggle" },
+            { "op": "addCategory", "element": "Toggle", "name": "OnOff" },
+            { "op": "addState", "element": "Toggle", "category": "OnOff", "name": "On" },
+            { "op": "addComponent", "name": "Fancy", "baseType": "Toggle" },
+            { "op": "setVariable", "element": "Fancy", "name": "OnOffState", "value": "On" }
+            """);
+
+        EditOk(projectPath, """{ "op": "renameState", "element": "Toggle", "category": "OnOff", "name": "On", "newName": "Enabled" }""");
+
+        Load(projectPath).GetComponentSave("Fancy")!.GetDefaultStateOrThrow().GetValue("OnOffState").ShouldBe("Enabled");
+        ShouldBeCleanAndStable(projectPath);
+    }
+
+    [Fact]
+    public void RenameCategory_InBase_RenamesTheVariableDerivedComponentsSet()
+    {
+        string projectPath = CreateEmptyProject();
+        EditOk(projectPath, """
+            { "op": "addComponent", "name": "Toggle" },
+            { "op": "addCategory", "element": "Toggle", "name": "OnOff" },
+            { "op": "addState", "element": "Toggle", "category": "OnOff", "name": "On" },
+            { "op": "addComponent", "name": "Fancy", "baseType": "Toggle" },
+            { "op": "setVariable", "element": "Fancy", "name": "OnOffState", "value": "On" }
+            """);
+
+        EditOk(projectPath, """{ "op": "renameCategory", "element": "Toggle", "name": "OnOff", "newName": "Power" }""");
+
+        VariableSave variable = Load(projectPath).GetComponentSave("Fancy")!.GetDefaultStateOrThrow().GetVariableSave("PowerState")!;
+        variable.Value.ShouldBe("On");
+        ShouldBeCleanAndStable(projectPath);
+    }
+
+    [Fact]
+    public void RenameInstance_InBase_RenamesTheValuesDerivedComponentsSetOnIt()
+    {
+        string projectPath = CreateEmptyProject();
+        EditOk(projectPath, """
+            { "op": "addComponent", "name": "Base" },
+            { "op": "addInstance", "element": "Base", "name": "Label", "type": "Text" },
+            { "op": "addComponent", "name": "Derived", "baseType": "Base" },
+            { "op": "setVariable", "element": "Derived", "name": "Label.Text", "value": "Hi" }
+            """);
+
+        EditOk(projectPath, """{ "op": "renameInstance", "element": "Base", "name": "Label", "newName": "Caption" }""");
+
+        ComponentSave derived = Load(projectPath).GetComponentSave("Derived")!;
+        derived.GetInstance("Caption")!.DefinedByBase.ShouldBeTrue();
+        derived.GetInstance("Label").ShouldBeNull();
+        derived.GetDefaultStateOrThrow().GetVariableSave("Caption.Text")!.Value.ShouldBe("Hi");
+        ShouldBeCleanAndStable(projectPath);
+    }
+
+    [Fact]
+    public void RenameCategory_NeededByBehavior_IsRefused()
+    {
+        string projectPath = CreateEmptyProject();
+        EditOk(projectPath, """
+            { "op": "addComponent", "name": "Card" },
+            { "op": "addCategory", "element": "Card", "name": "Look" }
+            """);
+        GumProjectSave project = Load(projectPath);
+        BehaviorSave behavior = new BehaviorSave { Name = "Styled" };
+        behavior.Categories.Add(new StateSaveCategory { Name = "Look" });
+        string behaviorFolder = Path.Combine(Folder(projectPath), "Behaviors");
+        Directory.CreateDirectory(behaviorFolder);
+        behavior.Save(Path.Combine(behaviorFolder, "Styled.behx"));
+        project.BehaviorReferences.Add(new BehaviorReference { Name = "Styled" });
+        project.GetComponentSave("Card")!.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "Styled" });
+        project.Save(projectPath, saveElements: true);
+        Dictionary<string, string> before = Snapshot(projectPath);
+
+        CliTestHelper result = Edit(projectPath, """{ "op": "renameCategory", "element": "Card", "name": "Look", "newName": "Style" }""");
+
+        result.ExitCode.ShouldBe(1);
+        result.StandardError.ShouldContain("needed by the following behavior(s)");
+        result.StandardError.ShouldContain("Styled");
+        Snapshot(projectPath).ShouldBe(before);
+    }
+
+    [Fact]
     public void RenameState_OfDefaultState_IsRefused()
     {
         string projectPath = CreateEmptyProject();

@@ -134,17 +134,9 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
             // This category can only be renamed if no behaviors require it
             var behaviorsNeedingCategory = _deleteLogic.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
 
-            if (behaviorsNeedingCategory.Any())
+            if (ProjectRenamer.GetWhyCategoryCannotBeRenamed(category, behaviorsNeedingCategory) is { } whyNot)
             {
-                string message =
-                    $"The category {category.Name} cannot be renamed because it is needed by the following behavior(s):";
-
-                foreach (var behavior in behaviorsNeedingCategory)
-                {
-                    message += "\n" + behavior.Name;
-                }
-
-                _dialogService.ShowMessage(message);
+                _dialogService.ShowMessage(whyNot);
                 return;
             }
 

@@ -60,6 +60,24 @@ public class RenameLogicTests
     }
 
     [Fact]
+    public void AskToRenameStateCategory_CategoryNeededByBehavior_ShowsMessageNamingBehaviorAndAsksNothing()
+    {
+        var element = new ComponentSave { Name = "MyComponent" };
+        var category = new StateSaveCategory { Name = "ButtonCategory" };
+        element.Categories.Add(category);
+        _mocker.GetMock<IDeleteLogic>()
+            .Setup(d => d.GetBehaviorsNeedingCategory(category, element))
+            .Returns(new List<BehaviorSave> { new BehaviorSave { Name = "ButtonBehavior" } });
+
+        _renameLogic.AskToRenameStateCategory(category, element);
+
+        _mocker.GetMock<IDialogService>().Verify(d => d.ShowMessage(
+            "The category ButtonCategory cannot be renamed because it is needed by the following behavior(s):" + "\n" + "ButtonBehavior",
+            It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+        _mocker.GetMock<IDialogService>().Verify(d => d.GetUserString(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<GetUserStringOptions>()), Times.Never);
+    }
+
+    [Fact]
     public void AskToRenameStateCategory_BehaviorOwner_PassesValidatorThatUsesNameVerifier()
     {
         var behavior = new BehaviorSave { Name = "MyBehavior" };
