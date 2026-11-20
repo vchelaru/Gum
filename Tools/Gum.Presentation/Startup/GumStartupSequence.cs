@@ -45,10 +45,20 @@ public class GumStartupSequence
         StartupTiming.Mark("ProjectManager.LoadSettings");
 
         // The project load below waits on the serializer setup; this overlaps it with plugin start-up.
+        // The Code Output plugin's load reads ProjectCodeSettings.codsj with Newtonsoft.Json, whose
+        // first use is warmed here too, for either project format.
         // Not awaited: the launcher logs its own failures.
         _ = new ProjectSerializerWarmupLauncher(
-            () => new Gum.ProjectServices.JsonProjectSerializerWarmup().WarmUp(),
-            () => new Gum.ProjectServices.XmlProjectSerializerWarmup().WarmUp(),
+            () =>
+            {
+                new Gum.ProjectServices.JsonProjectSerializerWarmup().WarmUp();
+                WarmUpCodeOutputSettings();
+            },
+            () =>
+            {
+                new Gum.ProjectServices.XmlProjectSerializerWarmup().WarmUp();
+                WarmUpCodeOutputSettings();
+            },
             exception => ToolLog.Write("serializer warm-up failed", detail: exception.ToString()),
             Task.Run)
             .Start(Environment.GetCommandLineArgs(), projectManager.LastProject);
@@ -115,6 +125,10 @@ public class GumStartupSequence
 
         fileWatchTimer.Start(TimeSpan.FromMilliseconds(500));
     }
+
+    private static void WarmUpCodeOutputSettings() =>
+        new Gum.ProjectServices.CodeGeneration.CodeOutputSettingsJsonWarmup().WarmUp(
+            Gum.ProjectServices.CodeGeneration.CodeOutputProjectSettingsManager.CreateDefaultSettings());
 
     /// <summary>
     /// Applies the platform's keyboard conventions to the grid's editors, which the grid creates
