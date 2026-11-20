@@ -214,6 +214,9 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IFileWatchManager>(provider => provider.GetRequiredService<FileWatchManager>());
         services.AddSingleton<ReorderLogic>();
         services.AddSingleton<IReorderLogic>(provider => provider.GetRequiredService<ReorderLogic>());
+        services.AddSingleton<IBaseTypeVariableRemover, BaseTypeVariableRemover>();
+        services.AddSingleton<IInstanceAddRules, InstanceAddRules>();
+        services.AddSingleton<IBaseTypeChangeLogic, BaseTypeChangeLogic>();
         services.AddSingleton<IBaseTypeVariablePruner, BaseTypeVariablePruner>();
         services.AddSingleton<InheritanceLogic>();
 

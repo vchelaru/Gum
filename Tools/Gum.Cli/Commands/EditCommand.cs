@@ -230,16 +230,19 @@ public static class EditCommand
         ElementCreationLogic elementCreation = new ElementCreationLogic();
         pendingAnimations ??= new PendingAnimationEdits(new FileElementAnimationsProvider());
         ElementNameValidator nameValidator = new ElementNameValidator(pendingAnimations);
+        InstanceAddRules instanceAddRules = new InstanceAddRules(new CircularReferenceManager(ObjectFinder.Self));
+        VariableDefinedByTypeLogic variableDefinedByType = new VariableDefinedByTypeLogic();
+        InheritanceSync inheritanceSync = new InheritanceSync();
         return new ProjectEditService(
             elementCreation,
             new InstanceCreationLogic(),
-            new InstanceAddRules(new CircularReferenceManager(ObjectFinder.Self)),
+            instanceAddRules,
             new StateCreationLogic(),
             new CategoryVariablePropagator(),
             new CustomVariableLogic(new StateVariableSorter()),
             new ExposeVariableLogic(),
             new StateVariableWriter(),
-            new VariableDefinedByTypeLogic(),
+            variableDefinedByType,
             nameValidator,
             new DefaultTypeResolver(),
             new InstanceRemovalLogic(referenceFinder, overrideRemover),
@@ -254,7 +257,8 @@ public static class EditCommand
             new ElementRemovalLogic(),
             new VariableReferenceValidator(),
             new VariableReferenceCascade(),
-            new InheritanceSync(),
+            inheritanceSync,
+            new BaseTypeChangeLogic(instanceAddRules, new BaseTypeVariableRemover(variableDefinedByType, referenceFinder, overrideRemover), inheritanceSync),
             new AnimationEditOperations(new AnimationEditLogic(nameValidator), pendingAnimations));
     }
 

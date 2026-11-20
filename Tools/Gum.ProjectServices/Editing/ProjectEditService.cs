@@ -156,6 +156,8 @@ public partial class ProjectEditService : IProjectEditService
     private readonly IComponentBehaviorLogic _componentBehaviors;
     private readonly IInheritanceSync _inheritanceSync;
     private readonly ReorderEditOperations _reorder;
+    private readonly IBaseTypeChangeLogic _baseTypeChange;
+    private readonly InstancePropertyLogic _instanceProperties = new InstancePropertyLogic();
 
     public ProjectEditService(
         IElementCreationLogic elementCreation,
@@ -182,6 +184,7 @@ public partial class ProjectEditService : IProjectEditService
         IVariableReferenceValidator referenceValidator,
         IVariableReferenceCascade referenceCascade,
         IInheritanceSync inheritanceSync,
+        IBaseTypeChangeLogic baseTypeChange,
         AnimationEditOperations animationOperations)
     {
         _reorder = new ReorderEditOperations(inheritanceSync, stateRemoval, propagator, nameValidator);
@@ -210,6 +213,7 @@ public partial class ProjectEditService : IProjectEditService
         _referenceCascade = referenceCascade;
         _componentBehaviors = new ComponentBehaviorLogic(stateCreation);
         _inheritanceSync = inheritanceSync;
+        _baseTypeChange = baseTypeChange;
 
         _operations = new Dictionary<string, OperationSpec>
         {
@@ -245,6 +249,8 @@ public partial class ProjectEditService : IProjectEditService
             ["renameCategory"] = new(Strings("element", "name", "newName"), None, RenameCategory),
             ["renameVariable"] = new(Strings("element", "name", "newName"), None, RenameVariable),
             ["renameBehavior"] = new(Strings("name", "newName"), None, RenameBehavior),
+            ["setBaseType"] = new(Strings("element", "baseType"), Strings("instance"), SetBaseType),
+            ["setInstanceProperty"] = new(Fields(Str("element"), Str("instance"), Str("property"), new EditField("value", EditFieldType.Bool)), None, SetInstanceProperty),
             ["setProjectProperty"] = new(Fields(Str("name"), new EditField("value", EditFieldType.Any)), None, SetProjectProperty),
             ["addAnimation"] = new(Strings("element", "name"), Fields(new EditField("loops", EditFieldType.Bool)), animationOperations.AddAnimation),
             ["removeAnimation"] = new(Strings("element", "name"), None, animationOperations.RemoveAnimation),
@@ -621,6 +627,45 @@ public partial class ProjectEditService : IProjectEditService
         _childDetacher.DetachChildren(instance, element);
         _instanceRemoval.RemoveInstance(instance, element);
         _inheritanceSync.RemoveInstance(element, instance);
+    }
+
+    // Like picking another Base Type in the tool: the variables the new type lacks go, and inheriting elements follow.
+    private void SetBaseType(GumProjectSave project, JsonElement operation)
+    {
+        ElementSave element = GetElement(project, operation);
+        string baseType = GetString(operation, "baseType");
+        if (GetOptionalString(operation, "instance") is { } instanceName)
+        {
+            InstanceSave instance = element.GetInstance(instanceName)
+                ?? throw new EditException($"{element.Name} has no instance named {instanceName}.");
+            if (_baseTypeChange.GetWhyCannotSetInstanceBaseType(element, instance, baseType) is { } whyNotInstance)
+            {
+                throw new EditException(whyNotInstance);
+            }
+            _baseTypeChange.SetInstanceBaseType(element, instance, baseType);
+        }
+        else
+        {
+            if (_baseTypeChange.GetWhyCannotSetElementBaseType(element, baseType) is { } whyNot)
+            {
+                throw new EditException(whyNot);
+            }
+            _baseTypeChange.SetElementBaseType(element, baseType);
+        }
+    }
+
+    private void SetInstanceProperty(GumProjectSave project, JsonElement operation)
+    {
+        ElementSave element = GetElement(project, operation);
+        string instanceName = GetString(operation, "instance");
+        string property = GetString(operation, "property");
+        InstanceSave instance = element.GetInstance(instanceName)
+            ?? throw new EditException($"{element.Name} has no instance named {instanceName}.");
+        if (_instanceProperties.GetWhyCannotSet(element, instance, property) is { } whyNot)
+        {
+            throw new EditException(whyNot);
+        }
+        _instanceProperties.Set(instance, property, operation.GetProperty("value").GetBoolean());
     }
 
     private void RemoveState(GumProjectSave project, JsonElement operation)
