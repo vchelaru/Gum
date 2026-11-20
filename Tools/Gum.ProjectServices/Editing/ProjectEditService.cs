@@ -475,10 +475,10 @@ public class ProjectEditService : IProjectEditService
     // The reaction the tool runs after a typed edit, without the canvas, so no row that reads the edit is left
     // holding a stale value.
     private void ReactToEdit(ElementSave element, StateSave state, Dictionary<string, object?> valuesBefore,
-        InstanceSave? instance, string unqualifiedName, string? qualifiedName = null)
+        InstanceSave? instance, string qualifiedName, string? unqualifiedName = null)
     {
-        EditedMember edit = new EditedMember(instance, unqualifiedName,
-            qualifiedName ?? (instance == null ? unqualifiedName : instance.Name + "." + unqualifiedName));
+        // ResolveVariable returns an instance variable already qualified ("Instance.Width").
+        EditedMember edit = new EditedMember(instance, unqualifiedName ?? VariableSave.GetRootName(qualifiedName), qualifiedName);
         _referenceCascade.ReactToEdit(element, state, valuesBefore, new[] { edit }, _ => null);
     }
 
@@ -748,7 +748,7 @@ public class ProjectEditService : IProjectEditService
         // The same reaction the tool runs after a typed edit, without the canvas: this state, its behaviors'
         // tool-only lines, the element's other states, the elements that read this one, and references inside
         // the instance's type.
-        ReactToEdit(element, state, VariableReferenceCascade.SnapshotValues(state), instance, "VariableReferences", listName);
+        ReactToEdit(element, state, VariableReferenceCascade.SnapshotValues(state), instance, listName, "VariableReferences");
     }
 
     // The Project Properties settings a game reads. Editor-only view settings (outlines, checkerboard) are left out.

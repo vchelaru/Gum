@@ -94,7 +94,7 @@ public class EditReferenceCascadeTests : BaseTestClass
         string projectPath = CreateEmptyProject();
         Edit(projectPath, """
             { "version": 1, "operations": [
-              { "op": "addComponent", "name": "Panel" },
+              { "op": "addComponent", "name": "Panel", "baseType": "Container" },
               { "op": "addInstance", "element": "Panel", "name": "PlayButton", "type": "Container" },
               { "op": "addCategory", "element": "Panel", "name": "Size" },
               { "op": "addState", "element": "Panel", "category": "Size", "name": "Big" },
@@ -142,6 +142,31 @@ public class EditReferenceCascadeTests : BaseTestClass
         StateSave state = project.Screens.Single().DefaultState!;
         state.GetVariableSave("PlayButton.Width").ShouldBeNull();
         state.GetValue("QuitButton.Width").ShouldBe(75f);
+        AssertConsistent(projectPath);
+    }
+
+    private const string PanelWithStateReader = """
+        { "version": 1, "operations": [
+          { "op": "addComponent", "name": "Panel", "baseType": "Container" },
+          { "op": "addInstance", "element": "Panel", "name": "C", "type": "Container" },
+          { "op": "addCategory", "element": "Panel", "name": "Size" },
+          { "op": "addState", "element": "Panel", "category": "Size", "name": "Big" },
+          { "op": "setVariable", "element": "Panel", "name": "C.Width", "value": 500 },
+          { "op": "setVariableReferences", "element": "Panel", "category": "Size", "state": "Big", "lines": [ "Height = C.Width * 2" ] }
+        ] }
+        """;
+
+    [Fact]
+    public void SetVariable_UpdatesAStateRowThatReadsAnInstanceVariable()
+    {
+        string projectPath = CreateEmptyProject();
+        Edit(projectPath, PanelWithStateReader);
+
+        Edit(projectPath, """
+            { "version": 1, "operations": [ { "op": "setVariable", "element": "Panel", "name": "C.Width", "value": 40 } ] }
+            """);
+
+        Load(projectPath).Components.Single().Categories.Single().States.Single().GetValue("Height").ShouldBe(80f);
         AssertConsistent(projectPath);
     }
 
