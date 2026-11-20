@@ -1,5 +1,7 @@
 using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.Input;
+using RenderingLibrary;
 using Gum.Mvvm;
 using Gum.Wireframe;
 using Shouldly;
@@ -217,6 +219,46 @@ public class ListBoxBindingSetDuringConstructionTests : BaseTestClass
 
         listBox.ListBoxItems.Count.ShouldBe(3);
         listBox.SelectedIndex.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ClickTemplatedRow_ShouldSelectItAndPushToViewModel()
+    {
+        TowerList listBox = CreateTowerList(false);
+        TowerViewModel viewModel = new("A", "B", "C");
+        listBox.BindingContext = viewModel;
+        InteractiveGue row = listBox.ListBoxItems[2].Visual;
+        float x = row.GetAbsoluteX() + row.AbsoluteWidth / 2;
+        float y = row.GetAbsoluteY() + row.AbsoluteHeight / 2;
+        Moq.Mock<ICursor> cursor = new();
+        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(x);
+        cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(y);
+        cursor.Setup(c => c.X).Returns((int)x);
+        cursor.Setup(c => c.Y).Returns((int)y);
+        cursor.Setup(c => c.LastInputDevice).Returns(InputDevice.Mouse);
+        cursor.Setup(c => c.PrimaryPush).Returns(true);
+        cursor.SetupProperty(c => c.VisualOver);
+        cursor.SetupProperty(c => c.WindowPushed);
+        FrameworkElement.MainCursor = cursor.Object;
+
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(listBox.Visual, cursor.Object, null!, 0);
+
+        listBox.SelectedIndex.ShouldBe(2);
+        listBox.ListBoxItems[2].IsSelected.ShouldBeTrue();
+        viewModel.SelectedTower.ShouldBe(2);
+    }
+
+    [Fact]
+    public void SelectedRow_ShouldApplySelectedVisualState()
+    {
+        TowerList listBox = CreateTowerList(false);
+        listBox.BindingContext = new TowerViewModel("A", "B", "C");
+
+        listBox.SelectedIndex = 1;
+
+        listBox.ListBoxItems[1].IsSelected.ShouldBeTrue();
+        listBox.ListBoxItems[1].Visual.Categories.ContainsKey("ListBoxItemCategory");
+        listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
     }
 
     #endregion
