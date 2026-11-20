@@ -16,7 +16,7 @@ Available in December 2026, or now if building Gum from source.
 - `<project.gumj>`: Path to the `.gumj` or `.gumx` project file
 - `<operations.json>`: Path to the operations file
 - `--json`: Report new errors as a JSON array, in the same format as [check](check.md)
-- `--schema`: Print every operation with its required and optional fields and the JSON type each field takes (`string`, `bool`, or `any` for a field such as `value` that takes any JSON value) instead of editing. It takes no project or operations file. The text output marks operations that accept a standard element with `*`. With `--json` it prints `{ "version": 1, "operations": [ { "op": "setVariable", "standardElements": true, "required": [ { "name": "element", "type": "string" }, ... ], "optional": [ ... ] } ] }`.
+- `--schema`: Print every operation with its required and optional fields and the JSON type each field takes (`string`, `bool`, or `any` for a field such as `value` that takes any JSON value) instead of editing. It takes no project or operations file. The text output marks operations that accept a standard element with `*`. It also lists the names `setProjectProperty` sets, with their value type and allowed values. With `--json` it prints `{ "version": 1, "projectProperties": [ { "name": "FontGenerator", "type": "string", "allowed": ["BmFont", "KernSmith"], "description": "..." } ], "operations": [ { "op": "setVariable", "standardElements": true, "required": [ { "name": "element", "type": "string" }, ... ], "optional": [ ... ] } ] }`.
 
 ## The Operations File
 
@@ -234,11 +234,33 @@ Available in December 2026, or now if building Gum from source.
 
 ```json
 { "op": "setProjectProperty", "name": "DefaultCanvasWidth", "value": 256 }
-{ "op": "setProjectProperty", "name": "DefaultCanvasHeight", "value": 224 }
 { "op": "setProjectProperty", "name": "TextureFilter", "value": "Point" }
+{ "op": "setProjectProperty", "name": "LocalizationFiles", "value": ["Localization/strings.csv"] }
+{ "op": "setProjectProperty", "name": "FontRanges", "value": "32-126,160-255,1024-1279" }
+{ "op": "setProjectProperty", "name": "FontGenerator", "value": "KernSmith" }
 ```
 
-Sets a project property, like the **Canvas** and **General** pages of the tool's **Project Properties**. `DefaultCanvasWidth` and `DefaultCanvasHeight` set the canvas size and take a positive whole number. `TextureFilter` takes `"Point"` or `"Linear"`. Any other name fails the edit, and the message lists the names it accepts.
+Sets a project property, like the **Canvas**, **General**, **Localization** and **Fonts** pages of the tool's **Project Properties**. `edit --schema` lists every name with its value type and, for a fixed set, the allowed values. Any other name fails the edit, and the message lists the names it accepts.
+
+| Name | Value |
+| --- | --- |
+| `DefaultCanvasWidth`, `DefaultCanvasHeight` | Positive whole number. |
+| `TextureFilter` | `"Point"` or `"Linear"`. |
+| `RestrictToUnitValues`, `RestrictFileNamesForAndroid` | `true` or `false`. |
+| `EngineProfile` | Path of the `.gumengine` profile, or `""` for none. |
+| `LocalizationFiles` | Array of CSV or RESX paths. It replaces the list, and `[]` clears it. |
+| `CurrentLanguageIndex` | Whole number from 0, the language to start in. |
+| `ShowLocalizationInGum` | `true` or `false`. |
+| `FontRanges` | Project-wide character ranges such as `"32-126,160-255"`. Spaces are removed, and a malformed range fails the edit. |
+| `FontGenerator` | `"BmFont"` or `"KernSmith"`. |
+| `FontSpacingHorizontal`, `FontSpacingVertical` | Whole number from 0. |
+| `AutoSizeFontOutputs` | `true` or `false`. |
+| `SinglePixelTextureFile` | Path of an image, or `""` for none. |
+| `SinglePixelTextureLeft`, `SinglePixelTextureTop`, `SinglePixelTextureRight`, `SinglePixelTextureBottom` | Whole number from 0, or `null` for the whole image. |
+
+Paths are stored relative to the project file with forward slashes, so an absolute path works. A path is not checked to exist, so create the file first or run [check](check.md) afterward. Set `FontRanges` before running [fonts](fonts.md), which bakes with the new ranges. `SinglePixelTexture*` only changes the tool's canvas; a game does not read it.
+
+`UseFontCharacterFile` (it reads a `.gumfcs` file in the tool) and `FontRangeEntries` (per-font ranges, edited on the tool's **Fonts** page) are refused with a message naming `FontRanges` instead. Editor-only view settings such as outlines and the checkerboard are not set.
 
 ## Animations
 

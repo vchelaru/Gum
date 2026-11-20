@@ -5,6 +5,7 @@ using Gum.Commands;
 using Gum.Localization;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.ProjectServices;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using ToolsUtilities;
@@ -76,22 +77,10 @@ public class ProjectPropertiesChangeLogic
                 // Normalize any absolute paths to project-relative so .gumx stays portable. An
                 // unsaved project has no directory to be relative to, so paths stay absolute.
                 string? projectDirectory = _projectState.ProjectDirectory;
-                bool normalizedAny = false;
-                List<string> normalized = new List<string>(viewModel.LocalizationFiles.Count);
-                foreach (string file in viewModel.LocalizationFiles)
-                {
-                    if (projectDirectory != null && !string.IsNullOrEmpty(file) && FileManager.IsRelative(file) == false)
-                    {
-                        normalized.Add(FileManager.MakeRelative(file, projectDirectory, preserveCase: true));
-                        normalizedAny = true;
-                    }
-                    else
-                    {
-                        normalized.Add(file);
-                    }
-                }
+                List<string> normalized = viewModel.LocalizationFiles
+                    .Select(file => ProjectRelativePaths.ToProjectRelative(file, projectDirectory)).ToList();
 
-                if (normalizedAny)
+                if (!normalized.SequenceEqual(viewModel.LocalizationFiles))
                 {
                     // This re-enters HandlePropertyChanged which will hit the else branch.
                     viewModel.LocalizationFiles = normalized;
@@ -127,20 +116,18 @@ public class ProjectPropertiesChangeLogic
             case nameof(viewModel.SinglePixelTextureRight):
             case nameof(viewModel.SinglePixelTextureBottom):
 
-                if (_projectState.ProjectDirectory is { } projectDirectoryForTexture
-                    && !string.IsNullOrEmpty(viewModel.SinglePixelTextureFile)
-                    && FileManager.IsRelative(viewModel.SinglePixelTextureFile) == false)
+                string relativeTexture = ProjectRelativePaths.ToProjectRelative(viewModel.SinglePixelTextureFile, _projectState.ProjectDirectory);
+                if (relativeTexture != viewModel.SinglePixelTextureFile)
                 {
                     // This will loop:
-                    viewModel.SinglePixelTextureFile = FileManager.MakeRelative(viewModel.SinglePixelTextureFile,
-                        projectDirectoryForTexture, preserveCase: true);
+                    viewModel.SinglePixelTextureFile = relativeTexture;
                     shouldSaveAndRefresh = false;
                 }
 
                 break;
             case nameof(viewModel.EngineProfile):
 
-                string? normalizedProfile = ToProjectRelativeReference(viewModel.EngineProfile, _projectState.ProjectDirectory);
+                string? normalizedProfile = ProjectRelativePaths.ToProjectRelativeReference(viewModel.EngineProfile, _projectState.ProjectDirectory);
                 if (normalizedProfile != viewModel.EngineProfile)
                 {
                     // This will loop:
@@ -178,22 +165,5 @@ public class ProjectPropertiesChangeLogic
 
             _fileCommands.TryAutoSaveProject();
         }
-    }
-
-    /// <summary>
-    /// The engine profile reference as the project stores it: relative to <paramref name="projectDirectory"/> with forward
-    /// slashes ("../" segments for a profile outside it). A rooted path stays as it is when the project has no folder yet
-    /// or the profile is on another drive.
-    /// </summary>
-    public static string ToProjectRelativeReference(string reference, string? projectDirectory)
-    {
-        string path = reference.Replace('\\', '/');
-        if (projectDirectory == null || !Path.IsPathRooted(path))
-        {
-            return path;
-        }
-
-        string relative = Path.GetRelativePath(projectDirectory, path).Replace('\\', '/');
-        return Path.IsPathRooted(relative) ? path : relative;
     }
 }

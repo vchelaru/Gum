@@ -95,6 +95,11 @@ public interface IProjectEditService
     /// Every operation <see cref="Apply"/> accepts, with its required and optional fields.
     /// </summary>
     IReadOnlyList<EditOperationSchema> GetOperationSchemas();
+
+    /// <summary>
+    /// Every project property the <c>setProjectProperty</c> operation sets, with its value type and allowed values.
+    /// </summary>
+    IReadOnlyList<ProjectPropertySchema> GetProjectPropertySchemas();
 }
 
 /// <inheritdoc/>
@@ -231,6 +236,9 @@ public class ProjectEditService : IProjectEditService
             ["removeKeyframe"] = new(Fields(Str("element"), Str("animation"), Str("state"), new EditField("time", EditFieldType.Any)), None, animationOperations.RemoveKeyframe),
         };
     }
+
+    /// <inheritdoc/>
+    public IReadOnlyList<ProjectPropertySchema> GetProjectPropertySchemas() => ProjectPropertySetter.GetSchemas();
 
     /// <inheritdoc/>
     public IReadOnlyList<EditOperationSchema> GetOperationSchemas() =>
@@ -748,38 +756,9 @@ public class ProjectEditService : IProjectEditService
         _referenceCascade.ApplyToInstanceInternals(element, instance, state, "VariableReferences", state.GetValueRecursive(listName));
     }
 
-    // The Project Properties settings a game reads. Editor-only view settings (outlines, checkerboard) are left out.
-    private static readonly Dictionary<string, Action<GumProjectSave, JsonElement>> ProjectProperties = new()
-    {
-        [nameof(GumProjectSave.DefaultCanvasWidth)] = (project, value) => project.DefaultCanvasWidth = GetPositiveInt(value),
-        [nameof(GumProjectSave.DefaultCanvasHeight)] = (project, value) => project.DefaultCanvasHeight = GetPositiveInt(value),
-        [nameof(GumProjectSave.TextureFilter)] = (project, value) => project.TextureFilter =
-            value.ValueKind == JsonValueKind.String && value.GetString() is "Point" or "Linear"
-                ? value.GetString()!
-                : throw new EditException($"{value.GetRawText()} is not a TextureFilter: use \"Point\" or \"Linear\"."),
-    };
+    private void SetProjectProperty(GumProjectSave project, JsonElement operation) =>
+        ProjectPropertySetter.Set(project, GetString(operation, "name"), operation.GetProperty("value"));
 
-    private static int GetPositiveInt(JsonElement value) =>
-        value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out int number) && number > 0
-            ? number
-            : throw new EditException($"{value.GetRawText()} is not a positive whole number.");
-
-    private void SetProjectProperty(GumProjectSave project, JsonElement operation)
-    {
-        string name = GetString(operation, "name");
-        if (!ProjectProperties.TryGetValue(name, out Action<GumProjectSave, JsonElement>? apply))
-        {
-            throw new EditException($"{name} is not a project property setProjectProperty sets. It sets: {string.Join(", ", ProjectProperties.Keys)}.");
-        }
-        try
-        {
-            apply(project, operation.GetProperty("value"));
-        }
-        catch (EditException ex)
-        {
-            throw new EditException($"{name}: {ex.Message}");
-        }
-    }
 
     #endregion
 
