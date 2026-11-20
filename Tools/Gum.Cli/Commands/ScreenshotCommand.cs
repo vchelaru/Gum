@@ -183,7 +183,27 @@ public static class ScreenshotCommand
             VariableOverrides = overrides,
         };
 
-        ScreenshotResult result = service.TakeScreenshot(request);
+        // MonoGame/KNI/FNA and raylib each compile their own copy of the runtime's property-assignment
+        // dispatcher, so each has its own error event; the backend that renders raises the one it binds.
+        MissingFontHint missingFonts = new MissingFontHint();
+        Action<string> onRuntimeError = missingFonts.Add;
+        Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError += onRuntimeError;
+        RaylibGum.Renderables.CustomSetPropertyOnRenderable.PropertyAssignmentError += onRuntimeError;
+        ScreenshotResult result;
+        try
+        {
+            result = service.TakeScreenshot(request);
+        }
+        finally
+        {
+            Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError -= onRuntimeError;
+            RaylibGum.Renderables.CustomSetPropertyOnRenderable.PropertyAssignmentError -= onRuntimeError;
+        }
+
+        if (missingFonts.Files.Count > 0)
+        {
+            Console.Error.WriteLine(MissingFontHint.BuildHint(missingFonts.Files, fullProjectPath, overrides.Count > 0));
+        }
 
         if (!result.Success)
         {
