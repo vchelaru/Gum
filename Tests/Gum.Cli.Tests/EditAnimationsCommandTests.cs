@@ -275,6 +275,55 @@ public class EditAnimationsCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Edit_WhenASecondSidecarIsReadOnly_FailsCleanlyAndRestoresTheFirst()
+    {
+        string projectPath = CreateEmptyProject();
+        Edit(projectPath, PopupSetup + """
+            ,
+            { "op": "addComponent", "name": "Panel" },
+            { "op": "addAnimation", "element": "Popup", "name": "Old" },
+            { "op": "addAnimation", "element": "Panel", "name": "Locked" }
+            """).ExitCode.ShouldBe(0);
+        string panelFile = Path.Combine(Path.GetDirectoryName(projectPath)!, "Components", "PanelAnimations.ganx");
+        Dictionary<string, string> before = ReadProjectFiles(projectPath);
+        File.SetAttributes(panelFile, FileAttributes.ReadOnly);
+        try
+        {
+            CliTestHelper result = Edit(projectPath, """
+                { "op": "addAnimation", "element": "Popup", "name": "New" },
+                { "op": "addAnimation", "element": "Panel", "name": "Blocked" }
+                """);
+
+            result.ExitCode.ShouldBe(1, result.StandardOutput + result.StandardError);
+            result.StandardError.ShouldContain("PanelAnimations.ganx");
+            ReadProjectFiles(projectPath).ShouldBe(before);
+        }
+        finally
+        {
+            File.SetAttributes(panelFile, FileAttributes.Normal);
+        }
+    }
+
+    [Fact]
+    public void Edit_OneElementsAnimations_LeaveAnotherElementsSidecarUntouched()
+    {
+        string projectPath = CreateEmptyProject();
+        Edit(projectPath, PopupSetup + """
+            ,
+            { "op": "addComponent", "name": "Panel" },
+            { "op": "addAnimation", "element": "Panel", "name": "Slide" }
+            """).ExitCode.ShouldBe(0);
+        string panelFile = Path.Combine(Path.GetDirectoryName(projectPath)!, "Components", "PanelAnimations.ganx");
+        byte[] panelBefore = File.ReadAllBytes(panelFile);
+
+        Edit(projectPath, """
+            { "op": "addAnimation", "element": "Popup", "name": "FadeIn" }
+            """).ExitCode.ShouldBe(0);
+
+        File.ReadAllBytes(panelFile).ShouldBe(panelBefore);
+    }
+
+    [Fact]
     public void EditSchema_ListsTheAnimationOperations()
     {
         CliTestHelper result = CliTestHelper.Run("edit", "--schema");

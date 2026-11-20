@@ -57,12 +57,13 @@ public class PendingAnimationEdits : IElementAnimationsProvider, ITopLevelNameSo
 
     /// <summary>
     /// Writes every changed sidecar, deleting one left with no animations. Skips an element the project no longer has.
-    /// If a write fails, the sidecars already written are put back and the exception is rethrown. Keeps what it
+    /// If a write fails, the sidecars already written are put back and an IOException naming the file is thrown. Keeps what it
     /// replaced so <see cref="Rollback"/> can undo a successful save when a later step fails.
     /// </summary>
     public void Save(GumProjectSave project)
     {
         _backups.Clear();
+        string? failingPath = null;
         try
         {
             foreach ((ElementSave element, ElementAnimationsSave animations) in _edited)
@@ -73,36 +74,49 @@ public class PendingAnimationEdits : IElementAnimationsProvider, ITopLevelNameSo
                 }
                 if (ElementAnimationFiles.GetPath(element, project) is { } path)
                 {
-                    _backups.Add((path.FullPath, File.Exists(path.FullPath) ? File.ReadAllBytes(path.FullPath) : null));
-                    ElementAnimationFiles.WriteOrDelete(path.FullPath, animations);
+                    failingPath = path.FullPath;
+                    byte[]? original = File.Exists(failingPath) ? File.ReadAllBytes(failingPath) : null;
+                    ElementAnimationFiles.WriteOrDelete(failingPath, animations);
+                    // Recorded only once written: a file that failed to write has nothing to put back.
+                    _backups.Add((failingPath, original));
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
-            Rollback();
-            throw;
+            string restoreFailures = Rollback();
+            throw new IOException($"cannot write {failingPath}: {ex.Message}{restoreFailures}", ex);
         }
     }
 
     /// <summary>
-    /// Puts back every sidecar the last <see cref="Save"/> replaced, newest first.
+    /// Puts back every sidecar the last <see cref="Save"/> replaced, newest first. Never throws: each file is
+    /// restored on its own, and the result names any that could not be (empty when all were).
     /// </summary>
-    public void Rollback()
+    public string Rollback()
     {
+        string failures = "";
         for (int i = _backups.Count - 1; i >= 0; i--)
         {
             (string path, byte[]? content) = _backups[i];
-            if (content != null)
+            try
             {
-                File.WriteAllBytes(path, content);
+                if (content != null)
+                {
+                    File.WriteAllBytes(path, content);
+                }
+                else if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
             }
-            else if (File.Exists(path))
+            catch (Exception ex)
             {
-                File.Delete(path);
+                failures += $" Could not put back {path}: {ex.Message}";
             }
         }
         _backups.Clear();
+        return failures;
     }
 
     /// <inheritdoc/>

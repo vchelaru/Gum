@@ -127,4 +127,31 @@ public class PendingAnimationEditsTests : BaseTestClass
 
         File.ReadAllText(SidecarPath()).ShouldBe(before);
     }
+
+    [Fact]
+    public void Save_WhenALaterSidecarIsReadOnly_RestoresEarlierOnesAndNamesTheFile()
+    {
+        ComponentSave popup = EditingTestProject.AddComponent(Project, "Popup");
+        ComponentSave other = EditingTestProject.AddComponent(Project, "Other");
+        new ElementAnimationsSave { Animations = { new AnimationSave { Name = "Old" } } }.Save(SidecarPath());
+        string before = File.ReadAllText(SidecarPath());
+        string otherPath = Path.Combine(_directory, "Components", "OtherAnimations.ganx");
+        new ElementAnimationsSave { Animations = { new AnimationSave { Name = "Locked" } } }.Save(otherPath);
+        PendingAnimationEdits pending = new PendingAnimationEdits(new FileElementAnimationsProvider());
+        pending.GetForEdit(popup, Project).Animations.Add(new AnimationSave { Name = "New" });
+        pending.GetForEdit(other, Project).Animations.Add(new AnimationSave { Name = "Blocked" });
+        File.SetAttributes(otherPath, FileAttributes.ReadOnly);
+        try
+        {
+            Exception exception = Should.Throw<Exception>(() => pending.Save(Project));
+
+            exception.Message.ShouldContain("OtherAnimations.ganx");
+            File.ReadAllText(SidecarPath()).ShouldBe(before);
+            pending.Rollback();
+        }
+        finally
+        {
+            File.SetAttributes(otherPath, FileAttributes.Normal);
+        }
+    }
 }
