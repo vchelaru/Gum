@@ -140,6 +140,120 @@ public class GumProjectDependencyWalkerFontTests : IDisposable
         result.FontCacheFiles.ShouldContain("FontCache/" + fntBase + "_0.png");
     }
 
+    // #8399: gumcli fonts writes "<font>-shadow.fnt" next to a dropshadow font; the runtime probes
+    // for it by name, so a bundle without it loads the text with no shadow.
+    [Fact]
+    public void Walk_with_FontCache_includes_the_shadow_fnt_of_a_dropshadow_font()
+    {
+        ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");
+        TestProjectBuilder.AddTextInstanceWithFontCache(screen, "Label", "Arial", 18);
+        screen.DefaultState!.Variables.Add(new VariableSave { SetsValue = true, Name = "Label.HasDropshadow", Type = "bool", Value = true });
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            screens: new[] { screen },
+            standards: new[] { TestProjectBuilder.BuildStandard("Text") });
+
+        string fntRelative = BmfcSave.GetFontCacheFileNameFor(
+            18, "Arial", outline: 0, useFontSmoothing: true, isItalic: false, isBold: false,
+            hasDropshadow: true).Replace('\\', '/');
+        string fntBase = Path.GetFileNameWithoutExtension(fntRelative);
+        string shadowRelative = "FontCache/" + fntBase + "-shadow.fnt";
+
+        // The shadow .fnt shares the primary's page, as gumcli fonts writes it.
+        byte[] shadowFnt = System.Text.Encoding.UTF8.GetBytes(
+            "info face=\"Arial\" size=18\ncommon lineHeight=18 base=14 pages=1\npage id=0 file=\"" + fntBase + "_0.png\"\n");
+        string root = CreateProjectRoot(new[]
+        {
+            (fntRelative, PrimaryFnt(fntBase)),
+            ("FontCache/" + fntBase + "_0.png", EmptyContent),
+            (shadowRelative, shadowFnt),
+        });
+        ObjectFinder.Self.GumProjectSave = project;
+
+        WalkResult result = new GumProjectDependencyWalker().Walk(project, root, GumBundleInclusion.FontCache);
+
+        result.FontCacheFiles.ShouldContain(fntRelative);
+        result.FontCacheFiles.ShouldContain(shadowRelative);
+        result.FontCacheFiles.ShouldContain("FontCache/" + fntBase + "_0.png");
+        result.MissingFiles.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Walk_with_FontCache_includes_the_separate_page_of_a_shadow_fnt()
+    {
+        ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");
+        TestProjectBuilder.AddTextInstanceWithFontCache(screen, "Label", "Arial", 18);
+        screen.DefaultState!.Variables.Add(new VariableSave { SetsValue = true, Name = "Label.HasDropshadow", Type = "bool", Value = true });
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            screens: new[] { screen },
+            standards: new[] { TestProjectBuilder.BuildStandard("Text") });
+
+        string fntRelative = BmfcSave.GetFontCacheFileNameFor(
+            18, "Arial", outline: 0, useFontSmoothing: true, isItalic: false, isBold: false,
+            hasDropshadow: true).Replace('\\', '/');
+        string fntBase = Path.GetFileNameWithoutExtension(fntRelative);
+        byte[] shadowFnt = System.Text.Encoding.UTF8.GetBytes(
+            "info face=\"Arial\" size=18\ncommon lineHeight=18 base=14 pages=1\npage id=0 file=\"Shadow.png\"\n");
+        string root = CreateProjectRoot(new[]
+        {
+            (fntRelative, PrimaryFnt(fntBase)),
+            ("FontCache/" + fntBase + "_0.png", EmptyContent),
+            ("FontCache/" + fntBase + "-shadow.fnt", shadowFnt),
+            ("FontCache/Shadow.png", EmptyContent),
+        });
+        ObjectFinder.Self.GumProjectSave = project;
+
+        WalkResult result = new GumProjectDependencyWalker().Walk(project, root, GumBundleInclusion.FontCache);
+
+        result.FontCacheFiles.ShouldContain("FontCache/Shadow.png");
+    }
+
+    [Fact]
+    public void Walk_with_FontCache_reports_nothing_missing_when_a_font_has_no_shadow_fnt()
+    {
+        ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");
+        TestProjectBuilder.AddTextInstanceWithFontCache(screen, "Label", "Arial", 18);
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            screens: new[] { screen },
+            standards: new[] { TestProjectBuilder.BuildStandard("Text") });
+        string fntRelative = BmfcSave.GetFontCacheFileNameFor(
+            18, "Arial", outline: 0, useFontSmoothing: true, isItalic: false, isBold: false).Replace('\\', '/');
+        string fntBase = Path.GetFileNameWithoutExtension(fntRelative);
+        string root = CreateProjectRoot(new[]
+        {
+            (fntRelative, PrimaryFnt(fntBase)),
+            ("FontCache/" + fntBase + "_0.png", EmptyContent),
+        });
+        ObjectFinder.Self.GumProjectSave = project;
+
+        WalkResult result = new GumProjectDependencyWalker().Walk(project, root, GumBundleInclusion.FontCache);
+
+        result.FontCacheFiles.ShouldNotContain(file => file.Contains("-shadow"));
+        result.MissingFiles.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Walk_with_ExternalFiles_includes_the_shadow_fnt_beside_a_CustomFontFile()
+    {
+        const string customFnt = "Fonts/normal.fnt";
+        const string customShadow = "Fonts/normal-shadow.fnt";
+        ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");
+        TestProjectBuilder.AddTextInstanceWithCustomFont(screen, "Label", customFnt);
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            screens: new[] { screen },
+            standards: new[] { TestProjectBuilder.BuildStandard("Text") });
+        byte[] pagelessFnt = System.Text.Encoding.UTF8.GetBytes("info face=\"Arial\" size=8\ncommon lineHeight=8 base=6 pages=0\n");
+        string root = CreateProjectRoot(new[]
+        {
+            (customFnt, pagelessFnt),
+            (customShadow, pagelessFnt),
+        });
+        ObjectFinder.Self.GumProjectSave = project;
+
+        WalkResult result = new GumProjectDependencyWalker().Walk(project, root, GumBundleInclusion.ExternalFiles);
+
+        result.ExternalFiles.ShouldContain(customShadow);
+    }
+
     [Fact]
     public void Walk_with_FontCache_resolves_partial_state_override_via_Standards_inheritance()
     {
@@ -287,6 +401,9 @@ public class GumProjectDependencyWalkerFontTests : IDisposable
         result.ExternalFiles.ShouldContain("Fonts/Present.ttf");
         cache.CollectionCount.ShouldBe(0);
     }
+
+    private static byte[] PrimaryFnt(string fntBase) => System.Text.Encoding.UTF8.GetBytes(
+        "info face=\"Arial\" size=18\ncommon lineHeight=18 base=14 pages=1\npage id=0 file=\"" + fntBase + "_0.png\"\n");
 
     private string CreateProjectRoot(IEnumerable<(string, byte[])> files)
     {

@@ -848,11 +848,18 @@ public class GumProjectDependencyWalker
         if (extension == ".fnt")
         {
             // BitmapFont.ReloadTextures: page files are relative to the .fnt's own directory.
-            ParsedFontFile fontFile = new ParsedFontFile(File.ReadAllText(fullPath));
-            return fontFile.GetPagesAsArrayOfStrings
-                .Where(page => !string.IsNullOrEmpty(page))
-                .Select(page => ResolveAgainst(relativeDirectory, page))
-                .ToList();
+            List<string> files = GetPagesOf(fullPath, relativeDirectory);
+
+            // BitmapFont probes for a "-shadow.fnt" sibling when it loads a dropshadow font, so the
+            // sibling and its pages ship with the font or the bundled shadow silently disappears (#8399).
+            string shadowRelative = ToShadowSiblingPath(relativePath);
+            string shadowFull = ToShadowSiblingPath(fullPath);
+            if (File.Exists(shadowFull))
+            {
+                files.Add(shadowRelative);
+                files.AddRange(GetPagesOf(shadowFull, relativeDirectory));
+            }
+            return files;
         }
 
         if (extension == ".achx" || extension == ".achj")
@@ -871,6 +878,20 @@ public class GumProjectDependencyWalker
         }
 
         return Enumerable.Empty<string>();
+    }
+
+    // Mirrors BitmapFont.GetShadowSiblingFntPath, which GumCommon can't reference: "a.fnt" -> "a-shadow.fnt".
+    private static string ToShadowSiblingPath(string fntPath) =>
+        fntPath.Substring(0, fntPath.Length - ".fnt".Length) + "-shadow.fnt";
+
+    // BitmapFont.ReloadTextures: page files are relative to the .fnt's own directory.
+    private static List<string> GetPagesOf(string fntFullPath, string relativeDirectory)
+    {
+        ParsedFontFile fontFile = new ParsedFontFile(File.ReadAllText(fntFullPath));
+        return fontFile.GetPagesAsArrayOfStrings
+            .Where(page => !string.IsNullOrEmpty(page))
+            .Select(page => ResolveAgainst(relativeDirectory, page))
+            .ToList();
     }
 
     /// <summary>

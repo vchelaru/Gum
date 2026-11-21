@@ -2,6 +2,7 @@ using Gum.Bundle;
 using Gum.DataTypes;
 using Gum.Localization;
 using Gum.ProjectServices;
+using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 
 namespace Gum.Cli.Tests;
@@ -34,6 +35,32 @@ public class PackCommandTests : BaseTestClass
         Dictionary<string, byte[]> entries = ReadBundleEntries(outputPath);
         entries.Keys.ShouldContain("Fonts/LiberationSans.ttf");
         entries.Keys.Any(entry => entry.StartsWith("FontCache/", StringComparison.Ordinal)).ShouldBeFalse();
+    }
+
+    // #8399: `gumcli fonts` writes <font>-shadow.fnt for a dropshadow Text and the runtime looks
+    // for it by name; a bundle without it loads the Text with no shadow.
+    [Theory]
+    [InlineData("core,fontcache")]
+    [InlineData("core,fontcache,external")]
+    public void Pack_includes_the_shadow_fnt_of_a_dropshadow_Text(string include)
+    {
+        string projectPath = CreateProjectWithDropshadowText("ShadowFont");
+        string projectDir = Path.GetDirectoryName(projectPath)!;
+        string fntBase = Path.GetFileNameWithoutExtension(BmfcSave.GetFontCacheFileNameFor(
+            18, "Arial", outline: 0, useFontSmoothing: true, hasDropshadow: true));
+        string pageXml = $"page id=0 file=\"{fntBase}_0.png\"\n";
+        WriteLooseFile(projectDir, $"FontCache/{fntBase}.fnt", "info face=\"Arial\" size=18\ncommon lineHeight=18 base=14 pages=1\n" + pageXml);
+        WriteLooseFile(projectDir, $"FontCache/{fntBase}-shadow.fnt", "info face=\"Arial\" size=18\ncommon lineHeight=18 base=14 pages=1\n" + pageXml);
+        File.WriteAllBytes(Path.Combine(projectDir, "FontCache", fntBase + "_0.png"), Convert.FromBase64String(AlphaRampPngBase64));
+        string outputPath = Path.Combine(projectDir, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath, "--include", include);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        Dictionary<string, byte[]> entries = ReadBundleEntries(outputPath);
+        entries.Keys.ShouldContain($"FontCache/{fntBase}.fnt");
+        entries.Keys.ShouldContain($"FontCache/{fntBase}_0.png");
+        entries.Keys.ShouldContain($"FontCache/{fntBase}-shadow.fnt");
     }
 
     [Fact]
@@ -810,6 +837,41 @@ public class PackCommandTests : BaseTestClass
         string fontsDirectory = Path.Combine(projectDir, "Fonts");
         Directory.CreateDirectory(fontsDirectory);
         File.WriteAllBytes(Path.Combine(fontsDirectory, "LiberationSans.ttf"), new byte[] { 0x00 });
+        return projectPath;
+    }
+
+    private string CreateProjectWithDropshadowText(string name)
+    {
+        string projectDir = Path.Combine(TempDirectory, name);
+        Directory.CreateDirectory(projectDir);
+        string projectPath = Path.Combine(projectDir, name + ".gumx");
+        new ProjectCreator().Create(projectPath);
+
+        string screenXml =
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <Name>TextScreen</Name>
+              <State>
+                <Name>Default</Name>
+                <Variable Type="bool" Name="Label.UseCustomFont" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+                <Variable Type="string" Name="Label.Font" IsFont="true" SetsValue="true"><Value xsi:type="xsd:string">Arial</Value></Variable>
+                <Variable Type="int" Name="Label.FontSize" SetsValue="true"><Value xsi:type="xsd:int">18</Value></Variable>
+                <Variable Type="int" Name="Label.OutlineThickness" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+                <Variable Type="bool" Name="Label.UseFontSmoothing" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
+                <Variable Type="bool" Name="Label.IsItalic" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+                <Variable Type="bool" Name="Label.IsBold" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+                <Variable Type="bool" Name="Label.HasDropshadow" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
+                <Variable Type="float" Name="Label.DropshadowBlur" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
+              </State>
+              <Instance><Name>Label</Name><BaseType>Text</BaseType><DefinedByBase>false</DefinedByBase></Instance>
+            </ScreenSave>
+            """;
+        File.WriteAllText(Path.Combine(projectDir, "Screens", "TextScreen.gusx"), screenXml);
+
+        string projectXml = File.ReadAllText(projectPath);
+        File.WriteAllText(projectPath, projectXml.Replace("</GumProjectSave>",
+            "  <ScreenReference Name=\"TextScreen\" />\n</GumProjectSave>"));
         return projectPath;
     }
 
