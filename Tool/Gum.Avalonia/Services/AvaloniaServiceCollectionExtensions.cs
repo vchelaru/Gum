@@ -31,6 +31,7 @@ public static class AvaloniaServiceCollectionExtensions
         services.AddSingleton<IDispatcher>(provider => provider.GetRequiredService<AvaloniaDispatcher>());
         services.AddSingleton<IClipboardService, AvaloniaClipboardService>();
         services.AddSingleton<IAppScaleProvider, AvaloniaAppScaleProvider>();
+        services.AddSingleton<Gum.Diagnostics.IDiagnosticsEnvironment, AvaloniaDiagnosticsEnvironment>();
         services.AddSingleton<IThemingService, AvaloniaThemingService>();
         services.AddSingleton(_ => new AvaloniaModifierKeyState());
         services.AddSingleton<IModifierKeyState>(provider => provider.GetRequiredService<AvaloniaModifierKeyState>());

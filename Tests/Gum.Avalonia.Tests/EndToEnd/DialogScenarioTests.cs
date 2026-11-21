@@ -503,6 +503,25 @@ public class DialogScenarioTests
         FileManager.UserApplicationDataForThisApplication.ShouldStartWith(Path.GetTempPath());
     }
 
+    [AvaloniaFact]
+    public void CreateDiagnosticsFile_HelpMenuOpensTheDialog_AndCancelWritesNothing()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        string? title = null;
+        string? fileName = null;
+        tree.Dialogs.AnswerNextInWindow<Gum.Diagnostics.CreateDiagnosticsViewModel>(window =>
+        {
+            title = window.Title;
+            fileName = ((Gum.Diagnostics.CreateDiagnosticsViewModel)window.Window.DataContext!).FileName;
+            window.ClickButton("Cancel");
+        });
+
+        tree.PickMainMenu("Help", "Create diagnostics file...");
+
+        title.ShouldBe("Create diagnostics file");
+        fileName.ShouldNotBeNull().ShouldStartWith("GumDiagnostics-");
+    }
+
     #endregion
 
     #region Project properties
