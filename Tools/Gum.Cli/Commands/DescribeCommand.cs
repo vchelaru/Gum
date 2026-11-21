@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
@@ -27,9 +28,12 @@ public static class DescribeCommand
             "project",
             "Path to the .gumx or .gumj project file.");
 
-        Argument<string> elementArgument = new Argument<string>(
+        Argument<string?> elementArgument = new Argument<string?>(
             "element",
-            "The Screen, Component or standard element to describe, such as Hud, Menus/MainMenu or Text.");
+            "The Screen, Component or standard element to describe, such as Hud, Menus/MainMenu or Text. Omit it to list the project's elements.")
+        {
+            Arity = ArgumentArity.ZeroOrOne
+        };
 
         Option<string?> instanceOption = new Option<string?>(
             "--instance",
@@ -41,7 +45,7 @@ public static class DescribeCommand
 
         Command command = new Command(
             "describe",
-            "List the variables an element or instance can set, with their types, and the element's states and categories.")
+            "List the variables an element or instance can set, with their types, and the element's states, categories, base type, behaviors, instances, exposed variables and variable references. Without an element, list the project's elements.")
         {
             projectArgument,
             elementArgument,
@@ -61,8 +65,14 @@ public static class DescribeCommand
         return command;
     }
 
-    private static int Execute(string projectPath, string elementName, string? instanceName, bool json)
+    private static int Execute(string projectPath, string? elementName, string? instanceName, bool json)
     {
+        if (elementName == null && instanceName != null)
+        {
+            Console.Error.WriteLine("error: --instance needs an element. Run gumcli describe <project> to list the elements.");
+            return 2;
+        }
+
         ProjectLoadResult loadResult = new ProjectLoader().Load(Path.GetFullPath(projectPath));
         if (!loadResult.Success)
         {
@@ -72,10 +82,17 @@ public static class DescribeCommand
         GumProjectSave project = loadResult.Project!;
         ObjectFinder.Self.GumProjectSave = project;
 
+        if (elementName == null)
+        {
+            IReadOnlyList<ListedElement> listed = ProjectElementFinder.List(project);
+            Console.WriteLine(json ? ListToJson(listed) : ListToText(listed));
+            return 0;
+        }
+
         ElementSave? element = ProjectElementFinder.Find(project, elementName);
         if (element == null)
         {
-            Console.Error.WriteLine($"error: The project has no Screen, Component or standard element named {elementName}.");
+            Console.Error.WriteLine($"error: The project has no Screen, Component or standard element named {elementName}. Run gumcli describe <project> to list them.");
             return 2;
         }
 
@@ -99,6 +116,48 @@ public static class DescribeCommand
         ElementDescription description = service.Describe(element, instance);
         Console.WriteLine(json ? ToJson(description) : ToText(description));
         return 0;
+    }
+
+    private static string ListToJson(IReadOnlyList<ListedElement> elements)
+    {
+        using MemoryStream stream = new MemoryStream();
+        using (Utf8JsonWriter writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
+        {
+            writer.WriteStartObject();
+            writer.WriteStartArray("elements");
+            foreach (ListedElement element in elements)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("name", element.Name);
+                writer.WriteString("kind", element.Kind.ToString().ToLowerInvariant());
+                writer.WriteString("baseType", element.BaseType);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+        return Encoding.UTF8.GetString(stream.ToArray());
+    }
+
+    private static string ListToText(IReadOnlyList<ListedElement> elements)
+    {
+        StringBuilder text = new StringBuilder();
+        foreach (ListedElementKind kind in Enum.GetValues<ListedElementKind>())
+        {
+            string heading = kind switch
+            {
+                ListedElementKind.Screen => "Screens",
+                ListedElementKind.Component => "Components",
+                ListedElementKind.Standard => "Standards",
+                _ => "Behaviors"
+            };
+            text.AppendLine($"{heading}:");
+            foreach (ListedElement element in elements.Where(item => item.Kind == kind))
+            {
+                text.AppendLine(element.BaseType == null ? $"  {element.Name}" : $"  {element.Name} ({element.BaseType})");
+            }
+        }
+        return text.ToString().TrimEnd();
     }
 
     private static string ToJson(ElementDescription description)
@@ -137,6 +196,47 @@ public static class DescribeCommand
             }
             writer.WriteEndArray();
 
+            if (description.Instances != null)
+            {
+                writer.WriteString("baseType", description.BaseType);
+                WriteStrings(writer, "behaviors", description.Behaviors!);
+
+                writer.WriteStartArray("instances");
+                foreach (DescribedInstance item in description.Instances)
+                {
+                    writer.WriteStartObject();
+                    writer.WriteString("name", item.Name);
+                    writer.WriteString("type", item.Type);
+                    writer.WriteString("parent", item.Parent);
+                    writer.WriteBoolean("definedByBase", item.DefinedByBase);
+                    writer.WriteBoolean("locked", item.Locked);
+                    writer.WriteEndObject();
+                }
+                writer.WriteEndArray();
+
+                writer.WriteStartArray("exposedVariables");
+                foreach (DescribedExposedVariable item in description.ExposedVariables!)
+                {
+                    writer.WriteStartObject();
+                    writer.WriteString("name", item.Name);
+                    writer.WriteString("variable", item.Variable);
+                    writer.WriteEndObject();
+                }
+                writer.WriteEndArray();
+
+                writer.WriteStartArray("variableReferences");
+                foreach (DescribedVariableReferences item in description.VariableReferences!)
+                {
+                    writer.WriteStartObject();
+                    writer.WriteString("instance", item.Instance);
+                    writer.WriteString("state", item.State);
+                    writer.WriteString("category", item.Category);
+                    WriteStrings(writer, "lines", item.Lines);
+                    writer.WriteEndObject();
+                }
+                writer.WriteEndArray();
+            }
+
             writer.WriteEndObject();
         }
         return Encoding.UTF8.GetString(stream.ToArray());
@@ -150,6 +250,51 @@ public static class DescribeCommand
             writer.WriteStringValue(value);
         }
         writer.WriteEndArray();
+    }
+
+    private static void AppendElementDetails(StringBuilder text, ElementDescription description)
+    {
+        if (description.BaseType != null)
+        {
+            text.AppendLine().Append($"Base type: {description.BaseType}");
+        }
+        if (description.Behaviors!.Count > 0)
+        {
+            text.AppendLine().Append($"Behaviors: {string.Join(", ", description.Behaviors)}");
+        }
+        if (description.Instances!.Count > 0)
+        {
+            text.AppendLine().Append("Instances:");
+            foreach (DescribedInstance item in description.Instances)
+            {
+                string parent = item.Parent == null ? "" : $" in {item.Parent}";
+                string inherited = item.DefinedByBase ? " inherited" : "";
+                string locked = item.Locked ? " locked" : "";
+                text.AppendLine().Append($"  {item.Name} ({item.Type}){parent}{inherited}{locked}");
+            }
+        }
+        if (description.ExposedVariables!.Count > 0)
+        {
+            text.AppendLine().Append("Exposed:");
+            foreach (DescribedExposedVariable item in description.ExposedVariables)
+            {
+                text.AppendLine().Append($"  {item.Name} -> {item.Variable}");
+            }
+        }
+        if (description.VariableReferences!.Count > 0)
+        {
+            text.AppendLine().Append("References:");
+            foreach (DescribedVariableReferences item in description.VariableReferences)
+            {
+                string owner = item.Instance ?? "(element)";
+                string state = item.Category == null ? item.State : $"{item.Category}/{item.State}";
+                string where = item.State == "Default" && item.Category == null ? "" : $" [{state}]";
+                foreach (string line in item.Lines)
+                {
+                    text.AppendLine().Append($"  {owner}{where}: {line}");
+                }
+            }
+        }
     }
 
     private static string ToText(ElementDescription description)
@@ -177,6 +322,11 @@ public static class DescribeCommand
         if (description.Categories.Count == 0)
         {
             text.Append(" none");
+        }
+
+        if (description.Instances != null)
+        {
+            AppendElementDetails(text, description);
         }
         return text.ToString();
     }

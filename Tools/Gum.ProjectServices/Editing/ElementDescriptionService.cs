@@ -30,7 +30,48 @@ public class ElementDescription
 
     /// <summary>The element's categories and their states.</summary>
     public IReadOnlyList<DescribedCategory> Categories { get; init; } = Array.Empty<DescribedCategory>();
+
+    /// <summary>The element's base type, or null for a standard element, an element with none, or an instance description.</summary>
+    public string? BaseType { get; init; }
+
+    /// <summary>The names of the behaviors the element implements, or null for an instance description.</summary>
+    public IReadOnlyList<string>? Behaviors { get; init; }
+
+    /// <summary>The element's instances in order, inherited ones included, or null for an instance description.</summary>
+    public IReadOnlyList<DescribedInstance>? Instances { get; init; }
+
+    /// <summary>The variables the element exposes, or null for an instance description.</summary>
+    public IReadOnlyList<DescribedExposedVariable>? ExposedVariables { get; init; }
+
+    /// <summary>The element's variable reference lines, or null for an instance description.</summary>
+    public IReadOnlyList<DescribedVariableReferences>? VariableReferences { get; init; }
 }
+
+/// <summary>
+/// An instance in an element.
+/// </summary>
+/// <param name="Name">The instance name.</param>
+/// <param name="Type">The instance's base type.</param>
+/// <param name="Parent">The instance's Parent variable, or null when it has none.</param>
+/// <param name="DefinedByBase">True when the instance comes from the element's base type.</param>
+/// <param name="Locked">True when the instance is locked in the tool.</param>
+public record DescribedInstance(string Name, string Type, string? Parent, bool DefinedByBase, bool Locked);
+
+/// <summary>
+/// A variable an element exposes.
+/// </summary>
+/// <param name="Name">The exposed name other elements set.</param>
+/// <param name="Variable">The instance variable it stands for, such as <c>Label.Text</c>.</param>
+public record DescribedExposedVariable(string Name, string Variable);
+
+/// <summary>
+/// The variable reference lines one state holds for the element or for one of its instances.
+/// </summary>
+/// <param name="Instance">The instance the lines belong to, or null for the element's own.</param>
+/// <param name="State">The state holding the lines.</param>
+/// <param name="Category">The state's category, or null for an uncategorized state.</param>
+/// <param name="Lines">The reference lines.</param>
+public record DescribedVariableReferences(string? Instance, string State, string? Category, IReadOnlyList<string> Lines);
 
 /// <summary>
 /// A variable <c>setVariable</c> accepts.
@@ -84,6 +125,7 @@ public class ElementDescriptionService : IElementDescriptionService
             .OrderBy(variable => variable.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
+        bool isElement = instance == null;
         return new ElementDescription
         {
             Element = element.Name,
@@ -93,8 +135,45 @@ public class ElementDescriptionService : IElementDescriptionService
             States = element.States.Select(state => state.Name).ToList(),
             Categories = element.Categories
                 .Select(category => new DescribedCategory(category.Name, category.States.Select(state => state.Name).ToList()))
-                .ToList()
+                .ToList(),
+            BaseType = isElement && !string.IsNullOrEmpty(element.BaseType) ? element.BaseType : null,
+            Behaviors = isElement ? element.Behaviors.Select(behavior => behavior.BehaviorName ?? "").ToList() : null,
+            Instances = isElement ? element.Instances.Select(item => DescribeInstance(element, item)).ToList() : null,
+            ExposedVariables = isElement
+                ? element.GetDefaultStateOrThrow().Variables
+                    .Where(variable => !string.IsNullOrEmpty(variable.ExposedAsName))
+                    .Select(variable => new DescribedExposedVariable(variable.ExposedAsName!, variable.Name))
+                    .ToList()
+                : null,
+            VariableReferences = isElement ? DescribeReferences(element) : null
         };
+    }
+
+    private static DescribedInstance DescribeInstance(ElementSave element, InstanceSave instance)
+    {
+        string? parent = element.GetDefaultStateOrThrow().GetValueRecursive(instance.Name + ".Parent") as string;
+        return new DescribedInstance(instance.Name, instance.BaseType, string.IsNullOrEmpty(parent) ? null : parent,
+            instance.DefinedByBase, instance.Locked);
+    }
+
+    private static List<DescribedVariableReferences> DescribeReferences(ElementSave element)
+    {
+        List<DescribedVariableReferences> references = new List<DescribedVariableReferences>();
+        IEnumerable<(StateSave State, string? Category)> states = element.States.Select(state => (state, (string?)null))
+            .Concat(element.Categories.SelectMany(category => category.States.Select(state => (state, (string?)category.Name))));
+        foreach ((StateSave state, string? category) in states)
+        {
+            foreach (VariableListSave list in state.VariableLists.Where(list => list.Name.EndsWith("VariableReferences", StringComparison.Ordinal)))
+            {
+                string? instanceName = list.Name == "VariableReferences" ? null : list.Name.Substring(0, list.Name.Length - ".VariableReferences".Length);
+                List<string> lines = list.ValueAsIList.OfType<string>().ToList();
+                if (lines.Count > 0)
+                {
+                    references.Add(new DescribedVariableReferences(instanceName, state.Name, category, lines));
+                }
+            }
+        }
+        return references;
     }
 
     private IReadOnlyList<string>? GetValues(DefinedVariable variable, ElementSave typeElement)
