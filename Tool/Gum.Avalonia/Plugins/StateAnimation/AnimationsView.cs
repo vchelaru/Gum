@@ -7,6 +7,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
+using Gum.Avalonia.Converters;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -293,7 +294,7 @@ public sealed class AnimationsView : Grid
                 new Binding(nameof(AnimatedKeyframeViewModel.AnimationName)),
             },
         });
-        glyph.Bind(TextBlock.ForegroundProperty, new Binding(nameof(AnimatedKeyframeViewModel.IsMissingReference)) { Converter = ViewConvertersForAnimations.MissingForeground });
+        ErrorText.Bind(glyph, nameof(AnimatedKeyframeViewModel.IsMissingReference), italic: false);
         glyph.Bind(ToolTip.TipProperty, new Binding(nameof(AnimatedKeyframeViewModel.IsMissingReference))
         {
             Converter = new FuncValueConverter<bool, string?>(missing => missing ? "This keyframe references a state or animation that no longer exists." : null),
@@ -396,12 +397,4 @@ public sealed class AnimationsView : Grid
         item.Click += (_, _) => MenuItemActions.InvokeAfterClose(action);
         return item;
     }
-}
-
-/// <summary>Converters the Animations tab shares between its views.</summary>
-internal static class ViewConvertersForAnimations
-{
-    /// <summary>Error-colored text for a keyframe that references something missing; unset otherwise.</summary>
-    public static readonly IValueConverter MissingForeground =
-        new FuncValueConverter<bool, object>(missing => missing ? Brushes.OrangeRed : AvaloniaProperty.UnsetValue);
 }

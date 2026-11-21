@@ -392,8 +392,7 @@ public sealed class BehaviorsView : Grid
     {
         TextBlock name = new TextBlock();
         name.Bind(TextBlock.TextProperty, new Binding(nameof(CheckListBehaviorItem.DisplayText)));
-        name.Bind(TextBlock.ForegroundProperty, new Binding(nameof(CheckListBehaviorItem.IsOrphaned)) { Converter = ViewConverters.OrphanForeground });
-        name.Bind(TextBlock.FontStyleProperty, new Binding(nameof(CheckListBehaviorItem.IsOrphaned)) { Converter = ViewConverters.OrphanFontStyle });
+        ErrorText.Bind(name, nameof(CheckListBehaviorItem.IsOrphaned), italic: true);
         return name;
     }
 }

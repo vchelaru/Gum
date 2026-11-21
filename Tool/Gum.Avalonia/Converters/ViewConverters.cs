@@ -20,14 +20,6 @@ public static class ViewConverters
     public static readonly IValueConverter RedoOpacity =
         new FuncValueConverter<UndoOrRedo, double>(kind => kind == UndoOrRedo.Redo ? 0.5 : 1.0);
 
-    /// <summary>Error-colored text for a missing (orphaned) behavior; unset otherwise so the theme applies.</summary>
-    public static readonly IValueConverter OrphanForeground =
-        new FuncValueConverter<bool, object>(isOrphaned => isOrphaned ? Brushes.OrangeRed : AvaloniaProperty.UnsetValue);
-
-    /// <summary>Italic text for a missing (orphaned) behavior.</summary>
-    public static readonly IValueConverter OrphanFontStyle =
-        new FuncValueConverter<bool, FontStyle>(isOrphaned => isOrphaned ? FontStyle.Italic : FontStyle.Normal);
-
     /// <summary>A solid brush for a neutral <see cref="System.Drawing.Color"/> (ADR-0004).</summary>
     public static readonly IValueConverter DrawingColorBrush =
         new FuncValueConverter<System.Drawing.Color, IBrush>(color => new SolidColorBrush(Color.FromArgb(color.A, color.R, color.G, color.B)));
