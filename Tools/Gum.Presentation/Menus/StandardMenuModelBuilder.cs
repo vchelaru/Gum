@@ -202,6 +202,10 @@ public class StandardMenuModelBuilder
         {
             ToolTip = "Open the folder containing Gum's global settings files",
         });
+        help.Items.Add(new MenuItemModel("Create diagnostics file...", () => _dialogService.Show<Gum.Diagnostics.CreateDiagnosticsViewModel>())
+        {
+            ToolTip = "Save a zip with version, system info, logs and errors to attach to a bug report. Nothing is sent.",
+        });
 
         Model.TopLevelItems.Add(file);
         Model.TopLevelItems.Add(edit);

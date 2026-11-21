@@ -271,6 +271,8 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IEditCommands, EditCommands>();
         services.AddSingleton<IVariableInCategoryPropagationLogic, VariableInCategoryPropagationLogic>();
         services.AddSingleton<IFileSystemRevealService, FileSystemRevealService>();
+        services.AddSingleton<Diagnostics.IDiagnosticsEnvironment, Diagnostics.DiagnosticsEnvironment>();
+        services.AddSingleton<Diagnostics.IDiagnosticsContentSource, Diagnostics.DiagnosticsContentSource>();
         // The property grid's file pickers, through the head's dialog service (phase 70).
         services.AddSingleton<WpfDataUi.Controls.IDataUiFilePicker, DialogServiceFilePicker>();
         // The Variables tab (phase 70): its controller and the grid-coupled services the core consumes.

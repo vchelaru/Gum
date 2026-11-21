@@ -153,6 +153,7 @@
 * [Importing Elements](gum-tool/importing-elements.md)
 * [Menu](gum-tool/menu/README.md)
   * [Content](gum-tool/menu/content.md)
+  * [Help](gum-tool/menu/help.md)
 * [Settings Window](gum-tool/settings-window.md)
   * [Project Settings](gum-tool/project-properties.md)
     * [Engine Profiles](gum-tool/engine-profiles.md)

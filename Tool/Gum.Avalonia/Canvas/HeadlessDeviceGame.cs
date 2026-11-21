@@ -48,6 +48,7 @@ internal sealed class HeadlessDeviceGame : Game
         }
         RunOneFrame();
         _isInitialized = true;
+        Gum.Diagnostics.GraphicsAdapterInfo.Name = GraphicsDevice.Adapter.Description;
         // A native crash (SIGSEGV) leaves no stderr, so the log is the only record of which GL driver was in use.
         if (ToolLog.IsEnabled)
         {

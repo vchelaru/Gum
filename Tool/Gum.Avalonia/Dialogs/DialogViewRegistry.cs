@@ -48,6 +48,7 @@ public class DialogViewRegistry
         Register<SubAnimationSelectionDialogViewModel>(() => new SubAnimationSelectionDialogView());
         Register<DeleteOptionsDialogViewModel>(() => new DeleteOptionsDialogView());
         Register<Gum.Diagnostics.FreezeDiagnosticsPromptViewModel>(() => new FreezeDiagnosticsPromptView());
+        Register<Gum.Diagnostics.CreateDiagnosticsViewModel>(() => new CreateDiagnosticsView());
         // The Variables tab's dialogs (phase 70).
         Register<Gum.Plugins.InternalPlugins.VariableGrid.ViewModels.AddVariableViewModel>(() => new Plugins.VariableGrid.AddVariableView());
         // Plugin dialogs whose view models live in Gum.Presentation (phase 70).
