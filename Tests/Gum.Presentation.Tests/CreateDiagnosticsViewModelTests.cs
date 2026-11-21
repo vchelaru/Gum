@@ -132,6 +132,42 @@ public class CreateDiagnosticsViewModelTests : IDisposable
         zip.Entries.ShouldNotContain(entry => entry.FullName.Contains("project/"));
     }
 
+    private void SetupCollectWithRealProjects()
+    {
+        string game = Path.Combine(_saveFolder, "RealGame");
+        Directory.CreateDirectory(game);
+        File.WriteAllText(Path.Combine(game, "Game.gumx"), "<gumx/>");
+        File.WriteAllText(Path.Combine(game, "Program.cs"), "class P {}");
+        _source.Setup(x => x.Collect()).Returns(new DiagnosticsContent(
+            Array.Empty<string>(), "No errors.", "", Array.Empty<string>(), Path.Combine(game, "Game.gumx"), game));
+    }
+
+    [Fact]
+    public async Task SaveAsync_GumProjectCheckedButDisabled_IsNotIncluded()
+    {
+        SetupCollectWithRealProjects();
+        CreateDiagnosticsViewModel viewModel = Create();
+        viewModel.IncludeGumProject = true;
+
+        await viewModel.SaveAsync();
+
+        using ZipArchive zip = ZipFile.OpenRead(Path.Combine(_saveFolder, "GumDiagnostics-2026-11-21.zip"));
+        zip.Entries.ShouldNotContain(entry => entry.FullName.StartsWith("gum-project/"));
+    }
+
+    [Fact]
+    public async Task SaveAsync_CSharpProjectCheckedButDisabled_IsNotIncluded()
+    {
+        SetupCollectWithRealProjects();
+        CreateDiagnosticsViewModel viewModel = Create();
+        viewModel.IncludeCSharpProject = true;
+
+        await viewModel.SaveAsync();
+
+        using ZipArchive zip = ZipFile.OpenRead(Path.Combine(_saveFolder, "GumDiagnostics-2026-11-21.zip"));
+        zip.Entries.ShouldNotContain(entry => entry.FullName.StartsWith("csharp-project/"));
+    }
+
     [Fact]
     public async Task SaveAsync_WriteFails_ShowsErrorAndStaysOpen()
     {

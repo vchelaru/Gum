@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using Gum.Diagnostics;
+using Moq;
 using Shouldly;
 
 namespace Gum.Presentation.Tests;
@@ -38,7 +39,18 @@ public class DiagnosticsZipTests : IDisposable
         File.WriteAllText(_settingsFile, @"{ ""last"": ""C:\\Users\\sam\\x"" }".Replace(@"\\", @"\"));
     }
 
-    public void Dispose() => Directory.Delete(_root, recursive: true);
+    public void Dispose()
+    {
+        // A junction cannot be removed by a recursive delete; unlink it first (this leaves its target alone).
+        foreach (string junction in new[] { Path.Combine(_gameFolder, "Junction"), Path.Combine(_gumFolder, "Junction") })
+        {
+            if (Directory.Exists(junction))
+            {
+                Directory.Delete(junction, recursive: false);
+            }
+        }
+        Directory.Delete(_root, recursive: true);
+    }
 
     private DiagnosticsContent Content() => new DiagnosticsContent(
         new[] { _logFile },
@@ -186,6 +198,120 @@ public class DiagnosticsZipTests : IDisposable
         File.ReadAllText(zipPath).ShouldBe("keep me");
     }
 
+
+    private string CreateOutside()
+    {
+        string outside = Path.Combine(_root, "Outside");
+        Directory.CreateDirectory(outside);
+        File.WriteAllText(Path.Combine(outside, "secret.txt"), "secret");
+        return outside;
+    }
+
+    [Fact]
+    public void Write_DirectorySymlinkInProjects_IsNotFollowed()
+    {
+        string outside = CreateOutside();
+        Directory.CreateSymbolicLink(Path.Combine(_gameFolder, "LinkedDir"), outside);
+        Directory.CreateSymbolicLink(Path.Combine(_gumFolder, "LinkedDir"), outside);
+
+        string zip = Write(new DiagnosticsRequest("", true, true));
+
+        Entries(zip).ShouldNotContain(entry => entry.Contains("secret.txt"));
+    }
+
+    [Fact]
+    public void Write_FileSymlinkInProjects_IsNotFollowed()
+    {
+        string outside = CreateOutside();
+        File.CreateSymbolicLink(Path.Combine(_gameFolder, "linked.cs"), Path.Combine(outside, "secret.txt"));
+        File.CreateSymbolicLink(Path.Combine(_gumFolder, "linked.gusx"), Path.Combine(outside, "secret.txt"));
+
+        string zip = Write(new DiagnosticsRequest("", true, true));
+
+        Entries(zip).ShouldNotContain(entry => entry.Contains("linked."));
+    }
+
+    [Fact]
+    public void Write_JunctionInProjects_IsNotFollowed()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+        string outside = CreateOutside();
+        foreach (string folder in new[] { _gameFolder, _gumFolder })
+        {
+            System.Diagnostics.ProcessStartInfo start = new System.Diagnostics.ProcessStartInfo("cmd.exe",
+                $"/c mklink /J \"{Path.Combine(folder, "Junction")}\" \"{outside}\"") { CreateNoWindow = true, UseShellExecute = false };
+            using System.Diagnostics.Process process = System.Diagnostics.Process.Start(start)!;
+            process.WaitForExit();
+            process.ExitCode.ShouldBe(0);
+        }
+
+        string zip = Write(new DiagnosticsRequest("", true, true));
+
+        Entries(zip).ShouldNotContain(entry => entry.Contains("secret.txt"));
+    }
+
+    [Fact]
+    public void Write_FailureMidWrite_LeavesNoFinalFileAndNoTemp()
+    {
+        string zipPath = Path.Combine(_root, "partial.zip");
+        DiagnosticsContent broken = Content() with { CSharpProjectFolder = Path.Combine(_root, "DoesNotExist") };
+
+        Should.Throw<Exception>(() => DiagnosticsZipWriter.Write(
+            zipPath, new DiagnosticsRequest("", false, true), _info, broken, new PathScrubber("sam", @"C:\Users\sam")));
+
+        File.Exists(zipPath).ShouldBeFalse();
+        Directory.GetFiles(_root, "partial*").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Write_FinalNameAppearsDuringWrite_IsNotOverwrittenAndTempIsRemoved()
+    {
+        string zipPath = Path.Combine(_root, "taken.zip");
+        File.WriteAllText(zipPath, "keep me");
+
+        Should.Throw<IOException>(() => DiagnosticsZipWriter.Write(
+            zipPath, new DiagnosticsRequest("", false, false), _info, Content(), new PathScrubber("sam", @"C:\Users\sam")));
+
+        File.ReadAllText(zipPath).ShouldBe("keep me");
+        Directory.GetFiles(_root, "taken*").ShouldBe(new[] { zipPath });
+    }
+
+    [Fact]
+    public void Write_ErrorsText_IsSavedScrubbed()
+    {
+        string zip = Write(new DiagnosticsRequest("", false, false));
+
+        ReadEntry(zip, "errors.txt").ShouldBe(@"1 error(s): %USER%\Game broke");
+    }
+
+    [Fact]
+    public void Collect_ProjectWithAnError_ListsItInErrorsTxtScrubbed()
+    {
+        Gum.DataTypes.GumProjectSave project = new Gum.DataTypes.GumProjectSave { FullFileName = Path.Combine(_gumFolder, "Game.gumx") };
+        Moq.Mock<Gum.ToolStates.IProjectState> projectState = new();
+        projectState.SetupGet(x => x.GumProjectSave).Returns(project);
+        Moq.Mock<Gum.ToolStates.ISelectedState> selected = new();
+        Moq.Mock<Gum.Managers.IErrorChecker> checker = new();
+        checker.Setup(x => x.GetErrorsFor(It.IsAny<Gum.DataTypes.ElementSave?>(), project)).Returns(new[]
+        {
+            new Gum.Managers.ErrorViewModel { Code = "GUM0001", Message = @"Missing C:\Users\sam\Game\a.png", ElementName = "MainScreen" },
+        });
+        checker.Setup(x => x.GetProjectErrors(project)).Returns(System.Array.Empty<Gum.Managers.ErrorViewModel>());
+        checker.Setup(x => x.GetPluginErrors(null)).Returns(System.Array.Empty<Gum.Managers.ErrorViewModel>());
+        Moq.Mock<Gum.Plugins.IPluginManager> plugins = new();
+        plugins.Setup(x => x.GetAllPluginSummaries()).Returns(System.Array.Empty<Gum.Plugins.PluginSummary>());
+        DiagnosticsContentSource source = new DiagnosticsContentSource(projectState.Object, selected.Object, checker.Object, plugins.Object);
+
+        DiagnosticsContent content = source.Collect();
+        string zipPath = Path.Combine(_root, "errors.zip");
+        DiagnosticsZipWriter.Write(zipPath, new DiagnosticsRequest("", false, false), _info, content, new PathScrubber("sam", @"C:\Users\sam"));
+
+        ReadEntry(zipPath, "errors.txt").ShouldBe(
+            "1 error(s):" + Environment.NewLine + @"MainScreen: GUM0001: Missing %USER%\Game\a.png" + Environment.NewLine);
+    }
     [Fact]
     public void FileName_Next_UsesDateThenNumbersOnCollision()
     {

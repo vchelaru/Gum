@@ -17,7 +17,10 @@ public static class DiagnosticsZipWriter
 
     private static readonly string[] GumProjectExtensions = { ".gumx", ".gusx", ".gucx", ".gutx", ".behx", ".ganx" };
 
-    /// <summary>Creates a new zip at <paramref name="zipPath"/>; fails if the file already exists.</summary>
+    /// <summary>
+    /// Creates a new zip at <paramref name="zipPath"/>; fails if the file already exists. The zip is built in a
+    /// <c>.tmp</c> file beside it and moved into place when complete, so a failure never leaves a broken zip.
+    /// </summary>
     public static void Write(
         string zipPath,
         DiagnosticsRequest request,
@@ -25,8 +28,36 @@ public static class DiagnosticsZipWriter
         DiagnosticsContent content,
         PathScrubber scrubber)
     {
-        using FileStream stream = new FileStream(zipPath, FileMode.CreateNew, FileAccess.Write);
-        using ZipArchive zip = new ZipArchive(stream, ZipArchiveMode.Create);
+        string tempPath = zipPath + ".tmp";
+        try
+        {
+            using (FileStream stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
+            {
+                WriteContents(stream, request, info, content, scrubber);
+            }
+            File.Move(tempPath, zipPath);
+        }
+        catch
+        {
+            try
+            {
+                File.Delete(tempPath);
+            }
+            catch (IOException)
+            {
+            }
+            throw;
+        }
+    }
+
+    private static void WriteContents(
+        Stream stream,
+        DiagnosticsRequest request,
+        DiagnosticsSystemInfo info,
+        DiagnosticsContent content,
+        PathScrubber scrubber)
+    {
+        using ZipArchive zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true);
 
         if (!string.IsNullOrWhiteSpace(request.Description))
         {
@@ -128,14 +159,24 @@ public static class DiagnosticsZipWriter
         }
     }
 
+    private static bool IsLink(string path) => (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
+
     private static IEnumerable<string> EnumerateFiles(string folder)
     {
+        // Links (symlinks, junctions) are never followed: they can point outside the project.
         foreach (string file in Directory.GetFiles(folder))
         {
-            yield return file;
+            if (!IsLink(file))
+            {
+                yield return file;
+            }
         }
         foreach (string subFolder in Directory.GetDirectories(folder))
         {
+            if (IsLink(subFolder))
+            {
+                continue;
+            }
             string name = Path.GetFileName(subFolder);
             if (Array.Exists(SkippedFolders, skipped => string.Equals(skipped, name, StringComparison.OrdinalIgnoreCase)))
             {

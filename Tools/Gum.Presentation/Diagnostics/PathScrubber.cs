@@ -14,8 +14,9 @@ public sealed class PathScrubber
     /// <summary>What a removed name or path is replaced with.</summary>
     public const string Placeholder = "%USER%";
 
-    private const string NameBoundaryBefore = @"(?<![\p{L}\p{N}_])";
-    private const string NameBoundaryAfter = @"(?![\p{L}\p{N}_])";
+    // An underscore is a boundary: "sam_x" is the user's name, while "sample" is a different word.
+    private const string NameBoundaryBefore = @"(?<![\p{L}\p{N}])";
+    private const string NameBoundaryAfter = @"(?![\p{L}\p{N}])";
     private const string OtherHomePaths = @"(?:[A-Za-z]:[\\/]+Users[\\/]+|/Users/|/home/)[^\\/\s""'<>|:*?]+";
 
     private readonly Regex? _homeFolder;

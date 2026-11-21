@@ -40,7 +40,7 @@ public sealed class CreateDiagnosticsView : StackPanel
             AcceptsReturn = true,
             TextWrapping = TextWrapping.Wrap,
             Height = 84,
-            Watermark = "Describe the problem and what you were doing when it happened.",
+            PlaceholderText = "Describe the problem and what you were doing when it happened.",
         };
         description.Bind(TextBox.TextProperty, new Binding(nameof(CreateDiagnosticsViewModel.Description)) { Mode = BindingMode.TwoWay });
         Children.Add(description);

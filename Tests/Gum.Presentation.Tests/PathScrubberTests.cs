@@ -76,7 +76,23 @@ public class PathScrubberTests
     {
         PathScrubber scrubber = new PathScrubber("sam", "/home/sam");
 
-        scrubber.Scrub("sample, Samsung, wisam, sam2, _sam").ShouldBe("sample, Samsung, wisam, sam2, _sam");
+        scrubber.Scrub("sample, Samsung, wisam, sam2").ShouldBe("sample, Samsung, wisam, sam2");
+    }
+
+    [Fact]
+    public void Scrub_UserNameNextToUnderscore_IsReplaced()
+    {
+        PathScrubber scrubber = new PathScrubber("sam", "/home/sam");
+
+        scrubber.Scrub("sam_x and x_sam and sam_").ShouldBe("%USER%_x and x_%USER% and %USER%_");
+    }
+
+    [Fact]
+    public void Scrub_UserNameInsideLongerWords_IsKept()
+    {
+        PathScrubber scrubber = new PathScrubber("sam", "/home/sam");
+
+        scrubber.Scrub("Samantha sample").ShouldBe("Samantha sample");
     }
 
     [Fact]
