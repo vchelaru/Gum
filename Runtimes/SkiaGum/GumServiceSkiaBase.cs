@@ -248,6 +248,10 @@ public abstract class GumServiceSkiaBase : IGumService
     /// </summary>
     public DeferredActionQueue DeferredQueue { get; private set; } = null!;
 
+    private readonly Gum.Input.InputBlocker _inputBlocker = new();
+
+    Gum.Input.InputBlocker? IGumService.InputBlocker => _inputBlocker;
+
     float? IGumService.GameTime => _hasReceivedUpdate ? (float?)_previousTotalSeconds : null;
 
     /// <inheritdoc/>

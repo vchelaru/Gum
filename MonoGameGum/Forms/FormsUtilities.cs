@@ -307,6 +307,9 @@ public class FormsUtilities
         }
     }
 
+    // Used when the current service keeps no input block state of its own (a custom IGumService).
+    static readonly Gum.Input.InputBlocker _fallbackInputBlocker = new();
+
     static List<GraphicalUiElement> innerList = new List<GraphicalUiElement>();
     static List<GraphicalUiElement> innerRootList = new List<GraphicalUiElement>();
 
@@ -492,11 +495,16 @@ public class FormsUtilities
             }
         }
 
+        // InteractiveGue.IsInputBlocked: the walk skips blocked subtrees, and the devices above still poll,
+        // so a press made while blocked is consumed rather than saved for later. Focus is left alone.
+        Gum.Input.InputBlocker inputBlocker = IGumService.Default?.InputBlocker ?? _fallbackInputBlocker;
+        Gum.Input.InputBlocker.ReleaseBlockedPush(cursor);
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
             innerList,
             cursor,
             keyboard,
-            gameTimeSeconds);
+            gameTimeSeconds,
+            dispatchToFocusedReceiver: inputBlocker.CanDispatchToFocusedReceiver(InteractiveGue.CurrentInputReceiver, keyboard));
 
         _lastEventRoots.Clear();
         _lastEventRoots.AddRange(innerList);

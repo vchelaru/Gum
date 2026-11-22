@@ -207,6 +207,40 @@ public partial class InteractiveGue : GraphicalUiElement
 
     public bool IsEnabledRecursively => GetIsEnabledRecursively(this);
 
+    bool _isInputBlocked;
+
+    /// <summary>
+    /// Whether the cursor, keyboard and gamepad are ignored by this element and everything under it. The
+    /// cursor passes through as if the subtree were not there, and a focused control inside it gets no
+    /// keyboard or gamepad input. Unlike <see cref="IsEnabled"/>, this changes no state, look or focus.
+    /// </summary>
+    public bool IsInputBlocked
+    {
+        get => _isInputBlocked;
+        set
+        {
+            if (_isInputBlocked != value)
+            {
+                _isInputBlocked = value;
+                ReportTypedPropertyChanged(nameof(IsInputBlocked));
+            }
+        }
+    }
+
+    // Whether element or any of its parents blocks input.
+    internal static bool IsInputBlockedInParentChain(GraphicalUiElement? element)
+    {
+        while (element != null)
+        {
+            if (element is InteractiveGue { _isInputBlocked: true })
+            {
+                return true;
+            }
+            element = element.Parent as GraphicalUiElement;
+        }
+        return false;
+    }
+
     static bool GetIsEnabledRecursively(InteractiveGue interactiveGue)
     {
         if (!interactiveGue.IsEnabled)
@@ -454,6 +488,13 @@ public partial class InteractiveGue : GraphicalUiElement
 
     internal static bool DoUiActivityRecursively(ICursor cursor, ref HandledActions handledActions, GraphicalUiElement currentItem, Layer? layer, bool isKnownToBeOver = false)
     {
+        // A subtree that blocks input is skipped, so the cursor passes through it. Like a hidden subtree,
+        // off events (RollOff, RemovedAsPushed) still come from comparing the cursor state around the walk.
+        if (currentItem is InteractiveGue { _isInputBlocked: true })
+        {
+            return false;
+        }
+
         bool handledByChild = false;
         bool handledByThis = false;
 
@@ -1702,7 +1743,12 @@ public static class GueInteractiveExtensionMethods
             InteractiveGue.EndCursorWalk(previousWorldCache);
         }
     }
-    public static void DoUiActivityRecursively(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
+    public static void DoUiActivityRecursively(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds) =>
+        DoUiActivityRecursively(gues, cursor, keyboard, currentGameTimeInSeconds, dispatchToFocusedReceiver: true);
+
+    // dispatchToFocusedReceiver false runs the cursor walk only, leaving the focused control without keyboard
+    // and gamepad input this frame.
+    internal static void DoUiActivityRecursively(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds, bool dispatchToFocusedReceiver)
     {
 #if FULL_DIAGNOSTICS
         if (cursor == null)
@@ -1804,7 +1850,7 @@ public static class GueInteractiveExtensionMethods
         // means the InteractiveGue must only run events which are at least 1 frame old
         InteractiveGue.DoNextClickAndPushActions(cursor, isInWindow);
 
-        if (InteractiveGue.CurrentInputReceiver != null)
+        if (dispatchToFocusedReceiver && InteractiveGue.CurrentInputReceiver != null)
         {
             var receiver = InteractiveGue.CurrentInputReceiver;
 
