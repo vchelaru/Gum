@@ -150,6 +150,10 @@ public partial class GumService : IGumService
     // explicit implementation. An implicit internal property compiles but the interface keeps its default (null).
     GumContext? IGumService.Context => _context;
 
+    private readonly Gum.Input.InputBlocker _inputBlocker = new();
+
+    Gum.Input.InputBlocker? IGumService.InputBlocker => _inputBlocker;
+
     /// <inheritdoc/>
     public INativeTextInput? NativeTextInput { get; private set; }
 

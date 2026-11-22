@@ -307,6 +307,7 @@
   * [Mouse and Touch Screen (Cursor)](code/events-and-interactivity/mouse-and-touch-screen-cursor.md)
   * [Gamepad Support](code/events-and-interactivity/gamepad-support.md)
   * [Keyboard Support](code/events-and-interactivity/keyboard-support.md)
+  * [Blocking Input](code/events-and-interactivity/blocking-input.md)
 * [Styling](code/styling/README.md)
   * [Code-Only Styling](code/styling/code-only-styling/README.md)
     * [Styling Using ActiveStyles](code/styling/code-only-styling/styling-using-activestyles.md)

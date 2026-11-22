@@ -331,6 +331,9 @@ namespace RenderingLibrary
         // reach it through InternalsVisibleTo; it is not part of the public API.
         internal GumContext? Context => null;
 
+        // This service's InteractiveGue.IsInputBlocked state, or null to use a process-wide one.
+        internal Gum.Input.InputBlocker? InputBlocker => null;
+
         /// <summary>
         /// The current default <see cref="IGumService"/>, and the one "current service" pointer: every
         /// per-service static (<c>ObjectFinder.Self</c>, <c>LoaderManager.Self</c>, the Forms statics,

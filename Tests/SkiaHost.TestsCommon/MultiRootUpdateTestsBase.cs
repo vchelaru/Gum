@@ -137,6 +137,29 @@ public abstract class MultiRootUpdateTestsBase : IDisposable
     }
 
     [Fact]
+    public void IsInputBlocked_SkipsTheCursorWalkUntilCleared()
+    {
+        InteractiveGue target = CreateHoverTarget();
+        Mock<ICursor> cursor = CreateCursorAt(10, 10);
+        FormsUtilities.SetCursor(cursor.Object);
+
+        try
+        {
+            target.IsInputBlocked = true;
+            Service.Update(1.0, new GraphicalUiElement[] { target });
+            cursor.Object.VisualOver.ShouldBeNull();
+
+            target.IsInputBlocked = false;
+            Service.Update(2.0, new GraphicalUiElement[] { target });
+            cursor.Object.VisualOver.ShouldBeSameAs(target);
+        }
+        finally
+        {
+            target.RemoveFromManagers();
+        }
+    }
+
+    [Fact]
     public void UpdateWithRoots_DoesNotPumpInputToAControlUnderARootNotPassed()
     {
         InteractiveGue target = CreateHoverTarget();
