@@ -64,6 +64,21 @@ public class PerSideOverrideSaveLoadTests : BaseTestClass
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    public void NineSliceSourceCutSides_SetValuesIncludingZero_RoundTrip(bool compact)
+    {
+        ComponentSave loaded = RoundTrip(CreatePanel("Frame", "NineSlice",
+            ("CustomFrameTextureCoordinateLeft", 6f), ("CustomFrameTextureCoordinateBottom", 0f),
+            ("CustomFrameTextureCoordinateTop", null)), compact);
+
+        loaded.DefaultState.Variables.Single(v => v.Name == "Frame.CustomFrameTextureCoordinateLeft").Value.ShouldBe(6f);
+        loaded.DefaultState.Variables.Single(v => v.Name == "Frame.CustomFrameTextureCoordinateBottom").Value.ShouldBe(0f);
+        VariableSave? top = loaded.DefaultState.Variables.SingleOrDefault(v => v.Name == "Frame.CustomFrameTextureCoordinateTop");
+        (top == null || top.Value == null).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
     public void RectangleCustomRadii_SetValuesIncludingZero_RoundTrip(bool compact)
     {
         ComponentSave loaded = RoundTrip(

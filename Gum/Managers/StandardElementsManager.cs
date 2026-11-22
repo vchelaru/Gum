@@ -611,6 +611,13 @@ public class StandardElementsManager
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "TextureHeight", Category = "Source" });
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateWidth", Category = "Source" });
+            // Issue #8354 - a source cut per side, mirroring the runtime's CustomFrameTextureCoordinate*
+            // properties (null falls back to CustomFrameTextureCoordinateWidth). The variable grid collapses
+            // the width and these into one linked/unlinked row, like BorderScale.
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateLeft", Category = "Source", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.BbCodeTextEffects, DetailText = "Texels the left border takes from the texture. Leave blank to use Custom Frame Texture Coordinate Width." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateTop", Category = "Source", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.BbCodeTextEffects, DetailText = "Texels the top border takes from the texture. Leave blank to use Custom Frame Texture Coordinate Width." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateRight", Category = "Source", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.BbCodeTextEffects, DetailText = "Texels the right border takes from the texture. Leave blank to use Custom Frame Texture Coordinate Width." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateBottom", Category = "Source", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.BbCodeTextEffects, DetailText = "Texels the bottom border takes from the texture. Leave blank to use Custom Frame Texture Coordinate Width." });
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsTilingMiddleSections", Category = "Source", MinimumGumxVersion = V3StandardSurfaceVersion });
 

@@ -16,15 +16,21 @@ public class NineSliceGuideManager : IVisualOverlayManager
     // [3] - bottom horizontal line
     private readonly Line[] _nineSliceGuideLines = new Line[4];
     private readonly ICanvasDisplayScale _displayScale;
+    private readonly INineSliceGuidePositions _positions;
 
     public bool ShowGuides { get; set; }
     public Texture2D? CurrentTexture { get; set; }
     public RectangleSelector? Selector { get; set; }
     public float? CustomFrameWidth { get; set; }
+    public float? CustomFrameLeft { get; set; }
+    public float? CustomFrameTop { get; set; }
+    public float? CustomFrameRight { get; set; }
+    public float? CustomFrameBottom { get; set; }
 
-    public NineSliceGuideManager(ICanvasDisplayScale displayScale)
+    public NineSliceGuideManager(ICanvasDisplayScale displayScale, INineSliceGuidePositions positions)
     {
         _displayScale = displayScale;
+        _positions = positions;
     }
 
     public void Initialize(SystemManagers systemManagers)
@@ -58,18 +64,10 @@ public class NineSliceGuideManager : IVisualOverlayManager
         // pixel-perfect with how NineSlices work, but it's a good initial guess
         if (ShowGuides && CurrentTexture != null)
         {
-            var texture = CurrentTexture;
-
-            var textureWidth = texture.Width;
-            var textureHeight = texture.Height;
-
             float left = 0;
             float top = 0;
             float right = CurrentTexture.Width;
             float bottom = CurrentTexture.Height;
-
-            float width = CurrentTexture.Width;
-            float height = CurrentTexture.Height;
 
             if (Selector != null)
             {
@@ -77,23 +75,14 @@ public class NineSliceGuideManager : IVisualOverlayManager
                 right = Selector.Right;
                 top = Selector.Top;
                 bottom = Selector.Bottom;
-
-                width = Selector.Width;
-                height = Selector.Height;
             }
 
-            var guideLeft = left + width / 3.0f;
-            var guideRight = left + width * 2.0f / 3.0f;
-            var guideTop = top + height / 3.0f;
-            var guideBottom = top + height * 2.0f / 3.0f;
-
-            if (CustomFrameWidth != null)
-            {
-                guideLeft = left + CustomFrameWidth.Value;
-                guideRight = right - CustomFrameWidth.Value;
-                guideTop = top + CustomFrameWidth.Value;
-                guideBottom = bottom - CustomFrameWidth.Value;
-            }
+            NineSliceGuideLines guides = _positions.Compute(left, top, right, bottom,
+                CustomFrameWidth, CustomFrameLeft, CustomFrameTop, CustomFrameRight, CustomFrameBottom);
+            float guideLeft = guides.Left;
+            float guideRight = guides.Right;
+            float guideTop = guides.Top;
+            float guideBottom = guides.Bottom;
 
             var leftLine = _nineSliceGuideLines[0];
             leftLine.X = guideLeft;

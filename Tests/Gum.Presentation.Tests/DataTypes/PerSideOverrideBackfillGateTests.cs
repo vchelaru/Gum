@@ -109,6 +109,20 @@ public class PerSideOverrideBackfillGateTests : BaseTestClass
     }
 
     [Theory]
+    [InlineData((int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion, false)]
+    [InlineData((int)GumProjectSave.GumxVersions.BbCodeTextEffects, true)]
+    public void Initialize_InjectsSourceCutSides_OnlyFromV9(int version, bool expected)
+    {
+        StateSave state = DefaultStateAfterInitialize("NineSlice", version, "Width", "Height", "Visible");
+
+        foreach (string side in new[] { "Left", "Top", "Right", "Bottom" })
+        {
+            state.Variables.Any(v => v.Name == "CustomFrameTextureCoordinate" + side).ShouldBe(expected, side);
+        }
+        state.Variables.Any(v => v.Name == "CustomFrameTextureCoordinateWidth").ShouldBeTrue();
+    }
+
+    [Theory]
     [InlineData("CustomRadiusTopLeft")]
     [InlineData("CustomRadiusTopRight")]
     [InlineData("CustomRadiusBottomLeft")]

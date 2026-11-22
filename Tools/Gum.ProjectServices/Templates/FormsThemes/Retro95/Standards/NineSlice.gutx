@@ -26,6 +26,10 @@
     <Variable Type="float?" Name="CustomBorderScaleLeft" Category="Dimensions" SetsValue="true" />
     <Variable Type="float?" Name="CustomBorderScaleRight" Category="Dimensions" SetsValue="true" />
     <Variable Type="float?" Name="CustomBorderScaleTop" Category="Dimensions" SetsValue="true" />
+    <Variable Type="float?" Name="CustomFrameTextureCoordinateBottom" Category="Source" SetsValue="true" />
+    <Variable Type="float?" Name="CustomFrameTextureCoordinateLeft" Category="Source" SetsValue="true" />
+    <Variable Type="float?" Name="CustomFrameTextureCoordinateRight" Category="Source" SetsValue="true" />
+    <Variable Type="float?" Name="CustomFrameTextureCoordinateTop" Category="Source" SetsValue="true" />
     <Variable Type="float?" Name="CustomFrameTextureCoordinateWidth" Category="Source" SetsValue="true" />
     <Variable Type="bool" Name="ExposeChildrenEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>

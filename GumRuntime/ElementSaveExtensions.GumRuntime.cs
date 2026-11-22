@@ -1301,6 +1301,11 @@ namespace GumRuntime
                 "BorderScale", "CustomBorderScaleLeft", "CustomBorderScaleTop",
                 "CustomBorderScaleRight", "CustomBorderScaleBottom"
             }),
+            new CompositeReferenceDescriptor("CustomFrameTextureCoordinateWidth", new[]
+            {
+                "CustomFrameTextureCoordinateWidth", "CustomFrameTextureCoordinateLeft", "CustomFrameTextureCoordinateTop",
+                "CustomFrameTextureCoordinateRight", "CustomFrameTextureCoordinateBottom"
+            }),
         };
 
         /// <summary>

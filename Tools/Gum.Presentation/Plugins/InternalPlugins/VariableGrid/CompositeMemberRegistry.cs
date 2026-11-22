@@ -11,7 +11,7 @@ public class CompositeMemberRegistry : ICompositeMemberRegistry
     /// <inheritdoc/>
     public IReadOnlyList<CompositeMemberDescriptor> Descriptors { get; }
 
-    /// <summary>Creates the registry pre-populated with the built-in descriptors (color, corner radius, border scale).</summary>
+    /// <summary>Creates the registry pre-populated with the built-in descriptors (color, corner radius, border scale, nine-slice source cut).</summary>
     public CompositeMemberRegistry()
     {
         Descriptors = new List<CompositeMemberDescriptor>
@@ -19,6 +19,7 @@ public class CompositeMemberRegistry : ICompositeMemberRegistry
             CreateColorDescriptor(),
             CreateCornerRadiusDescriptor(),
             CreateBorderScaleDescriptor(),
+            CreateFrameTextureCoordinateDescriptor(),
         };
     }
 
@@ -88,49 +89,47 @@ public class CompositeMemberRegistry : ICompositeMemberRegistry
             composite.Uniform, composite.TopLeft, composite.TopRight, composite.BottomLeft, composite.BottomRight);
     }
 
-    private CompositeMemberDescriptor CreateBorderScaleDescriptor()
-    {
+    private CompositeMemberDescriptor CreateBorderScaleDescriptor() =>
         // NineSlice only; same shape as the corner radius: a uniform value plus four optional overrides.
+        CreateNineSliceSidesDescriptor("BorderScale", typeof(GumDisplayers.BorderScale), isUniformNullable: false);
+
+    private CompositeMemberDescriptor CreateFrameTextureCoordinateDescriptor() =>
+        // The source cut (#8354): the width is nullable too, null cutting a third of the texture.
+        CreateNineSliceSidesDescriptor("CustomFrameTextureCoordinateWidth", typeof(GumDisplayers.FrameTextureCoordinate), isUniformNullable: true);
+
+    private CompositeMemberDescriptor CreateNineSliceSidesDescriptor(string token, Type displayer, bool isUniformNullable)
+    {
         return new CompositeMemberDescriptor(
-            ChannelRootNames: ElementSaveExtensions.GetCompositeChannelRootNames("BorderScale")!,
-            CompositeNameFormat: "{prefix}BorderScale{suffix}",
-            Displayer: typeof(GumDisplayers.BorderScale),
-            CompositeType: typeof(BorderScaleComposite),
-            Compose: ComposeBorderScale,
-            Decompose: DecomposeBorderScale);
-    }
-
-    private object ComposeBorderScale(IReadOnlyList<object?> channels)
-    {
-        return new BorderScaleComposite(
-            ToFloat(channels[0]),
-            ToNullableFloat(channels[1]),
-            ToNullableFloat(channels[2]),
-            ToNullableFloat(channels[3]),
-            ToNullableFloat(channels[4]));
-    }
-
-    private object?[] DecomposeBorderScale(object value)
-    {
-        BorderScaleComposite composite = (BorderScaleComposite)value;
-        return DecomposeUniformWithOverrides(
-            composite.Uniform, composite.Left, composite.Top, composite.Right, composite.Bottom);
+            ChannelRootNames: ElementSaveExtensions.GetCompositeChannelRootNames(token)!,
+            CompositeNameFormat: "{prefix}" + token + "{suffix}",
+            Displayer: displayer,
+            CompositeType: typeof(NineSliceSidesComposite),
+            Compose: channels => new NineSliceSidesComposite(
+                isUniformNullable ? ToNullableFloat(channels[0]) : ToFloat(channels[0]),
+                ToNullableFloat(channels[1]),
+                ToNullableFloat(channels[2]),
+                ToNullableFloat(channels[3]),
+                ToNullableFloat(channels[4])),
+            Decompose: value =>
+            {
+                NineSliceSidesComposite composite = (NineSliceSidesComposite)value;
+                return DecomposeUniformWithOverrides(
+                    composite.Uniform, composite.Left, composite.Top, composite.Right, composite.Bottom);
+            });
     }
 
     // The channels of a composite that is one value plus four optional overrides; negatives floor at 0.
-    private static object?[] DecomposeUniformWithOverrides(float uniform, float? first, float? second, float? third, float? fourth)
+    private static object?[] DecomposeUniformWithOverrides(float? uniform, float? first, float? second, float? third, float? fourth)
     {
         return new object?[]
         {
-            ClampToZeroMin(uniform),
+            ClampNullableToZeroMin(uniform),
             ClampNullableToZeroMin(first),
             ClampNullableToZeroMin(second),
             ClampNullableToZeroMin(third),
             ClampNullableToZeroMin(fourth)
         };
     }
-
-    private static float ClampToZeroMin(float value) => Math.Max(0f, value);
 
     private static float? ClampNullableToZeroMin(float? value) => value.HasValue ? Math.Max(0f, value.Value) : null;
 

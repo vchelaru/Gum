@@ -126,4 +126,29 @@ public class SkiaNineSliceSourceCutTests : BaseTestClass
             }
         }
     }
+
+    [Fact]
+    public void SetProperty_CustomFrameTextureCoordinateSides_ShouldForwardToRuntime()
+    {
+        Gum.GueDeriving.NineSliceRuntime sut = new();
+        System.Collections.Generic.List<string?> changed = new();
+        sut.PropertyChanged += (_, args) => changed.Add(args.PropertyName);
+
+        sut.SetProperty("CustomFrameTextureCoordinateLeft", 6f);
+        sut.SetProperty("CustomFrameTextureCoordinateTop", 0f);
+        sut.SetProperty("CustomFrameTextureCoordinateRight", 2.5f);
+        sut.SetProperty("CustomFrameTextureCoordinateBottom", 3f);
+
+        sut.CustomFrameTextureCoordinateLeft.ShouldBe(6f);
+        sut.CustomFrameTextureCoordinateTop.ShouldBe(0f);
+        sut.CustomFrameTextureCoordinateRight.ShouldBe(2.5f);
+        sut.CustomFrameTextureCoordinateBottom.ShouldBe(3f);
+        // Through the runtime, not reflection on the renderable, so bindings hear the change.
+        changed.ShouldContain("CustomFrameTextureCoordinateLeft");
+        changed.ShouldContain("CustomFrameTextureCoordinateBottom");
+
+        sut.SetProperty("CustomFrameTextureCoordinateLeft", null!);
+
+        sut.CustomFrameTextureCoordinateLeft.ShouldBeNull();
+    }
 }

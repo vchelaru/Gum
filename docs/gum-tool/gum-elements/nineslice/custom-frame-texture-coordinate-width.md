@@ -19,3 +19,13 @@ If the `Custom Frame Texture Coordinate Width` value is changed, then the source
 If `Custom Frame Texture Coordinate Width` is set to a value of 0, then the `NineSlice` does not draw a border. In other words, setting this value to 0 results in the `NineSlice` behaving like a `Sprite`.
 
 <figure><img src="../../../.gitbook/assets/21_07 48 58.gif" alt=""><figcaption></figcaption></figure>
+
+## Setting Each Side
+
+The chain button next to `Custom Frame Texture Coordinate Width` breaks it apart into **T**, **L**, **R**, and **B** fields, arranged the way the sides sit on the NineSlice, the same as [Border Scale](border-scale.md). Each field is the number of pixels that side takes from the source texture, so art with a thick top and a thin bottom keeps both at their own size. A side left blank uses `Custom Frame Texture Coordinate Width`, or a third of the texture if that is blank too. Click the chain button again to return to one value, which clears every side.
+
+The **Texture Coordinates** tab draws its guides at each side's cut.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}

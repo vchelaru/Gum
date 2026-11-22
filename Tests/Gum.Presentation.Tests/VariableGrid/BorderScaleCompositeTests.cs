@@ -37,14 +37,14 @@ public class BorderScaleCompositeTests : BaseTestClass
         CompositeMemberDescriptor descriptor = BorderScaleDescriptor();
 
         descriptor.Displayer.ShouldBe(typeof(GumDisplayers.BorderScale));
-        descriptor.CompositeType.ShouldBe(typeof(BorderScaleComposite));
+        descriptor.CompositeType.ShouldBe(typeof(NineSliceSidesComposite));
         descriptor.CompositeNameFormat.ShouldBe("{prefix}BorderScale{suffix}");
     }
 
     [Fact]
     public void Descriptor_Compose_ShouldBuildCompositeFromChannelsInOrder()
     {
-        BorderScaleComposite composite = (BorderScaleComposite)BorderScaleDescriptor().Compose(
+        NineSliceSidesComposite composite = (NineSliceSidesComposite)BorderScaleDescriptor().Compose(
             new object?[] { 2f, 1f, null, 3f, null });
 
         composite.Uniform.ShouldBe(2f);
@@ -57,7 +57,7 @@ public class BorderScaleCompositeTests : BaseTestClass
     [Fact]
     public void Descriptor_Compose_ShouldKeepAnExplicitZeroOverride()
     {
-        BorderScaleComposite composite = (BorderScaleComposite)BorderScaleDescriptor().Compose(
+        NineSliceSidesComposite composite = (NineSliceSidesComposite)BorderScaleDescriptor().Compose(
             new object?[] { 2f, 0f, null, null, null });
 
         composite.Left.ShouldBe(0f);
@@ -67,7 +67,7 @@ public class BorderScaleCompositeTests : BaseTestClass
     [Fact]
     public void Descriptor_Decompose_ShouldReturnFiveChannelsInOrder()
     {
-        object?[] channels = BorderScaleDescriptor().Decompose(new BorderScaleComposite(2f, 1f, null, 3f, null));
+        object?[] channels = BorderScaleDescriptor().Decompose(new NineSliceSidesComposite(2f, 1f, null, 3f, null));
 
         channels.ShouldBe(new object?[] { 2f, 1f, null, 3f, null });
     }
@@ -75,7 +75,7 @@ public class BorderScaleCompositeTests : BaseTestClass
     [Fact]
     public void Descriptor_Decompose_ShouldClampNegativesToZero()
     {
-        object?[] channels = BorderScaleDescriptor().Decompose(new BorderScaleComposite(-2f, -1f, null, 3f, -0.5f));
+        object?[] channels = BorderScaleDescriptor().Decompose(new NineSliceSidesComposite(-2f, -1f, null, 3f, -0.5f));
 
         channels.ShouldBe(new object?[] { 0f, 0f, null, 3f, 0f });
     }
@@ -91,8 +91,8 @@ public class BorderScaleCompositeTests : BaseTestClass
     [Fact]
     public void Composite_IsLinked_ShouldBeTrueOnlyWhenNoSideHasAnOverride()
     {
-        new BorderScaleComposite(1f, null, null, null, null).IsLinked.ShouldBeTrue();
-        new BorderScaleComposite(1f, null, null, null, 0f).IsLinked.ShouldBeFalse();
+        new NineSliceSidesComposite(1f, null, null, null, null).IsLinked.ShouldBeTrue();
+        new NineSliceSidesComposite(1f, null, null, null, 0f).IsLinked.ShouldBeFalse();
     }
 
     #endregion
@@ -138,46 +138,46 @@ public class BorderScaleCompositeTests : BaseTestClass
     [Fact]
     public void DisplayLogic_ComposesLinkedAndUnlinkedValues()
     {
-        BorderScaleDisplayLogic logic = new BorderScaleDisplayLogic();
-        BorderScaleComposite current = new BorderScaleComposite(4, null, null, null, null);
+        NineSliceSidesDisplayLogic logic = new NineSliceSidesDisplayLogic(isUniformNullable: false);
+        NineSliceSidesComposite current = new NineSliceSidesComposite(4, null, null, null, null);
 
-        logic.Compose(isLinked: true, "6", "1", "2", "3", "4", current).ShouldBe(new BorderScaleComposite(6, null, null, null, null));
-        logic.Compose(isLinked: false, "6", "1", "", "3", "x", current).ShouldBe(new BorderScaleComposite(6, 1, null, 3, null));
-        logic.Compose(isLinked: true, "bad", "", "", "", "", current).Uniform.ShouldBe(4f);
+        logic.Compose(isLinked: true, "6", new string?[] { "1", "2", "3", "4" }, current).ShouldBe(new NineSliceSidesComposite(6, null, null, null, null));
+        logic.Compose(isLinked: false, "6", new string?[] { "1", "", "3", "x" }, current).ShouldBe(new NineSliceSidesComposite(6, 1, null, 3, null));
+        logic.Compose(isLinked: true, "bad", new string?[] { "", "", "", "" }, current).Uniform.ShouldBe(4f);
     }
 
     [Fact]
     public void DisplayLogic_Relinking_DropsEveryOverrideOfTheCurrentValue()
     {
-        BorderScaleDisplayLogic logic = new BorderScaleDisplayLogic();
-        BorderScaleComposite current = new BorderScaleComposite(4, 1, 2, 3, 4);
+        NineSliceSidesDisplayLogic logic = new NineSliceSidesDisplayLogic(isUniformNullable: false);
+        NineSliceSidesComposite current = new NineSliceSidesComposite(4, 1, 2, 3, 4);
 
-        logic.Compose(isLinked: true, "6", "1", "2", "3", "4", current).ShouldBe(new BorderScaleComposite(6, null, null, null, null));
+        logic.Compose(isLinked: true, "6", new string?[] { "1", "2", "3", "4" }, current).ShouldBe(new NineSliceSidesComposite(6, null, null, null, null));
     }
 
     [Fact]
     public void DisplayLogic_KeepsAZeroSideAsZero_NotInherited()
     {
-        BorderScaleDisplayLogic logic = new BorderScaleDisplayLogic();
-        BorderScaleComposite current = new BorderScaleComposite(4, null, null, null, null);
+        NineSliceSidesDisplayLogic logic = new NineSliceSidesDisplayLogic(isUniformNullable: false);
+        NineSliceSidesComposite current = new NineSliceSidesComposite(4, null, null, null, null);
 
-        logic.Compose(isLinked: false, "2", "0", "", "", "", current).Left.ShouldBe(0f);
+        logic.Compose(isLinked: false, "2", new string?[] { "0", "", "", "" }, current).Left.ShouldBe(0f);
     }
 
     [Fact]
     public void DisplayLogic_FloorsTypedNegativesAtZero()
     {
-        BorderScaleDisplayLogic logic = new BorderScaleDisplayLogic();
-        BorderScaleComposite current = new BorderScaleComposite(4, null, null, null, null);
+        NineSliceSidesDisplayLogic logic = new NineSliceSidesDisplayLogic(isUniformNullable: false);
+        NineSliceSidesComposite current = new NineSliceSidesComposite(4, null, null, null, null);
 
-        logic.Compose(isLinked: false, "-6", "-1", "", "3", "-0.5", current)
-            .ShouldBe(new BorderScaleComposite(0, 0, null, 3, 0));
+        logic.Compose(isLinked: false, "-6", new string?[] { "-1", "", "3", "-0.5" }, current)
+            .ShouldBe(new NineSliceSidesComposite(0, 0, null, 3, 0));
     }
 
     [Fact]
     public void DisplayLogic_FormatsDecimalsWithoutTrailingZeros()
     {
-        BorderScaleDisplayLogic logic = new BorderScaleDisplayLogic();
+        NineSliceSidesDisplayLogic logic = new NineSliceSidesDisplayLogic(isUniformNullable: false);
 
         logic.FormatFloat(2.5f).ShouldBe("2.5");
         logic.FormatFloat(1f).ShouldBe("1");

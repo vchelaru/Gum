@@ -522,7 +522,7 @@ public class ColorDisplay : DataUiDisplayBase
 /// <summary>
 /// The editor of a composite made of one uniform value and four optional overrides: one uniform field
 /// while linked, four fields once unlinked with the chain button. Dragging a field's label scrubs it
-/// (floor of 0). The corner-radius and border-scale composites differ only in their labels, scrub step
+/// (floor of 0). The corner-radius, border-scale and source-cut composites differ only in their labels, scrub step
 /// and how the fields compose into a value, which the subclasses supply.
 /// </summary>
 public abstract class LinkedOverridesDisplay : DataUiDisplayBase
@@ -541,7 +541,7 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
     private readonly TextBlock[] _fieldLabels = new TextBlock[4];
     private readonly TextBlock _hint;
     private readonly Dictionary<Control, TextBox> _dragTargets;
-    private float _currentUniform;
+    private float? _currentUniform;
     private bool _isLinked;
     private bool _isSyncing;
     private TextBox? _draggingTextBox;
@@ -569,7 +569,7 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
         _isLinked = true;
         _dragTargets = new Dictionary<Control, TextBox>();
 
-        _label = new TextBlock { MinWidth = 100, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0), Cursor = new Cursor(StandardCursorType.SizeWestEast) };
+        _label = new TextBlock { TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0), Cursor = new Cursor(StandardCursorType.SizeWestEast) };
         _uniformTextBox = CreateField();
         AddDragTarget(_label, _uniformTextBox);
 
@@ -638,6 +638,8 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
         _hint = CreateHintTextBlock();
 
         Grid grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto") };
+        // The label column wraps a long name and gives way when the panel is narrow, like a text row's.
+        DataUiRowLayout.ConfigureLabelColumn(grid.ColumnDefinitions[0], 100);
         Grid.SetColumn(_uniformTextBox, 1);
         Grid.SetColumn(_cornersGrid, 1);
         Grid.SetColumn(_linkButton, 2);
@@ -690,15 +692,15 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
     }
 
     /// <summary>Reads the composite a value holds into the uniform value, the four overrides and whether it is linked.</summary>
-    protected abstract bool TryReadComposite(object? value, out float uniform, out float?[] overrides, out bool isLinked);
+    protected abstract bool TryReadComposite(object? value, out float? uniform, out float?[] overrides, out bool isLinked);
 
     /// <summary>Composes the fields' text into the composite value.</summary>
-    protected abstract object ComposeValue(bool isLinked, string? uniformText, string?[] overrideTexts, float currentUniform);
+    protected abstract object ComposeValue(bool isLinked, string? uniformText, string?[] overrideTexts, float? currentUniform);
 
     /// <inheritdoc/>
     public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
-        if (!TryReadComposite(valueOnInstance, out float uniform, out float?[] overrides, out bool isLinked))
+        if (!TryReadComposite(valueOnInstance, out float? uniform, out float?[] overrides, out bool isLinked))
         {
             return ApplyValueResult.NotSupported;
         }
@@ -707,7 +709,7 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
         try
         {
             _currentUniform = uniform;
-            _uniformTextBox.Text = _logic.FormatFloat(uniform);
+            _uniformTextBox.Text = _logic.FormatNullableFloat(uniform);
             for (int i = 0; i < 4; i++)
             {
                 _cornerTextBoxes[i].Text = _logic.FormatNullableFloat(overrides[i]);
@@ -746,6 +748,13 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
             foreach (TextBox corner in _cornerTextBoxes)
             {
                 corner.Text = _uniformTextBox.Text;
+            }
+
+            if (string.IsNullOrEmpty(_uniformTextBox.Text))
+            {
+                // A blank uniform seeds blank fields, which reads back as linked once committed, so stay
+                // unlinked without committing until a field is typed.
+                return;
             }
         }
 
@@ -836,7 +845,7 @@ public abstract class LinkedOverridesDisplay : DataUiDisplayBase
                 _draggingTextBox = target;
                 _dragLastPosition = e.GetPosition(this);
                 _hasScrubbed = false;
-                _scrubLogic.Begin(_logic.ParseFloat(target.Text) ?? _currentUniform);
+                _scrubLogic.Begin(_logic.ParseFloat(target.Text) ?? _currentUniform ?? 0);
                 return true;
             },
             e =>
@@ -898,7 +907,7 @@ public class CornerRadiusDisplay : LinkedOverridesDisplay
     }
 
     /// <inheritdoc/>
-    protected override bool TryReadComposite(object? value, out float uniform, out float?[] overrides, out bool isLinked)
+    protected override bool TryReadComposite(object? value, out float? uniform, out float?[] overrides, out bool isLinked)
     {
         if (value is not CornerRadiusComposite composite)
         {
@@ -915,38 +924,33 @@ public class CornerRadiusDisplay : LinkedOverridesDisplay
     }
 
     /// <inheritdoc/>
-    protected override object ComposeValue(bool isLinked, string? uniformText, string?[] overrideTexts, float currentUniform) =>
+    protected override object ComposeValue(bool isLinked, string? uniformText, string?[] overrideTexts, float? currentUniform) =>
         Logic.Compose(isLinked, uniformText, overrideTexts[0], overrideTexts[1], overrideTexts[2], overrideTexts[3],
-            new CornerRadiusComposite(currentUniform, null, null, null, null));
+            new CornerRadiusComposite(currentUniform ?? 0, null, null, null, null));
 }
 
 /// <summary>
-/// The NineSlice border-scale composite's editor: one uniform field while linked, four per-side fields
-/// (left, top, right, bottom) once unlinked with the chain button. Dragging a field's label scrubs it in
-/// hundredths, floor of 0.
+/// The editor of a NineSlice composite made of a shared value and four per-side overrides: one shared
+/// field while linked, four per-side fields (left, top, right, bottom) laid out where each side sits once
+/// unlinked with the chain button. Border scale and source cut differ only in their tooltips, scrub step
+/// and whether the shared value may be blank.
 /// </summary>
-public class BorderScaleDisplay : LinkedOverridesDisplay
+public abstract class NineSliceSidesDisplay : LinkedOverridesDisplay
 {
-    private static readonly BorderScaleDisplayLogic Logic = new BorderScaleDisplayLogic();
+    private readonly NineSliceSidesDisplayLogic _sidesLogic;
 
     /// <summary>Builds the editor.</summary>
-    public BorderScaleDisplay()
-        : base(
-            Logic,
-            new[] { "L", "T", "R", "B" },
-            new[] { "Left border scale", "Top border scale", "Right border scale", "Bottom border scale" },
-            "Linked - all sides share Border Scale. Click to set sides independently.",
-            "Unlinked - click to use one Border Scale for all sides again.",
-            scrubMultiplier: .02m,
-            scrubRounding: .01m,
-            diamondLayout: true)
+    protected NineSliceSidesDisplay(NineSliceSidesDisplayLogic logic, string[] fieldTips, string linkedTip, string unlinkedTip,
+        decimal scrubMultiplier, decimal scrubRounding)
+        : base(logic, new[] { "L", "T", "R", "B" }, fieldTips, linkedTip, unlinkedTip, scrubMultiplier, scrubRounding, diamondLayout: true)
     {
+        _sidesLogic = logic;
     }
 
     /// <inheritdoc/>
-    protected override bool TryReadComposite(object? value, out float uniform, out float?[] overrides, out bool isLinked)
+    protected override bool TryReadComposite(object? value, out float? uniform, out float?[] overrides, out bool isLinked)
     {
-        if (value is not BorderScaleComposite composite)
+        if (value is not NineSliceSidesComposite composite)
         {
             uniform = 0;
             overrides = new float?[4];
@@ -961,9 +965,45 @@ public class BorderScaleDisplay : LinkedOverridesDisplay
     }
 
     /// <inheritdoc/>
-    protected override object ComposeValue(bool isLinked, string? uniformText, string?[] overrideTexts, float currentUniform) =>
-        Logic.Compose(isLinked, uniformText, overrideTexts[0], overrideTexts[1], overrideTexts[2], overrideTexts[3],
-            new BorderScaleComposite(currentUniform, null, null, null, null));
+    protected override object ComposeValue(bool isLinked, string? uniformText, string?[] overrideTexts, float? currentUniform) =>
+        _sidesLogic.Compose(isLinked, uniformText, overrideTexts, new NineSliceSidesComposite(currentUniform, null, null, null, null));
+}
+
+/// <summary>
+/// The NineSlice border-scale composite's editor. Dragging a field's label scrubs it in hundredths, floor of 0.
+/// </summary>
+public class BorderScaleDisplay : NineSliceSidesDisplay
+{
+    /// <summary>Builds the editor.</summary>
+    public BorderScaleDisplay()
+        : base(
+            new NineSliceSidesDisplayLogic(isUniformNullable: false),
+            new[] { "Left border scale", "Top border scale", "Right border scale", "Bottom border scale" },
+            "Linked - all sides share Border Scale. Click to set sides independently.",
+            "Unlinked - click to use one Border Scale for all sides again.",
+            scrubMultiplier: .02m,
+            scrubRounding: .01m)
+    {
+    }
+}
+
+/// <summary>
+/// The NineSlice source-cut composite's editor (#8354): Custom Frame Texture Coordinate Width and the texels
+/// each side takes from the texture. A blank width cuts a third of the texture. Dragging a label scrubs whole texels.
+/// </summary>
+public class FrameTextureCoordinateDisplay : NineSliceSidesDisplay
+{
+    /// <summary>Builds the editor.</summary>
+    public FrameTextureCoordinateDisplay()
+        : base(
+            new NineSliceSidesDisplayLogic(isUniformNullable: true),
+            new[] { "Left source cut", "Top source cut", "Right source cut", "Bottom source cut" },
+            "Linked - all sides share Custom Frame Texture Coordinate Width. Click to set sides independently.",
+            "Unlinked - click to use one Custom Frame Texture Coordinate Width for all sides again.",
+            scrubMultiplier: 1m,
+            scrubRounding: 1m)
+    {
+    }
 }
 
 /// <summary>A row with a button that removes its variable from the category; the member's setter does the removal.</summary>

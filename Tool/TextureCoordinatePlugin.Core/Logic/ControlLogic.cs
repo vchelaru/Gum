@@ -133,7 +133,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
         _backgroundManager = new BackgroundManager(messenger, themingService);
         _lineGridManager = new LineGridManager();
-        _nineSliceGuideManager = new NineSliceGuideManager(_displayScale);
+        _nineSliceGuideManager = new NineSliceGuideManager(_displayScale, new NineSliceGuidePositions());
         _textureOutlineManager = new TextureOutlineManager(_displayScale);
         _regionOverlayManager = new TextureRegionOverlayManager(_displayScale);
         _pluginManager = pluginManager;
@@ -362,7 +362,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
     public void Refresh()
     {
-        var textureToAssign = GetTextureToAssign(out bool showNineSliceGuides, out float? customFrameTextureCoordinateWidth);
+        var textureToAssign = GetTextureToAssign(out NineSlice? nineSlice);
 
         if (textureToAssign?.IsDisposed == true)
         {
@@ -420,10 +420,14 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
         RefreshLineGrid();
 
-        _nineSliceGuideManager.ShowGuides = showNineSliceGuides;
+        _nineSliceGuideManager.ShowGuides = nineSlice != null;
         _nineSliceGuideManager.CurrentTexture = textureToAssign;
         _nineSliceGuideManager.Selector = _view.Canvas.RectangleSelector;
-        _nineSliceGuideManager.CustomFrameWidth = customFrameTextureCoordinateWidth;
+        _nineSliceGuideManager.CustomFrameWidth = nineSlice?.CustomFrameTextureCoordinateWidth;
+        _nineSliceGuideManager.CustomFrameLeft = nineSlice?.CustomFrameTextureCoordinateLeft;
+        _nineSliceGuideManager.CustomFrameTop = nineSlice?.CustomFrameTextureCoordinateTop;
+        _nineSliceGuideManager.CustomFrameRight = nineSlice?.CustomFrameTextureCoordinateRight;
+        _nineSliceGuideManager.CustomFrameBottom = nineSlice?.CustomFrameTextureCoordinateBottom;
         _nineSliceGuideManager.Refresh();
 
         RefreshRegions(textureToAssign);
@@ -509,40 +513,15 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         return new RecursiveVariableFinder(state).GetValue<string>($"{instancePrefix}SourceFile");
     }
 
-    private Texture2D? GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth)
+    private Texture2D? GetTextureToAssign(out NineSlice? nineSlice)
     {
         var graphicalUiElement = _selectedState.SelectedIpso as GraphicalUiElement;
-        isNineslice = false;
-        customFrameTextureCoordinateWidth = null;
+        nineSlice = null;
         Texture2D? textureToAssign = null;
 
         if (graphicalUiElement != null)
         {
-            var containedRenderable = graphicalUiElement.RenderableComponent;
-
-            if (containedRenderable is Sprite asSprite)
-            {
-                textureToAssign = asSprite.Texture;
-            }
-            else if (containedRenderable is NineSlice nineSlice)
-            {
-                isNineslice = true;
-                customFrameTextureCoordinateWidth = nineSlice.CustomFrameTextureCoordinateWidth;
-                var isUsingSameTextures =
-                    nineSlice.TopLeftTexture == nineSlice.CenterTexture &&
-                    nineSlice.TopTexture == nineSlice.CenterTexture &&
-                    nineSlice.TopRightTexture == nineSlice.CenterTexture &&
-                    nineSlice.LeftTexture == nineSlice.CenterTexture &&
-                    nineSlice.RightTexture == nineSlice.CenterTexture &&
-                    nineSlice.BottomLeftTexture == nineSlice.CenterTexture &&
-                    nineSlice.BottomTexture == nineSlice.CenterTexture &&
-                    nineSlice.BottomRightTexture == nineSlice.CenterTexture;
-
-                if (isUsingSameTextures)
-                {
-                    textureToAssign = nineSlice.CenterTexture;
-                }
-            }
+            textureToAssign = GetTextureFrom(graphicalUiElement.RenderableComponent, ref nineSlice);
 
             if (textureToAssign == null && _currentExposedSource != null)
             {
@@ -551,35 +530,40 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
                 if (innerChild is GraphicalUiElement innerGue)
                 {
-                    var innerRenderable = innerGue.RenderableComponent;
-                    if (innerRenderable is Sprite innerSprite)
-                    {
-                        textureToAssign = innerSprite.Texture;
-                    }
-                    else if (innerRenderable is NineSlice innerNineSlice)
-                    {
-                        isNineslice = true;
-                        customFrameTextureCoordinateWidth = innerNineSlice.CustomFrameTextureCoordinateWidth;
-                        var isUsingSameTextures =
-                            innerNineSlice.TopLeftTexture == innerNineSlice.CenterTexture &&
-                            innerNineSlice.TopTexture == innerNineSlice.CenterTexture &&
-                            innerNineSlice.TopRightTexture == innerNineSlice.CenterTexture &&
-                            innerNineSlice.LeftTexture == innerNineSlice.CenterTexture &&
-                            innerNineSlice.RightTexture == innerNineSlice.CenterTexture &&
-                            innerNineSlice.BottomLeftTexture == innerNineSlice.CenterTexture &&
-                            innerNineSlice.BottomTexture == innerNineSlice.CenterTexture &&
-                            innerNineSlice.BottomRightTexture == innerNineSlice.CenterTexture;
-
-                        if (isUsingSameTextures)
-                        {
-                            textureToAssign = innerNineSlice.CenterTexture;
-                        }
-                    }
+                    textureToAssign = GetTextureFrom(innerGue.RenderableComponent, ref nineSlice);
                 }
             }
         }
 
         return textureToAssign;
+    }
+
+    // A sprite's texture, or a nine-slice's when all nine sections share one texture. A nine-slice is
+    // reported even when its sections differ, so the guides still show.
+    private Texture2D? GetTextureFrom(object? renderable, ref NineSlice? nineSlice)
+    {
+        if (renderable is Sprite sprite)
+        {
+            return sprite.Texture;
+        }
+
+        if (renderable is NineSlice asNineSlice)
+        {
+            nineSlice = asNineSlice;
+            bool isUsingSameTextures =
+                asNineSlice.TopLeftTexture == asNineSlice.CenterTexture &&
+                asNineSlice.TopTexture == asNineSlice.CenterTexture &&
+                asNineSlice.TopRightTexture == asNineSlice.CenterTexture &&
+                asNineSlice.LeftTexture == asNineSlice.CenterTexture &&
+                asNineSlice.RightTexture == asNineSlice.CenterTexture &&
+                asNineSlice.BottomLeftTexture == asNineSlice.CenterTexture &&
+                asNineSlice.BottomTexture == asNineSlice.CenterTexture &&
+                asNineSlice.BottomRightTexture == asNineSlice.CenterTexture;
+
+            return isUsingSameTextures ? asNineSlice.CenterTexture : null;
+        }
+
+        return null;
     }
 
     private void RefreshLineGrid()

@@ -20,6 +20,9 @@ public static class GumDisplayers
     /// <summary>The linked/unlinked NineSlice border-scale composite.</summary>
     public sealed class BorderScale { private BorderScale() { } }
 
+    /// <summary>The linked/unlinked NineSlice source-cut composite (Custom Frame Texture Coordinate Width and its sides).</summary>
+    public sealed class FrameTextureCoordinate { private FrameTextureCoordinate() { } }
+
     /// <summary>The X, Y, Z and W fields of a float vector shader parameter, side by side in one row.</summary>
     public sealed class ShaderVector { private ShaderVector() { } }
 

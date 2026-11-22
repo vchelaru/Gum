@@ -1553,6 +1553,34 @@ public partial class CustomSetPropertyOnRenderable
                     return true;
                 }
                 break;
+            case nameof(NineSliceRuntime.CustomFrameTextureCoordinateLeft):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.CustomFrameTextureCoordinateLeft = (float?)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSliceRuntime.CustomFrameTextureCoordinateTop):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.CustomFrameTextureCoordinateTop = (float?)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSliceRuntime.CustomFrameTextureCoordinateRight):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.CustomFrameTextureCoordinateRight = (float?)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSliceRuntime.CustomFrameTextureCoordinateBottom):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.CustomFrameTextureCoordinateBottom = (float?)value;
+                    return true;
+                }
+                break;
         }
         return false;
     }
