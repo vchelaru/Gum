@@ -22,7 +22,7 @@ public class BorderScaleDisplayTests
 {
     private class Fixture
     {
-        public BorderScaleComposite BorderScale { get; set; } = new BorderScaleComposite(1, null, null, null, null);
+        public NineSliceSidesComposite BorderScale { get; set; } = new NineSliceSidesComposite(1, null, null, null, null);
         public InstanceMember Member() => new InstanceMember(nameof(BorderScale), this);
     }
 
@@ -46,37 +46,37 @@ public class BorderScaleDisplayTests
     public void Display_UnlinkingSeedsTheSides_AndSideEditsWriteThrough()
     {
         Fixture fixture = new Fixture();
-        fixture.BorderScale = new BorderScaleComposite(2, null, null, null, null);
+        fixture.BorderScale = new NineSliceSidesComposite(2, null, null, null, null);
         BorderScaleDisplay display = new BorderScaleDisplay { InstanceMember = fixture.Member() };
 
         display.ToggleLinked();
-        fixture.BorderScale.ShouldBe(new BorderScaleComposite(2, 2, 2, 2, 2));
+        fixture.BorderScale.ShouldBe(new NineSliceSidesComposite(2, 2, 2, 2, 2));
 
         display.CornerTextBoxes[0].Text = "0";
         display.CornerTextBoxes[3].Text = "0.5";
         display.Commit();
 
-        fixture.BorderScale.ShouldBe(new BorderScaleComposite(2, 0, 2, 2, 0.5f));
+        fixture.BorderScale.ShouldBe(new NineSliceSidesComposite(2, 0, 2, 2, 0.5f));
     }
 
     [AvaloniaFact]
     public void Display_RelinkingClearsEverySideOverride()
     {
         Fixture fixture = new Fixture();
-        fixture.BorderScale = new BorderScaleComposite(2, 1, null, 3, null);
+        fixture.BorderScale = new NineSliceSidesComposite(2, 1, null, 3, null);
         BorderScaleDisplay display = new BorderScaleDisplay { InstanceMember = fixture.Member() };
         display.IsLinked.ShouldBeFalse();
 
         display.ToggleLinked();
 
-        fixture.BorderScale.ShouldBe(new BorderScaleComposite(2, null, null, null, null));
+        fixture.BorderScale.ShouldBe(new NineSliceSidesComposite(2, null, null, null, null));
     }
 
     [AvaloniaFact]
     public void Display_ShowsAnUnlinkedValue_WithEmptyFieldsForInheritedSides()
     {
         Fixture fixture = new Fixture();
-        fixture.BorderScale = new BorderScaleComposite(2, 1, null, 0, null);
+        fixture.BorderScale = new NineSliceSidesComposite(2, 1, null, 0, null);
         BorderScaleDisplay display = new BorderScaleDisplay { InstanceMember = fixture.Member() };
 
         display.IsLinked.ShouldBeFalse();
@@ -147,11 +147,15 @@ public class BorderScaleDisplayTests
         grid.UndoManager.CurrentElementHistory!.Actions.Count.ShouldBe(historyBefore + 1);
     }
 
-    [AvaloniaFact]
-    public void UnlinkedFields_AreLaidOutAsADiamond_MatchingTheSidesOnTheNineSlice()
+    [AvaloniaTheory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void UnlinkedFields_AreLaidOutAsADiamond_MatchingTheSidesOnTheNineSlice(bool borderScale)
     {
-        Fixture fixture = new Fixture();
-        BorderScaleDisplay display = new BorderScaleDisplay { InstanceMember = fixture.Member() };
+        // Both NineSlice composites (Border Scale and the source cut, #8354) share the layout.
+        LinkedOverridesDisplay display = borderScale
+            ? new BorderScaleDisplay { InstanceMember = new Fixture().Member() }
+            : new FrameTextureCoordinateDisplay { InstanceMember = new InstanceMember("Cut", new FrameFixture()) };
         Window window = new Window { Content = display, Width = 400, Height = 300 };
         window.Show();
         display.ToggleLinked();
@@ -201,6 +205,11 @@ public class BorderScaleDisplayTests
         {
             window.Close();
         }
+    }
+
+    private class FrameFixture
+    {
+        public NineSliceSidesComposite Cut { get; set; } = new NineSliceSidesComposite(4, null, null, null, null);
     }
 
     private class CornerFixture

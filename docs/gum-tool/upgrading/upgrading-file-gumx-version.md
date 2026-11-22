@@ -174,7 +174,7 @@ Available in December 2026, or now if building Gum from source. New projects cre
 
 **Required Gum Tool Version**: 2026 December (or later)
 
-This version turns on the built-in BBCode text effects, such as `[Wave]` and `[Rainbow]` (see [Text Effects](../../code/standard-visuals/textruntime/bbcode.md#text-effects)). In a project below version 9, these tags are drawn as plain text.
+This version turns on the built-in BBCode text effects, such as `[Wave]` and `[Rainbow]` (see [Text Effects](../../code/standard-visuals/textruntime/bbcode.md#text-effects)). In a project below version 9, these tags are drawn as plain text. It also unlocks setting a NineSlice's [Custom Frame Texture Coordinate Width](../gum-elements/nineslice/custom-frame-texture-coordinate-width.md) per side.
 
 Before changing the version number, check that no text in the project uses `[Wave]`, `[Shake]`, `[Tornado]`, `[Fade]`, `[Rainbow]`, or `[Pulse]` as plain text, since those tags start animating at version 9.
 

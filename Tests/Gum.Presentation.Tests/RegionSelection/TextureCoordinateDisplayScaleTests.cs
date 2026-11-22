@@ -56,7 +56,7 @@ public class TextureCoordinateDisplayScaleTests
     {
         SystemManagers managers = CreateManagers();
         CanvasDisplayScale displayScale = new CanvasDisplayScale { DisplayScale = 2 };
-        NineSliceGuideManager manager = new NineSliceGuideManager(displayScale);
+        NineSliceGuideManager manager = new NineSliceGuideManager(displayScale, new NineSliceGuidePositions());
         manager.Initialize(managers);
 
         manager.Refresh();

@@ -57,6 +57,7 @@ public class AvaloniaVariableGridHead : IVariableGridHead
         registry.Register(typeof(GumDisplayers.FontRanges), typeof(Gum.Avalonia.Settings.FontRangesDisplay));
         registry.Register(typeof(GumDisplayers.CornerRadius), typeof(CornerRadiusDisplay));
         registry.Register(typeof(GumDisplayers.BorderScale), typeof(BorderScaleDisplay));
+        registry.Register(typeof(GumDisplayers.FrameTextureCoordinate), typeof(FrameTextureCoordinateDisplay));
         registry.Register(typeof(GumDisplayers.ShaderVector), typeof(ShaderVectorDisplay));
         registry.Register(typeof(GumDisplayers.RemoveButton), typeof(VariableRemoveButton));
         registry.Register(typeof(GumDisplayers.TextOverflowVerticalMode), typeof(TextOverflowVerticalModeDisplay));

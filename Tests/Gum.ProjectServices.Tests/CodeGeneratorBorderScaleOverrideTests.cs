@@ -21,6 +21,13 @@ public class CodeGeneratorBorderScaleOverrideTests : BaseTestClass
         "CustomBorderScaleLeft", "CustomBorderScaleTop", "CustomBorderScaleRight", "CustomBorderScaleBottom"
     };
 
+    // #8354: the per-side source cuts are the same kind of nullable per-side value.
+    private static readonly string[] SourceCutVariableNames =
+    {
+        "CustomFrameTextureCoordinateLeft", "CustomFrameTextureCoordinateTop",
+        "CustomFrameTextureCoordinateRight", "CustomFrameTextureCoordinateBottom"
+    };
+
     private static CodeGenerator CreateCodeGenerator()
     {
         Mock<INameVerifier> mockNameVerifier = new Mock<INameVerifier>();
@@ -51,7 +58,7 @@ public class CodeGeneratorBorderScaleOverrideTests : BaseTestClass
         // The base test class already registers a bare NineSlice; declare the variables on it.
         StandardElementSave element = Project.StandardElements.Single(item => item.Name == "NineSlice");
         AddVariable(element, "BorderScale", 1f, "float");
-        foreach (string sideVariableName in SideVariableNames)
+        foreach (string sideVariableName in SideVariableNames.Concat(SourceCutVariableNames))
         {
             AddVariable(element, sideVariableName, null, "float?");
         }
@@ -77,6 +84,19 @@ public class CodeGeneratorBorderScaleOverrideTests : BaseTestClass
         {
             ObjectFinder.Self.GumProjectSave = null;
         }
+    }
+
+    [Theory]
+    [InlineData(OutputLibrary.MonoGame)]
+    [InlineData(OutputLibrary.Skia)]
+    public void GetCodeForInstance_SourceCutSides_EmitAssignmentsOnlyForSetSides(OutputLibrary library)
+    {
+        string code = GenerateNineSliceInstanceCode(library,
+            ("CustomFrameTextureCoordinateLeft", 6f), ("CustomFrameTextureCoordinateBottom", 0f));
+
+        code.ShouldContain("Frame.CustomFrameTextureCoordinateLeft = 6");
+        code.ShouldContain("Frame.CustomFrameTextureCoordinateBottom = 0");
+        code.ShouldNotContain("CustomFrameTextureCoordinateTop");
     }
 
     [Theory]

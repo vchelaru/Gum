@@ -655,6 +655,27 @@ public partial class CustomSetPropertyOnRenderable
         effectOwner.RenderTargetEffect = resolvedEffect;
     }
 
+#if !FRB
+    // The NineSlice's nullable per-side values: border scale (#6983) and source cut (#8354). Null clears a
+    // side so it falls back to the shared value. Returns false for any other property.
+    private static bool TrySetNineSliceSide(NineSliceRuntimeType? runtime, string propertyName, object? value)
+    {
+        float? side = value as float?;
+        switch (propertyName)
+        {
+            case "CustomBorderScaleLeft": if (runtime != null) { runtime.CustomBorderScaleLeft = side; } return true;
+            case "CustomBorderScaleTop": if (runtime != null) { runtime.CustomBorderScaleTop = side; } return true;
+            case "CustomBorderScaleRight": if (runtime != null) { runtime.CustomBorderScaleRight = side; } return true;
+            case "CustomBorderScaleBottom": if (runtime != null) { runtime.CustomBorderScaleBottom = side; } return true;
+            case "CustomFrameTextureCoordinateLeft": if (runtime != null) { runtime.CustomFrameTextureCoordinateLeft = side; } return true;
+            case "CustomFrameTextureCoordinateTop": if (runtime != null) { runtime.CustomFrameTextureCoordinateTop = side; } return true;
+            case "CustomFrameTextureCoordinateRight": if (runtime != null) { runtime.CustomFrameTextureCoordinateRight = side; } return true;
+            case "CustomFrameTextureCoordinateBottom": if (runtime != null) { runtime.CustomFrameTextureCoordinateBottom = side; } return true;
+            default: return false;
+        }
+    }
+#endif
+
     private static bool TrySetPropertyOnNineSlice(NineSlice nineSlice, GraphicalUiElement graphicalUiElement, string propertyName, object value, bool handled)
     {
 
@@ -773,36 +794,8 @@ public partial class CustomSetPropertyOnRenderable
             handled = true;
         }
 #if !FRB
-        else if(propertyName == "CustomBorderScaleLeft")
+        else if(TrySetNineSliceSide(nineSliceRuntime, propertyName, value))
         {
-            if (nineSliceRuntime != null)
-            {
-                nineSliceRuntime.CustomBorderScaleLeft = (float?)value;
-            }
-            handled = true;
-        }
-        else if(propertyName == "CustomBorderScaleTop")
-        {
-            if (nineSliceRuntime != null)
-            {
-                nineSliceRuntime.CustomBorderScaleTop = (float?)value;
-            }
-            handled = true;
-        }
-        else if(propertyName == "CustomBorderScaleRight")
-        {
-            if (nineSliceRuntime != null)
-            {
-                nineSliceRuntime.CustomBorderScaleRight = (float?)value;
-            }
-            handled = true;
-        }
-        else if(propertyName == "CustomBorderScaleBottom")
-        {
-            if (nineSliceRuntime != null)
-            {
-                nineSliceRuntime.CustomBorderScaleBottom = (float?)value;
-            }
             handled = true;
         }
 #endif

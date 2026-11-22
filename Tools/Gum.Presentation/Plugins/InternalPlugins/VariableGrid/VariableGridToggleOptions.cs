@@ -193,7 +193,7 @@ public class VariableGridToggleOptions
 
 /// <summary>
 /// Field formatting and parsing shared by the composite editors that pair one uniform value with four
-/// optional overrides (corner radius, border scale): values floor at 0, and an empty override inherits
+/// optional overrides (corner radius, the NineSlice border scale and source cut): values floor at 0, and an empty override inherits
 /// the uniform value.
 /// </summary>
 public abstract class UniformWithOverridesDisplayLogic
@@ -234,23 +234,33 @@ public class CornerRadiusDisplayLogic : UniformWithOverridesDisplayLogic
 }
 
 /// <summary>
-/// The value logic of the NineSlice border-scale composite editor: composing the uniform scale and four
-/// optional per-side overrides from its fields.
+/// The value logic of the NineSlice composite editors (border scale and source cut): composing the shared
+/// value and four optional per-side overrides from their fields.
 /// </summary>
-public class BorderScaleDisplayLogic : UniformWithOverridesDisplayLogic
+public class NineSliceSidesDisplayLogic : UniformWithOverridesDisplayLogic
 {
-    /// <summary>
-    /// The composite for the fields: linked uses only the uniform scale; unlinked adds each side
-    /// (empty sides inherit). An unparseable uniform field keeps <paramref name="current"/>'s.
-    /// </summary>
-    public BorderScaleComposite Compose(bool isLinked, string? uniformText, string? leftText, string? topText,
-        string? rightText, string? bottomText, BorderScaleComposite current)
+    private readonly bool _isUniformNullable;
+
+    /// <param name="isUniformNullable">True when a blank shared field means null (the source cut, where null
+    /// cuts a third of the texture); false when a blank shared field keeps the current value (border scale).</param>
+    public NineSliceSidesDisplayLogic(bool isUniformNullable)
     {
-        float uniform = ParseFloat(uniformText) ?? current.Uniform;
+        _isUniformNullable = isUniformNullable;
+    }
+
+    /// <summary>
+    /// The composite for the fields: linked uses only the shared value; unlinked adds each side, in the order
+    /// left, top, right, bottom (empty sides inherit). An unparseable shared field keeps <paramref name="current"/>'s.
+    /// </summary>
+    public NineSliceSidesComposite Compose(bool isLinked, string? uniformText, string?[] sideTexts, NineSliceSidesComposite current)
+    {
+        float? uniform = _isUniformNullable && string.IsNullOrWhiteSpace(uniformText)
+            ? null
+            : ParseFloat(uniformText) ?? current.Uniform;
 
         return isLinked
-            ? new BorderScaleComposite(uniform, null, null, null, null)
-            : new BorderScaleComposite(uniform, ParseFloat(leftText), ParseFloat(topText),
-                ParseFloat(rightText), ParseFloat(bottomText));
+            ? new NineSliceSidesComposite(uniform, null, null, null, null)
+            : new NineSliceSidesComposite(uniform, ParseFloat(sideTexts[0]), ParseFloat(sideTexts[1]),
+                ParseFloat(sideTexts[2]), ParseFloat(sideTexts[3]));
     }
 }
