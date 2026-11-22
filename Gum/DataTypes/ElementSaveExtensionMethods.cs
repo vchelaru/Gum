@@ -9,21 +9,46 @@ namespace Gum.DataTypes
 {
     public class VariableSaveSorter : IComparer<VariableSave>
     {
+        private List<VariableSave> _listOrderToMatch = new List<VariableSave>();
+        private Dictionary<string, int> _firstIndexByName = new Dictionary<string, int>();
+
+        /// <summary>
+        /// The list whose order is matched. Setting it snapshots name-to-first-index once, so
+        /// later changes to the list (including sorting it in place) do not change the keys.
+        /// </summary>
         public List<VariableSave> ListOrderToMatch
         {
-            get;
-            set;
-        } = new List<VariableSave>();
+            get => _listOrderToMatch;
+            set
+            {
+                _listOrderToMatch = value;
+                _firstIndexByName = new Dictionary<string, int>();
+                for (int i = 0; i < value.Count; i++)
+                {
+                    _firstIndexByName.TryAdd(value[i].Name, i);
+                }
+            }
+        }
 
         public int Compare(VariableSave? x, VariableSave? y)
         {
             System.Diagnostics.Debug.Assert(x != null, "x should not be null");
             System.Diagnostics.Debug.Assert(y != null, "y should not be null");
 
-            int indexOfX = IndexOfByName(ListOrderToMatch, x.Name);
-            int indexOfY = IndexOfByName(ListOrderToMatch, y.Name);
+            int indexOfX = _firstIndexByName.TryGetValue(x.Name, out int ix) ? ix : -1;
+            int indexOfY = _firstIndexByName.TryGetValue(y.Name, out int iy) ? iy : -1;
 
             return indexOfX.CompareTo(indexOfY);
+        }
+
+        /// <summary>
+        /// Sorts <paramref name="listToSort"/> to match the name order of <paramref name="orderToMatch"/>.
+        /// Sorting a list against itself leaves it unchanged, because the keys are snapshotted
+        /// before the sort starts.
+        /// </summary>
+        public static void SortToMatch(List<VariableSave> listToSort, List<VariableSave> orderToMatch)
+        {
+            listToSort.Sort(new VariableSaveSorter { ListOrderToMatch = orderToMatch });
         }
 
         public static int IndexOfByName(List<VariableSave> list, string name)
@@ -251,11 +276,7 @@ namespace Gum.DataTypes
                     }
                 }
 
-                VariableSaveSorter vss = new VariableSaveSorter();
-                vss.ListOrderToMatch = defaultState.Variables;
-
-
-                elementDefaultState.Variables.Sort(vss);
+                VariableSaveSorter.SortToMatch(elementDefaultState.Variables, defaultState.Variables);
 
 
             }
