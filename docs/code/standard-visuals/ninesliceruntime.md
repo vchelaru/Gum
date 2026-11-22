@@ -60,6 +60,23 @@ secondNineSlice.Texture = firstNineSlice.Texture;
 
 On SkiaSharp-based runtimes, a texture Gum loads is shared; editing its pixels changes it for every visual that uses it. See [Editing a Loaded Texture on SkiaSharp](../files-and-fonts/file-loading.md#editing-a-loaded-texture-on-skiasharp) before changing its pixels.
 
+### Border Width in the Texture
+
+`CustomFrameTextureCoordinateWidth` sets how many texture pixels every border takes from the texture. When it is `null`, each border takes a third of the texture. `CustomFrameTextureCoordinateLeft`, `CustomFrameTextureCoordinateTop`, `CustomFrameTextureCoordinateRight`, and `CustomFrameTextureCoordinateBottom` override it for one side. Each corner and edge keeps its pixels at their own size, and only the middle stretches.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+```csharp
+// Initialize
+// The texture has a 6 pixel border on the left, 8 on top, 2 on the right and 3 on the bottom
+nineSlice.CustomFrameTextureCoordinateLeft = 6;
+nineSlice.CustomFrameTextureCoordinateTop = 8;
+nineSlice.CustomFrameTextureCoordinateRight = 2;
+nineSlice.CustomFrameTextureCoordinateBottom = 3;
+```
+
 ### Border Scale
 
 `BorderScale` multiplies the thickness of every border. `CustomBorderScaleLeft`, `CustomBorderScaleTop`, `CustomBorderScaleRight`, and `CustomBorderScaleBottom` override it for one side. A side left `null` uses `BorderScale`, and a side set to `0` draws no border.
