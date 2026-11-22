@@ -24,7 +24,13 @@ If `Custom Frame Texture Coordinate Width` is set to a value of 0, then the `Nin
 
 The chain button next to `Custom Frame Texture Coordinate Width` breaks it apart into **T**, **L**, **R**, and **B** fields, arranged the way the sides sit on the NineSlice, the same as [Border Scale](border-scale.md). Each field is the number of pixels that side takes from the source texture, so art with a thick top and a thin bottom keeps both at their own size. A side left blank uses `Custom Frame Texture Coordinate Width`, or a third of the texture if that is blank too. Click the chain button again to return to one value, which clears every side.
 
+<figure><img src="../../../.gitbook/assets/22_06 00 01.png" alt=""><figcaption><p>Left 6, top 8, right 2 and bottom 3</p></figcaption></figure>
+
+<figure><img src="../../../.gitbook/assets/22_06 00 02.png" alt=""><figcaption><p>Each side cut to fit the art (left) and one width of 6 for every side (right)</p></figcaption></figure>
+
 The **Texture Coordinates** tab draws its guides at each side's cut.
+
+<figure><img src="../../../.gitbook/assets/22_06 00 03.png" alt=""><figcaption><p>Guides at each side's cut</p></figcaption></figure>
 
 The chain button appears only in projects at [version 9](../../upgrading/upgrading-file-gumx-version.md#version-9) or later. Older projects keep the single value.
 
