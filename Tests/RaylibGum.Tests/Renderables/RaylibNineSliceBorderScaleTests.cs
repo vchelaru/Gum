@@ -1,5 +1,6 @@
 using Gum.GueDeriving;
 using Gum.Renderables;
+using RenderingLibrary.Graphics;
 using RaylibGum.Helpers;
 using Shouldly;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ public class RaylibNineSliceBorderScaleTests : BaseTestClass
         NineSlice.ComputeDrawSections(0, 0, 3, 3, width, height,
             borderScale,
             left ?? borderScale, top ?? borderScale, right ?? borderScale, bottom ?? borderScale,
-            customFrameTextureCoordinateWidth: null, isTilingMiddleSections: isTiling);
+            cut: NineSliceSourceCut.Compute(3, 3, null, null, null, null, null), isTilingMiddleSections: isTiling);
 
     private static NineSliceDrawSection SectionWithSource(List<NineSliceDrawSection> sections, int srcX, int srcY) =>
         sections.Single(s => s.Source.X == srcX && s.Source.Y == srcY);
@@ -191,7 +192,7 @@ public class RaylibNineSliceBorderScaleTests : BaseTestClass
     {
         // 6 texel source with a 2 texel frame at scale 10 wants 40 wide, but only 20 is available.
         List<NineSliceDrawSection> sections = NineSlice.ComputeDrawSections(0, 0, 6, 6, 20, 100,
-            10f, 10f, 10f, 10f, 10f, null, false);
+            10f, 10f, 10f, 10f, 10f, NineSliceSourceCut.Compute(6, 6, null, null, null, null, null), false);
 
         NineSliceDrawSection left = sections.Single(s => s.Destination.X == 0 && s.Destination.Y == 0);
         left.Destination.Width.ShouldBe(10f);

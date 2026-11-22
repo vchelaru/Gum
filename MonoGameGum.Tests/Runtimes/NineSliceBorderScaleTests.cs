@@ -109,8 +109,7 @@ public class NineSliceBorderScaleTests : BaseTestClass
     private static List<(float Width, float Height)> SectionSizes(NineSlice nineSlice)
     {
         System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
-        typeof(NineSlice).GetField("_fullOutsideTexturePixelWidth", flags)!.SetValue(nineSlice, 1);
-        typeof(NineSlice).GetField("_fullOutsideTexturePixelHeight", flags)!.SetValue(nineSlice, 1);
+        typeof(NineSlice).GetField("_sourceCut", flags)!.SetValue(nineSlice, new NineSliceSourceCut(1, 1, 1, 1));
         typeof(NineSlice).GetMethod("RefreshSpriteDimensions", flags)!.Invoke(nineSlice, null);
         System.Collections.IList sprites = (System.Collections.IList)typeof(NineSlice).GetField("mSprites", flags)!.GetValue(nineSlice)!;
         List<(float, float)> sizes = new();

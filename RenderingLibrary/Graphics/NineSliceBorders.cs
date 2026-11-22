@@ -41,39 +41,43 @@ internal readonly struct NineSliceBorders
     }
 
     /// <summary>
-    /// Computes the bands. <paramref name="fullOutsideWidth"/> and <paramref name="fullOutsideHeight"/>
-    /// are the texel thickness of the frame; each scale multiplies that thickness for its side (a
-    /// negative scale counts as 0). When a pair of opposing bands would overlap, both shrink in
-    /// proportion to their scales and sample fewer texels, so their ratio is kept. A side with
-    /// scale 0 draws nothing and the rest of the nine-slice fills its space.
+    /// Computes the bands. <paramref name="cut"/> is the texel thickness of each side of the frame;
+    /// each scale multiplies its side's thickness (a negative scale counts as 0). When a pair of
+    /// opposing bands would overlap, both shrink by the same factor and sample fewer texels, so
+    /// their ratio is kept. A side with scale 0 draws nothing and the rest of the nine-slice fills
+    /// its space.
     /// </summary>
     public static NineSliceBorders Compute(
-        int fullOutsideWidth, int fullOutsideHeight,
+        NineSliceSourceCut cut,
         float scaleLeft, float scaleTop, float scaleRight, float scaleBottom,
         float width, float height)
     {
-        ComputeAxis(fullOutsideWidth, scaleLeft, scaleRight, width,
+        ComputeAxis(cut.Left, cut.Right, scaleLeft, scaleRight, width,
             out float destLeft, out float destRight, out int sourceLeft, out int sourceRight);
-        ComputeAxis(fullOutsideHeight, scaleTop, scaleBottom, height,
+        ComputeAxis(cut.Top, cut.Bottom, scaleTop, scaleBottom, height,
             out float destTop, out float destBottom, out int sourceTop, out int sourceBottom);
 
         return new NineSliceBorders(destLeft, destTop, destRight, destBottom,
             sourceLeft, sourceTop, sourceRight, sourceBottom);
     }
 
-    private static void ComputeAxis(int full, float scaleNear, float scaleFar, float length,
+    private static void ComputeAxis(int fullNear, int fullFar, float scaleNear, float scaleFar, float length,
         out float destNear, out float destFar, out int sourceNear, out int sourceFar)
     {
         float near = scaleNear > 0 ? scaleNear : 0;
         float far = scaleFar > 0 ? scaleFar : 0;
-        float sum = near + far;
+        sourceNear = fullNear;
+        sourceFar = fullFar;
 
-        if (sum <= 0 || full <= 0)
+        // What each band draws when the pair fits.
+        float wantedNear = fullNear * near;
+        float wantedFar = fullFar * far;
+        float wanted = wantedNear + wantedFar;
+
+        if (wanted <= 0)
         {
             destNear = 0;
             destFar = 0;
-            sourceNear = full;
-            sourceFar = full;
             return;
         }
 
@@ -82,19 +86,22 @@ internal readonly struct NineSliceBorders
             length = 0;
         }
 
-        if (full * sum > length)
+        if (wanted <= length)
         {
-            destNear = length * near / sum;
-            destFar = length * far / sum;
-        }
-        else
-        {
-            destNear = full * near;
-            destFar = full * far;
+            destNear = wantedNear;
+            destFar = wantedFar;
+            return;
         }
 
-        int shared = System.Math.Min(full, MathFunctions.RoundToInt(length / sum));
-        sourceNear = near > 0 ? shared : full;
-        sourceFar = far > 0 ? shared : full;
+        destNear = length * wantedNear / wanted;
+        destFar = length * wantedFar / wanted;
+        if (near > 0)
+        {
+            sourceNear = System.Math.Min(fullNear, MathFunctions.RoundToInt(length * fullNear / wanted));
+        }
+        if (far > 0)
+        {
+            sourceFar = System.Math.Min(fullFar, MathFunctions.RoundToInt(length * fullFar / wanted));
+        }
     }
 }
