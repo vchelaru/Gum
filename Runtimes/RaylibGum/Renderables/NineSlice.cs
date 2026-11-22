@@ -289,6 +289,22 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
     /// </summary>
     public float? CustomFrameTextureCoordinateWidth { get; set; }
 
+    /// <summary>Texels the left border takes from the texture; null falls back to <see cref="CustomFrameTextureCoordinateWidth"/>.</summary>
+    public float? CustomFrameTextureCoordinateLeft { get; set; }
+
+    /// <summary>Texels the top border takes from the texture; null falls back to <see cref="CustomFrameTextureCoordinateWidth"/>.</summary>
+    public float? CustomFrameTextureCoordinateTop { get; set; }
+
+    /// <summary>Texels the right border takes from the texture; null falls back to <see cref="CustomFrameTextureCoordinateWidth"/>.</summary>
+    public float? CustomFrameTextureCoordinateRight { get; set; }
+
+    /// <summary>Texels the bottom border takes from the texture; null falls back to <see cref="CustomFrameTextureCoordinateWidth"/>.</summary>
+    public float? CustomFrameTextureCoordinateBottom { get; set; }
+
+    private bool HasCustomFrameTextureCoordinateSide =>
+        CustomFrameTextureCoordinateLeft != null || CustomFrameTextureCoordinateTop != null
+        || CustomFrameTextureCoordinateRight != null || CustomFrameTextureCoordinateBottom != null;
+
     /// <summary>
     /// When true, the Top, Bottom, Left, Right, and Center sections are repeated
     /// (tiled) at their natural source size scaled by <see cref="BorderScale"/>,
@@ -368,7 +384,7 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
 
     // Raylib's built-in nine-patch draw can only express the plain, uniform, untiled, unflipped case.
     internal bool CanUseNinePatch(bool isFlipped) =>
-        !IsTilingMiddleSections && BorderScale == 1f && CustomFrameTextureCoordinateWidth == null && !isFlipped
+        !IsTilingMiddleSections && BorderScale == 1f && CustomFrameTextureCoordinateWidth == null && !HasCustomFrameTextureCoordinateSide && !isFlipped
         && CustomBorderScaleLeft == null && CustomBorderScaleTop == null
         && CustomBorderScaleRight == null && CustomBorderScaleBottom == null;
 
@@ -378,7 +394,10 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
             srcLeft, srcTop, srcRight, srcBottom,
             this.Width, this.Height,
             BorderScale, EffectiveBorderScaleLeft, EffectiveBorderScaleTop, EffectiveBorderScaleRight, EffectiveBorderScaleBottom,
-            CustomFrameTextureCoordinateWidth, IsTilingMiddleSections);
+            NineSliceSourceCut.Compute(srcRight - srcLeft, srcBottom - srcTop, CustomFrameTextureCoordinateWidth,
+                CustomFrameTextureCoordinateLeft, CustomFrameTextureCoordinateTop,
+                CustomFrameTextureCoordinateRight, CustomFrameTextureCoordinateBottom),
+            IsTilingMiddleSections);
 
     // Nearest sampling picks a texel by where a pixel center falls, and a quad covers the pixels whose centers it
     // contains. At a fractional edge the two can disagree, so a one-texel outline vanishes for a frame and the line
@@ -581,20 +600,22 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
         return ComputeDrawSections(
             srcLeft, srcTop, srcRight, srcBottom, destWidth, destHeight,
             borderScale, borderScale, borderScale, borderScale, borderScale,
-            customFrameTextureCoordinateWidth, isTilingMiddleSections);
+            NineSliceSourceCut.Compute(srcRight - srcLeft, srcBottom - srcTop, customFrameTextureCoordinateWidth,
+                null, null, null, null),
+            isTilingMiddleSections);
     }
 
     /// <summary>
     /// Same as the uniform overload, with each side's effective border scale (the
-    /// <c>CustomBorderScale*</c> override, or <paramref name="borderScale"/> when unset).
-    /// <paramref name="borderScale"/> itself sizes the center's tiles.
+    /// <c>CustomBorderScale*</c> override, or <paramref name="borderScale"/> when unset) and
+    /// each side's texel cut. <paramref name="borderScale"/> itself sizes the center's tiles.
     /// </summary>
     internal static List<NineSliceDrawSection> ComputeDrawSections(
         int srcLeft, int srcTop, int srcRight, int srcBottom,
         float destWidth, float destHeight,
         float borderScale,
         float scaleLeft, float scaleTop, float scaleRight, float scaleBottom,
-        float? customFrameTextureCoordinateWidth,
+        NineSliceSourceCut cut,
         bool isTilingMiddleSections)
     {
         var sections = new List<NineSliceDrawSection>();
@@ -606,26 +627,13 @@ public class NineSlice : RenderableBase, IAnimatable, IAnimationChainRenderable,
             return sections;
         }
 
-        int fullOutsideW;
-        int fullOutsideH;
-        if (customFrameTextureCoordinateWidth.HasValue)
-        {
-            fullOutsideW = (int)Math.Round(customFrameTextureCoordinateWidth.Value);
-            fullOutsideH = fullOutsideW;
-        }
-        else
-        {
-            fullOutsideW = (usedWidth + 1) / 3;
-            fullOutsideH = (usedHeight + 1) / 3;
-        }
-
-        int insideTextureW = usedWidth - (fullOutsideW * 2);
-        int insideTextureH = usedHeight - (fullOutsideH * 2);
+        int insideTextureW = usedWidth - cut.Left - cut.Right;
+        int insideTextureH = usedHeight - cut.Top - cut.Bottom;
 
         // Per-side destination thickness (clamped so opposing bands never overlap) and the texels
         // each band samples, shared with every other runtime.
         NineSliceBorders borders = NineSliceBorders.Compute(
-            fullOutsideW, fullOutsideH, scaleLeft, scaleTop, scaleRight, scaleBottom, destWidth, destHeight);
+            cut, scaleLeft, scaleTop, scaleRight, scaleBottom, destWidth, destHeight);
 
         float destLeft = borders.DestLeft;
         float destTop = borders.DestTop;

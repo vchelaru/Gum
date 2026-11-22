@@ -373,6 +373,65 @@ public class NineSliceRuntime : InteractiveGue
 
 #if XNALIKE || SKIA || RAYLIB
     /// <summary>
+    /// Texels the left border takes from the texture. When <c>null</c> the left border uses
+    /// <see cref="CustomFrameTextureCoordinateWidth"/> (or 1/3 of the texture width if that is null too).
+    /// Only the cut changes; <see cref="CustomBorderScaleLeft"/> still sets how thick it draws.
+    /// </summary>
+    public float? CustomFrameTextureCoordinateLeft
+    {
+        get => ContainedNineSlice.CustomFrameTextureCoordinateLeft;
+        set
+        {
+            ContainedNineSlice.CustomFrameTextureCoordinateLeft = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Texels the top border takes from the texture. When <c>null</c> the top border uses
+    /// <see cref="CustomFrameTextureCoordinateWidth"/> (or 1/3 of the texture height if that is null too).
+    /// </summary>
+    public float? CustomFrameTextureCoordinateTop
+    {
+        get => ContainedNineSlice.CustomFrameTextureCoordinateTop;
+        set
+        {
+            ContainedNineSlice.CustomFrameTextureCoordinateTop = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Texels the right border takes from the texture. When <c>null</c> the right border uses
+    /// <see cref="CustomFrameTextureCoordinateWidth"/> (or 1/3 of the texture width if that is null too).
+    /// </summary>
+    public float? CustomFrameTextureCoordinateRight
+    {
+        get => ContainedNineSlice.CustomFrameTextureCoordinateRight;
+        set
+        {
+            ContainedNineSlice.CustomFrameTextureCoordinateRight = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Texels the bottom border takes from the texture. When <c>null</c> the bottom border uses
+    /// <see cref="CustomFrameTextureCoordinateWidth"/> (or 1/3 of the texture height if that is null too).
+    /// </summary>
+    public float? CustomFrameTextureCoordinateBottom
+    {
+        get => ContainedNineSlice.CustomFrameTextureCoordinateBottom;
+        set
+        {
+            ContainedNineSlice.CustomFrameTextureCoordinateBottom = value;
+            NotifyPropertyChanged();
+        }
+    }
+#endif
+
+#if XNALIKE || SKIA || RAYLIB
+    /// <summary>
     /// Whether to tile (repeat) the middle sections instead of stretching them.
     /// When true, the Top, Bottom, Left, Right, and Center sections are rendered
     /// as repeating tiles at their natural texture size scaled by BorderScale.

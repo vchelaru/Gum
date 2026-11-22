@@ -86,11 +86,8 @@ public class NineSlice : SpriteBatchRenderableBase,
 //      Sprite mLeftSprite = new Sprite(null);
 //      Sprite mCenterSprite = new Sprite(null);
 
-    int _fullOutsideTexturePixelWidth;
-    int _fullInsideTexturePixelWidth;
-
-    int _fullOutsideTexturePixelHeight;
-    int _fullInsideTexturePixelHeight;
+    // Where the single texture is cut, set by RefreshSourceRectangles and read by RefreshSpriteDimensions.
+    NineSliceSourceCut _sourceCut;
 
     public Rectangle? SourceRectangle;
 
@@ -283,7 +280,23 @@ public class NineSlice : SpriteBatchRenderableBase,
         set;
     }
 
-    bool IsOnlyRenderingCenterSprite => CustomFrameTextureCoordinateWidth <= 0;
+    /// <summary>Texels the left border takes from the texture; <c>null</c> falls back to <see cref="CustomFrameTextureCoordinateWidth"/>.</summary>
+    public float? CustomFrameTextureCoordinateLeft { get; set; }
+
+    /// <summary>Texels the top border takes from the texture; <c>null</c> falls back to <see cref="CustomFrameTextureCoordinateWidth"/>.</summary>
+    public float? CustomFrameTextureCoordinateTop { get; set; }
+
+    /// <summary>Texels the right border takes from the texture; <c>null</c> falls back to <see cref="CustomFrameTextureCoordinateWidth"/>.</summary>
+    public float? CustomFrameTextureCoordinateRight { get; set; }
+
+    /// <summary>Texels the bottom border takes from the texture; <c>null</c> falls back to <see cref="CustomFrameTextureCoordinateWidth"/>.</summary>
+    public float? CustomFrameTextureCoordinateBottom { get; set; }
+
+    bool IsOnlyRenderingCenterSprite =>
+        (CustomFrameTextureCoordinateLeft ?? CustomFrameTextureCoordinateWidth) <= 0
+        && (CustomFrameTextureCoordinateTop ?? CustomFrameTextureCoordinateWidth) <= 0
+        && (CustomFrameTextureCoordinateRight ?? CustomFrameTextureCoordinateWidth) <= 0
+        && (CustomFrameTextureCoordinateBottom ?? CustomFrameTextureCoordinateWidth) <= 0;
 
     public Texture2D? TopLeftTexture 
     {
@@ -551,7 +564,7 @@ public class NineSlice : SpriteBatchRenderableBase,
     float EffectiveBorderScaleBottom => CustomBorderScaleBottom ?? _borderScale;
 
     NineSliceBorders GetBorders() => NineSliceBorders.Compute(
-        _fullOutsideTexturePixelWidth, _fullOutsideTexturePixelHeight,
+        _sourceCut,
         EffectiveBorderScaleLeft, EffectiveBorderScaleTop, EffectiveBorderScaleRight, EffectiveBorderScaleBottom,
         Width, Height);
 
@@ -585,10 +598,18 @@ public class NineSlice : SpriteBatchRenderableBase,
     [Obsolete("Do not use this, it's called automatically in rendering")]
     public void RefreshTextureCoordinatesAndSpriteSizes()
     {
+        RefreshSections();
+    }
+
+    // Recomputes every section's source rectangle and size, as Render does.
+    internal void RefreshSections()
+    {
         RefreshSourceRectangles();
 
         RefreshSpriteDimensions();
     }
+
+    internal Sprite GetSection(NineSliceSections section) => mSprites[(int)section];
 
     /// <summary>
     /// The layout box, moved by the animation frame's offset, when one texture holds every piece:
@@ -623,9 +644,7 @@ public class NineSlice : SpriteBatchRenderableBase,
         // 3. This prevents render target rendering when the parent is invisible
         if (Width > 0 && Height > 0)
         {
-            RefreshSourceRectangles();
-
-            RefreshSpriteDimensions();
+            RefreshSections();
 
             var systemManagers = (SystemManagers)managers;
             var spriteRenderer = systemManagers.Renderer.SpriteRenderer;
@@ -899,10 +918,6 @@ public class NineSlice : SpriteBatchRenderableBase,
             {
                 for (var sprite = 0; sprite < mSprites.Count(); sprite++)
                 {
-
-                    _fullOutsideTexturePixelWidth = topLeftTexture.Width;
-                    _fullInsideTexturePixelWidth = topLeftTexture.Width - (_fullOutsideTexturePixelWidth * 2);
-
                     var spriteTexture = mSprites[sprite].Texture;
                     // A piece can be null when its texture was assigned individually.
                     mSprites[sprite].SourceRectangle = spriteTexture == null
@@ -948,20 +963,9 @@ public class NineSlice : SpriteBatchRenderableBase,
                 int usedWidth = rightCoordinate - leftCoordinate;
                 int usedHeight = bottomCoordinate - topCoordinate;
 
-                if (CustomFrameTextureCoordinateWidth != null)
-                {
-                    _fullOutsideTexturePixelWidth = MathFunctions.RoundToInt(CustomFrameTextureCoordinateWidth.Value);
-                    _fullOutsideTexturePixelHeight = _fullOutsideTexturePixelWidth;
-
-                }
-                else
-                {
-                    _fullOutsideTexturePixelWidth = (usedWidth + 1) / 3;
-                    _fullOutsideTexturePixelHeight = (usedHeight + 1) / 3;
-                }
-
-                _fullInsideTexturePixelWidth = usedWidth - (_fullOutsideTexturePixelWidth * 2);
-                _fullInsideTexturePixelHeight = usedHeight - (_fullOutsideTexturePixelHeight * 2);
+                _sourceCut = NineSliceSourceCut.Compute(usedWidth, usedHeight, CustomFrameTextureCoordinateWidth,
+                    CustomFrameTextureCoordinateLeft, CustomFrameTextureCoordinateTop,
+                    CustomFrameTextureCoordinateRight, CustomFrameTextureCoordinateBottom);
 
                 NineSliceBorders borders = GetBorders();
                 int leftWidth = borders.SourceLeft;
@@ -969,10 +973,10 @@ public class NineSlice : SpriteBatchRenderableBase,
                 int topHeight = borders.SourceTop;
                 int bottomHeight = borders.SourceBottom;
 
-                int insideWidth = _fullInsideTexturePixelWidth;
-                int insideHeight = _fullInsideTexturePixelHeight;
+                int insideWidth = usedWidth - _sourceCut.Left - _sourceCut.Right;
+                int insideHeight = usedHeight - _sourceCut.Top - _sourceCut.Bottom;
 
-                if (Height <= _fullOutsideTexturePixelHeight * 2 && Height % 2 == 1)
+                if (Height <= _sourceCut.Top + _sourceCut.Bottom && Height % 2 == 1)
                 {
                     // If this is an odd (not even) height
                     // and if the middle has 0 height, then one of the nineslices needs to be 1 pixel shorter

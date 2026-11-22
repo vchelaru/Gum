@@ -266,6 +266,18 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     /// </summary>
     public float? CustomFrameTextureCoordinateWidth { get; set; }
 
+    /// <summary>Texels the left border takes from the texture; null falls back to <see cref="CustomFrameTextureCoordinateWidth"/>.</summary>
+    public float? CustomFrameTextureCoordinateLeft { get; set; }
+
+    /// <summary>Texels the top border takes from the texture; null falls back to <see cref="CustomFrameTextureCoordinateWidth"/>.</summary>
+    public float? CustomFrameTextureCoordinateTop { get; set; }
+
+    /// <summary>Texels the right border takes from the texture; null falls back to <see cref="CustomFrameTextureCoordinateWidth"/>.</summary>
+    public float? CustomFrameTextureCoordinateRight { get; set; }
+
+    /// <summary>Texels the bottom border takes from the texture; null falls back to <see cref="CustomFrameTextureCoordinateWidth"/>.</summary>
+    public float? CustomFrameTextureCoordinateBottom { get; set; }
+
     /// <summary>
     /// When true, the Top, Bottom, Left, Right, and Center sections are repeated
     /// (tiled) at their natural source size scaled by <see cref="BorderScale"/>,
@@ -451,29 +463,20 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             return;
         }
 
-        int fullOutsideW;
-        int fullOutsideH;
-        if (CustomFrameTextureCoordinateWidth.HasValue)
-        {
-            fullOutsideW = (int)Math.Round(CustomFrameTextureCoordinateWidth.Value);
-            fullOutsideH = fullOutsideW;
-        }
-        else
-        {
-            fullOutsideW = (usedWidth + 1) / 3;
-            fullOutsideH = (usedHeight + 1) / 3;
-        }
+        NineSliceSourceCut cut = NineSliceSourceCut.Compute(usedWidth, usedHeight, CustomFrameTextureCoordinateWidth,
+            CustomFrameTextureCoordinateLeft, CustomFrameTextureCoordinateTop,
+            CustomFrameTextureCoordinateRight, CustomFrameTextureCoordinateBottom);
 
-        int insideTextureW = usedWidth - (fullOutsideW * 2);
-        int insideTextureH = usedHeight - (fullOutsideH * 2);
+        int insideTextureW = usedWidth - cut.Left - cut.Right;
+        int insideTextureH = usedHeight - cut.Top - cut.Bottom;
 
         if (!DisableDeviceSnapping)
         {
             SKRect snapped = SnapToDevicePixels(canvas, boundingRect);
             // A nine-slice smaller than its borders squeezes them; that squeeze matches the other runtimes at the exact
             // rectangle, so only a nine-slice that fits its borders, before and after snapping, is moved.
-            float minWidth = fullOutsideW * (EffectiveBorderScaleLeft + EffectiveBorderScaleRight);
-            float minHeight = fullOutsideH * (EffectiveBorderScaleTop + EffectiveBorderScaleBottom);
+            float minWidth = cut.Left * EffectiveBorderScaleLeft + cut.Right * EffectiveBorderScaleRight;
+            float minHeight = cut.Top * EffectiveBorderScaleTop + cut.Bottom * EffectiveBorderScaleBottom;
             if (boundingRect.Width >= minWidth && boundingRect.Height >= minHeight
                 && snapped.Width >= minWidth && snapped.Height >= minHeight)
             {
@@ -485,7 +488,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         // Per-side destination thickness (clamped so opposing bands never overlap) and the texels
         // each band samples, shared with every other runtime.
         NineSliceBorders borders = NineSliceBorders.Compute(
-            fullOutsideW, fullOutsideH,
+            cut,
             EffectiveBorderScaleLeft, EffectiveBorderScaleTop, EffectiveBorderScaleRight, EffectiveBorderScaleBottom,
             boundingRect.Width, boundingRect.Height);
         float destLeftW = borders.DestLeft;
@@ -506,7 +509,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
 
         if (TryDrawLattice(
                 canvas, paint, sampling, boundingRect,
-                srcLeft, srcTop, usedWidth, usedHeight, fullOutsideW, fullOutsideH, borders))
+                srcLeft, srcTop, usedWidth, usedHeight, cut, borders))
         {
             return;
         }
@@ -592,7 +595,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     //  - Borders that fit: when NineSliceBorders clamps a band the sections are no longer the texels' size.
     private bool TryDrawLattice(
         SKCanvas canvas, SKPaint paint, SKSamplingOptions sampling, SKRect boundingRect,
-        int srcLeft, int srcTop, int usedWidth, int usedHeight, int fullOutsideW, int fullOutsideH,
+        int srcLeft, int srcTop, int usedWidth, int usedHeight, NineSliceSourceCut cut,
         NineSliceBorders borders)
     {
         if (DisableLatticeFastPath || sampling.Filter != SKFilterMode.Nearest || IsTilingMiddleSections)
@@ -615,17 +618,19 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             return false;
         }
 
-        if (fullOutsideW <= 0 || fullOutsideH <= 0
-            || usedWidth - (fullOutsideW * 2) <= 0 || usedHeight - (fullOutsideH * 2) <= 0)
+        int insideTexelsW = usedWidth - cut.Left - cut.Right;
+        int insideTexelsH = usedHeight - cut.Top - cut.Bottom;
+        if (cut.Left <= 0 || cut.Top <= 0 || cut.Right <= 0 || cut.Bottom <= 0
+            || insideTexelsW <= 0 || insideTexelsH <= 0)
         {
             return false;
         }
 
         // The bands must be exactly the texels' size times the scale (no clamping), with room left in the middle.
-        if (borders.SourceLeft != fullOutsideW || borders.SourceRight != fullOutsideW
-            || borders.SourceTop != fullOutsideH || borders.SourceBottom != fullOutsideH
-            || borders.DestLeft != fullOutsideW * scale || borders.DestRight != fullOutsideW * scale
-            || borders.DestTop != fullOutsideH * scale || borders.DestBottom != fullOutsideH * scale
+        if (borders.SourceLeft != cut.Left || borders.SourceRight != cut.Right
+            || borders.SourceTop != cut.Top || borders.SourceBottom != cut.Bottom
+            || borders.DestLeft != cut.Left * scale || borders.DestRight != cut.Right * scale
+            || borders.DestTop != cut.Top * scale || borders.DestBottom != cut.Bottom * scale
             || boundingRect.Width <= borders.DestLeft + borders.DestRight
             || boundingRect.Height <= borders.DestTop + borders.DestBottom)
         {
@@ -676,34 +681,32 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         {
             float deviceScaleX = Math.Abs(matrix.ScaleX);
             float deviceScaleY = Math.Abs(matrix.ScaleY);
-            int insideTexelsW = usedWidth - (fullOutsideW * 2);
-            int insideTexelsH = usedHeight - (fullOutsideH * 2);
-            bool borderTie = CanSampleOnTexelBoundary(fullOutsideW, MathF.Round(deviceScaleX * borders.DestLeft))
-                || CanSampleOnTexelBoundary(fullOutsideW, MathF.Round(deviceScaleX * borders.DestRight))
-                || CanSampleOnTexelBoundary(fullOutsideH, MathF.Round(deviceScaleY * borders.DestTop))
-                || CanSampleOnTexelBoundary(fullOutsideH, MathF.Round(deviceScaleY * borders.DestBottom));
+            bool borderTie = CanSampleOnTexelBoundary(cut.Left, MathF.Round(deviceScaleX * borders.DestLeft))
+                || CanSampleOnTexelBoundary(cut.Right, MathF.Round(deviceScaleX * borders.DestRight))
+                || CanSampleOnTexelBoundary(cut.Top, MathF.Round(deviceScaleY * borders.DestTop))
+                || CanSampleOnTexelBoundary(cut.Bottom, MathF.Round(deviceScaleY * borders.DestBottom));
             bool middleTieX = CanSampleOnTexelBoundary(insideTexelsW, MathF.Round(deviceScaleX * (boundingRect.Width - borders.DestLeft - borders.DestRight)));
             bool middleTieY = CanSampleOnTexelBoundary(insideTexelsH, MathF.Round(deviceScaleY * (boundingRect.Height - borders.DestTop - borders.DestBottom)));
             // A tie in the stretched middle only matters when the texels either side of it differ: where the middle is the
             // same color along that axis (a flat fill, an outline row), either choice draws the same pixel.
             if (borderTie || ((middleTieX || middleTieY)
-                && !IsMiddleUniform(middleTieX, middleTieY, srcLeft, srcTop, usedWidth, usedHeight, fullOutsideW, fullOutsideH)))
+                && !IsMiddleUniform(middleTieX, middleTieY, srcLeft, srcTop, usedWidth, usedHeight, cut)))
             {
                 return false;
             }
         }
 
-        _latticeXDivs[0] = srcLeft + fullOutsideW;
-        _latticeXDivs[1] = srcLeft + usedWidth - fullOutsideW;
-        _latticeYDivs[0] = srcTop + fullOutsideH;
-        _latticeYDivs[1] = srcTop + usedHeight - fullOutsideH;
+        _latticeXDivs[0] = srcLeft + cut.Left;
+        _latticeXDivs[1] = srcLeft + usedWidth - cut.Right;
+        _latticeYDivs[0] = srcTop + cut.Top;
+        _latticeYDivs[1] = srcTop + usedHeight - cut.Bottom;
         SKLattice lattice = new() { XDivs = _latticeXDivs, YDivs = _latticeYDivs };
         if (srcLeft != 0 || srcTop != 0 || usedWidth != Image.Width || usedHeight != Image.Height)
         {
             lattice.Bounds = SKRectI.Create(srcLeft, srcTop, usedWidth, usedHeight);
         }
 
-        if (TryAddToVertexBatch(canvas, paint, matrix, boundingRect, scale, srcLeft, srcTop, usedWidth, usedHeight, fullOutsideW, fullOutsideH))
+        if (TryAddToVertexBatch(canvas, paint, matrix, boundingRect, scale, srcLeft, srcTop, usedWidth, usedHeight, cut))
         {
             return true;
         }
@@ -730,7 +733,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     // translate-and-positive-scale matrix batches; a flip, rotation, Add color operation, blend, shadow or filter keeps
     // the lattice. Alpha stays on the paint, so NineSlices of different alpha draw in separate batches.
     private bool TryAddToVertexBatch(SKCanvas canvas, SKPaint paint, SKMatrix matrix, SKRect boundingRect, float scale,
-        int srcLeft, int srcTop, int usedWidth, int usedHeight, int fullOutsideW, int fullOutsideH)
+        int srcLeft, int srcTop, int usedWidth, int usedHeight, NineSliceSourceCut cut)
     {
         NineSliceVertexBatch? batch = VertexBatch;
         if (batch == null || !batch.IsGpuCanvas(canvas) || HasDropshadow
@@ -742,7 +745,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             return false;
         }
 
-        // The lattice's cells: bands of fullOutside texels drawn at `scale`, and a stretched middle, under
+        // The lattice's cells: bands of each side's cut texels drawn at `scale`, and a stretched middle, under
         // matrix * translate(boundingRect.Left, Top) * scale(scale).
         float localWidth = boundingRect.Width / scale;
         float localHeight = boundingRect.Height / scale;
@@ -751,20 +754,20 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
         Span<float> us = stackalloc float[4];
         Span<float> vs = stackalloc float[4];
         xs[0] = matrix.ScaleX * boundingRect.Left + matrix.TransX;
-        xs[1] = matrix.ScaleX * (boundingRect.Left + scale * fullOutsideW) + matrix.TransX;
-        xs[2] = matrix.ScaleX * (boundingRect.Left + scale * (localWidth - fullOutsideW)) + matrix.TransX;
+        xs[1] = matrix.ScaleX * (boundingRect.Left + scale * cut.Left) + matrix.TransX;
+        xs[2] = matrix.ScaleX * (boundingRect.Left + scale * (localWidth - cut.Right)) + matrix.TransX;
         xs[3] = matrix.ScaleX * (boundingRect.Left + scale * localWidth) + matrix.TransX;
         ys[0] = matrix.ScaleY * boundingRect.Top + matrix.TransY;
-        ys[1] = matrix.ScaleY * (boundingRect.Top + scale * fullOutsideH) + matrix.TransY;
-        ys[2] = matrix.ScaleY * (boundingRect.Top + scale * (localHeight - fullOutsideH)) + matrix.TransY;
+        ys[1] = matrix.ScaleY * (boundingRect.Top + scale * cut.Top) + matrix.TransY;
+        ys[2] = matrix.ScaleY * (boundingRect.Top + scale * (localHeight - cut.Bottom)) + matrix.TransY;
         ys[3] = matrix.ScaleY * (boundingRect.Top + scale * localHeight) + matrix.TransY;
         us[0] = srcLeft;
-        us[1] = srcLeft + fullOutsideW;
-        us[2] = srcLeft + usedWidth - fullOutsideW;
+        us[1] = srcLeft + cut.Left;
+        us[2] = srcLeft + usedWidth - cut.Right;
         us[3] = srcLeft + usedWidth;
         vs[0] = srcTop;
-        vs[1] = srcTop + fullOutsideH;
-        vs[2] = srcTop + usedHeight - fullOutsideH;
+        vs[1] = srcTop + cut.Top;
+        vs[2] = srcTop + usedHeight - cut.Bottom;
         vs[3] = srcTop + usedHeight;
 
         SKShader shader = _batchShader ??= Image!.ToShader(SKShaderTileMode.Clamp, SKShaderTileMode.Clamp, new SKSamplingOptions(SKFilterMode.Nearest));
@@ -777,13 +780,13 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
     // Whether the texels of the stretched middle are the same along the axes asked for: across the columns between the
     // two side borders for X, across the rows between the top and bottom borders for Y, over the whole source rectangle.
     // Cached per image and source rectangle. Without the bitmap (an image assigned directly) it answers false.
-    private (SKImage? Image, int Left, int Top, int Width, int Height, int OutsideW, int OutsideH, bool X, bool Y) _uniformity;
+    private (SKImage? Image, int Left, int Top, int Width, int Height, NineSliceSourceCut Cut, bool X, bool Y) _uniformity;
 
-    private bool IsMiddleUniform(bool needX, bool needY, int srcLeft, int srcTop, int usedWidth, int usedHeight, int outsideW, int outsideH)
+    private bool IsMiddleUniform(bool needX, bool needY, int srcLeft, int srcTop, int usedWidth, int usedHeight, NineSliceSourceCut cut)
     {
         var u = _uniformity;
         if (!ReferenceEquals(u.Image, _image) || u.Left != srcLeft || u.Top != srcTop || u.Width != usedWidth
-            || u.Height != usedHeight || u.OutsideW != outsideW || u.OutsideH != outsideH)
+            || u.Height != usedHeight || !u.Cut.Equals(cut))
         {
             bool uniformX = false;
             bool uniformY = false;
@@ -791,10 +794,10 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
             if (bitmap != null && Sprite.IsUsable(bitmap)
                 && srcLeft >= 0 && srcTop >= 0 && srcLeft + usedWidth <= bitmap.Width && srcTop + usedHeight <= bitmap.Height)
             {
-                int firstColumn = srcLeft + outsideW;
-                int lastColumn = srcLeft + usedWidth - outsideW - 1;
-                int firstRow = srcTop + outsideH;
-                int lastRow = srcTop + usedHeight - outsideH - 1;
+                int firstColumn = srcLeft + cut.Left;
+                int lastColumn = srcLeft + usedWidth - cut.Right - 1;
+                int firstRow = srcTop + cut.Top;
+                int lastRow = srcTop + usedHeight - cut.Bottom - 1;
                 uniformX = true;
                 for (int y = srcTop; y < srcTop + usedHeight && uniformX; y++)
                 {
@@ -822,7 +825,7 @@ public class NineSlice : RenderableShapeBase, IAnimatable, IAnimationChainRender
                     }
                 }
             }
-            u = (_image, srcLeft, srcTop, usedWidth, usedHeight, outsideW, outsideH, uniformX, uniformY);
+            u = (_image, srcLeft, srcTop, usedWidth, usedHeight, cut, uniformX, uniformY);
             _uniformity = u;
         }
         return (!needX || u.X) && (!needY || u.Y);
