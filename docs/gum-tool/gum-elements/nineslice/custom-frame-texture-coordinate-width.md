@@ -26,6 +26,7 @@ The chain button next to `Custom Frame Texture Coordinate Width` breaks it apart
 
 The **Texture Coordinates** tab draws its guides at each side's cut.
 
+The chain button appears only in projects at [version 9](../../upgrading/upgrading-file-gumx-version.md#version-9) or later. Older projects keep the single value.
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source.
 {% endhint %}
