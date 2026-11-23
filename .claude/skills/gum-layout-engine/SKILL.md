@@ -172,14 +172,22 @@ Finds the previous visible sibling and computes the offset to stack after it.
    fallback (O(n)). The cache is valid during `UpdateChildren` but may be stale
    for individual property-change-triggered layouts.
 
-2. **Find previous visible sibling** — walks backward from `thisIndex` skipping
-   invisible elements.
+2. **Find previous placed sibling** — walks backward from `thisIndex` skipping
+   siblings the stack does not place (`IsPlacedByParentLayout`).
 
 3. **Determine wrap** — if wrapping, increments `StackedRowOrColumnIndex` and
    sums `StackedRowOrColumnDimensions` for all previous rows/columns.
 
 4. **Compute offset** — for non-wrapping: previous sibling's position + size +
    `StackSpacing`. For wrapping: row/column dimension sum.
+
+### Children the stack or grid skips
+
+A child with `IgnoredByParentLayout` is laid out as in a Regular parent: `GetIfParentStacks`, `GetIfParentIsAutoGrid`
+and `GetWrappedLineAxis` return false or null for it, and code reading the parent's layout from the child's side goes
+through `GetParentChildrenLayoutForThis`. Every walk over siblings that counts stack slots, grid cells or Ratio space
+must test `IsPlacedByParentLayout` (visible and not flagged), not `Visible`. Parent sizing still counts the child:
+`GetMaxCellWidth`/`GetMaxCellHeight` return its extent separately so a grid does not multiply it by the cell count.
 
 ### RefreshParentRowColumnDimensionForThis
 

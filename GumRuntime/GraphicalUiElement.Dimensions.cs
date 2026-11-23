@@ -177,7 +177,7 @@ public partial class GraphicalUiElement
                         }
 
                         if (useFixedStackChildrenSize && this.ChildrenLayout == ChildrenLayout.TopToBottomStack && this.Children.Count > 1 &&
-                            GetFirstVisibleChild() is GraphicalUiElement element)
+                            GetFirstPlacedChild() is GraphicalUiElement element)
                         {
                             // A first child sized from this parent (a percent of it) is ignored like any such
                             // child, so it stands in for the others as zero. Reading its height would size this
@@ -205,14 +205,14 @@ public partial class GraphicalUiElement
                             {
                                 maxHeight = 0;
                             }
-                            maxHeight += (StackSpacing + elementHeight) * (GetVisibleChildCount() - 1);
+                            maxHeight += (StackSpacing + elementHeight) * (GetPlacedChildCount() - 1);
                         }
                         else
                         {
-                            float maxCellHeight = GetMaxCellHeight(considerWrappedStacked, maxHeight);
+                            float maxCellHeight = GetMaxCellHeight(considerWrappedStacked, maxHeight, out float ignoredByLayoutHeight);
                             _measuredLineHeight = maxCellHeight;
 
-                            maxHeight = maxCellHeight;
+                            maxHeight = System.Math.Max(maxCellHeight, ignoredByLayoutHeight);
 
                             if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal || this.ChildrenLayout == ChildrenLayout.AutoGridVertical)
                             {
@@ -222,13 +222,15 @@ public partial class GraphicalUiElement
                                 if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
                                 {
                                     var columnCount = System.Math.Max(1, this.AutoGridHorizontalCells);
-                                    var requiredRowCount = (int)Math.Ceiling((float)GetVisibleChildCount() / columnCount);
+                                    var requiredRowCount = (int)Math.Ceiling((float)GetPlacedChildCount() / columnCount);
                                     numberOfVerticalCells = System.Math.Max(numberOfVerticalCells, requiredRowCount);
                                 }
 
                                 // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
                                 // at least that same size, so we multiply the size by the number of cells tall
                                 maxHeight = maxCellHeight * numberOfVerticalCells + (numberOfVerticalCells-1) * StackSpacing;
+                                // A child the grid skips takes no cell and counts as in a Regular parent.
+                                maxHeight = System.Math.Max(maxHeight, ignoredByLayoutHeight);
                             }
 
                         }
@@ -404,7 +406,7 @@ public partial class GraphicalUiElement
                 for (int i = 0; i < ratioSiblings.Count; i++)
                 {
                     var child = ratioSiblings[i];
-                    if (child != this && IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.Visible)
+                    if (child != this && IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.Visible && !IsSiblingSkippedByParentLayout(gue))
                     {
                         if (gue.WidthUnits == DimensionUnitType.Absolute)
                         {
@@ -440,7 +442,7 @@ public partial class GraphicalUiElement
                 }
             }
 
-            if (EffectiveParentGue is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
+            if (EffectiveParentGue is GraphicalUiElement parentGue && GetParentChildrenLayoutForThis(parentGue) == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
             {
                 var numberOfSpaces = numberOfVisibleChildren;
 
@@ -456,7 +458,7 @@ public partial class GraphicalUiElement
                 for (int i = 0; i < ratioSiblings.Count; i++)
                 {
                     var child = ratioSiblings[i];
-                    if (IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
+                    if (IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible && !IsSiblingSkippedByParentLayout(gue))
                     {
                         totalRatio += System.Math.Max(0, gue.Width);
                     }
@@ -503,7 +505,7 @@ public partial class GraphicalUiElement
                 for (int i = 0; i < ratioSiblings.Count; i++)
                 {
                     var child = ratioSiblings[i];
-                    if (child != this && IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.Visible)
+                    if (child != this && IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.Visible && !IsSiblingSkippedByParentLayout(gue))
                     {
                         if (gue.HeightUnits == DimensionUnitType.Absolute)
                         {
@@ -539,7 +541,7 @@ public partial class GraphicalUiElement
                 }
             }
 
-            if (EffectiveParentGue is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
+            if (EffectiveParentGue is GraphicalUiElement parentGue && GetParentChildrenLayoutForThis(parentGue) == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
             {
                 var numberOfSpaces = numberOfVisibleChildren;
                 heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
@@ -554,7 +556,7 @@ public partial class GraphicalUiElement
                 for (int i = 0; i < ratioSiblings.Count; i++)
                 {
                     var child = ratioSiblings[i];
-                    if (IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
+                    if (IsLayoutSibling(child, onlyParentless) && child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible && !IsSiblingSkippedByParentLayout(gue))
                     {
                         totalRatio += System.Math.Max(0, gue.Height);
                     }
@@ -597,11 +599,17 @@ public partial class GraphicalUiElement
     // other axis, so MaintainFileAspectRatio falls back as if the renderable had no aspect ratio.
     static bool IsUsableAspectRatio(float aspectRatio) => aspectRatio > 0 && !float.IsInfinity(aspectRatio);
 
-    private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight)
+    private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight) =>
+        System.Math.Max(GetMaxCellHeight(considerWrappedStacked, maxHeight, out float ignoredByLayoutHeight), ignoredByLayoutHeight);
+
+    /// <param name="ignoredByLayoutHeight">The height needed by the counted children the stack or grid skips
+    /// (<see cref="IgnoredByParentLayout"/>), measured as in a Regular parent and left out of the return value.</param>
+    private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight, out float ignoredByLayoutHeight)
     {
         float maxCellHeight = maxHeight;
         float lineHeight = maxHeight;
         bool hasCountedVisibleChild = false;
+        ignoredByLayoutHeight = 0;
         for (int i = 0; i < Children!.Count; i++)
         {
             var element = Children[i];
@@ -624,7 +632,11 @@ public partial class GraphicalUiElement
                         element.MinHeight, element.MaxHeight);
                 }
 
-                if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+                if (element.IgnoredByParentLayout)
+                {
+                    ignoredByLayoutHeight = System.Math.Max(ignoredByLayoutHeight, elementHeight);
+                }
+                else if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
                 {
                     // Stack spacing is only added between visible children, so skip it
                     // for the first visible child in its line regardless of its index in Children.
@@ -649,7 +661,7 @@ public partial class GraphicalUiElement
                 {
                     maxCellHeight = System.Math.Max(maxCellHeight, elementHeight);
                 }
-                hasCountedVisibleChild = true;
+                hasCountedVisibleChild |= !element.IgnoredByParentLayout;
             }
         }
 
@@ -736,10 +748,10 @@ public partial class GraphicalUiElement
                             }
                         }
 
-                        float maxCellWidth = GetMaxCellWidth(considerWrappedStacked, maxWidth);
+                        float maxCellWidth = GetMaxCellWidth(considerWrappedStacked, maxWidth, out float ignoredByLayoutWidth);
                         _measuredLineWidth = maxCellWidth;
 
-                        maxWidth = maxCellWidth;
+                        maxWidth = System.Math.Max(maxCellWidth, ignoredByLayoutWidth);
 
                         if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal || this.ChildrenLayout == ChildrenLayout.AutoGridVertical)
                         {
@@ -750,12 +762,14 @@ public partial class GraphicalUiElement
                             if (ChildrenLayout == ChildrenLayout.AutoGridVertical)
                             {
                                 var rowCount = System.Math.Max(1, this.AutoGridVerticalCells);
-                                var requiredColumnCount = (int)Math.Ceiling((float)GetVisibleChildCount() / rowCount);
+                                var requiredColumnCount = (int)Math.Ceiling((float)GetPlacedChildCount() / rowCount);
                                 numberOfHorizontalCells = System.Math.Max(numberOfHorizontalCells, requiredColumnCount);
                             }
                             // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
                             // at least that same size, so we multiply the size by the number of cells wide
                             maxWidth = maxCellWidth * numberOfHorizontalCells + (numberOfHorizontalCells-1) * StackSpacing;
+                            // A child the grid skips takes no cell and counts as in a Regular parent.
+                            maxWidth = System.Math.Max(maxWidth, ignoredByLayoutWidth);
                         }
                     }
 
@@ -901,11 +915,17 @@ public partial class GraphicalUiElement
 
     }
 
-    private float GetMaxCellWidth(bool considerWrappedStacked, float maxWidth)
+    private float GetMaxCellWidth(bool considerWrappedStacked, float maxWidth) =>
+        System.Math.Max(GetMaxCellWidth(considerWrappedStacked, maxWidth, out float ignoredByLayoutWidth), ignoredByLayoutWidth);
+
+    /// <param name="ignoredByLayoutWidth">The width needed by the counted children the stack or grid skips
+    /// (<see cref="IgnoredByParentLayout"/>), measured as in a Regular parent and left out of the return value.</param>
+    private float GetMaxCellWidth(bool considerWrappedStacked, float maxWidth, out float ignoredByLayoutWidth)
     {
         float maxCellWidth = maxWidth;
         float lineWidth = maxWidth;
         bool hasCountedVisibleChild = false;
+        ignoredByLayoutWidth = 0;
         for (int i = 0; i < this.Children!.Count; i++)
         {
             var element = this.Children[i];
@@ -929,7 +949,11 @@ public partial class GraphicalUiElement
                         element.MinWidth, element.MaxWidth);
                 }
 
-                if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                if (element.IgnoredByParentLayout)
+                {
+                    ignoredByLayoutWidth = System.Math.Max(ignoredByLayoutWidth, elementWidth);
+                }
+                else if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
                 {
                     // Stack spacing is only added between visible children, so skip it
                     // for the first visible child in its line regardless of its index in Children.
@@ -954,7 +978,7 @@ public partial class GraphicalUiElement
                 {
                     maxCellWidth = System.Math.Max(maxCellWidth, elementWidth);
                 }
-                hasCountedVisibleChild = true;
+                hasCountedVisibleChild |= !element.IgnoredByParentLayout;
             }
         }
 

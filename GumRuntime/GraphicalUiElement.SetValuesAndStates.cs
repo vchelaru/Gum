@@ -1213,6 +1213,10 @@ public partial class GraphicalUiElement
                     this.IgnoredByParentSize = (bool)value!;
                     toReturn = true;
                     break;
+                case nameof(IgnoredByParentLayout):
+                    this.IgnoredByParentLayout = (bool)value!;
+                    toReturn = true;
+                    break;
                 case nameof(MaxHeight):
                     this.MaxHeight = (float?)value;
                     toReturn = true;

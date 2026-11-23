@@ -45,12 +45,12 @@ public partial class GraphicalUiElement
     float GetRequiredParentWidth()
     {
         var effectiveParent = this.EffectiveParentGue;
-        if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.TopToBottomStack && effectiveParent.WrapsChildren)
+        if (effectiveParent != null && GetParentChildrenLayoutForThis(effectiveParent) == ChildrenLayout.TopToBottomStack && effectiveParent.WrapsChildren)
         {
             // The column needs what this child contributes to it, measured from the column's start.
             return _wrappedLineStart + GetStackedLineDimension(effectiveParent);
         }
-        else if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.LeftToRightStack
+        else if (effectiveParent != null && GetParentChildrenLayoutForThis(effectiveParent) == ChildrenLayout.LeftToRightStack
             && mXUnits != GeneralUnitType.PixelsFromSmall)
         {
             // The parent owns this child's X position via stacking, so a non-PixelsFromSmall
@@ -112,12 +112,12 @@ public partial class GraphicalUiElement
     float GetRequiredParentHeight()
     {
         var effectiveParent = this.EffectiveParentGue;
-        if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.LeftToRightStack && effectiveParent.WrapsChildren)
+        if (effectiveParent != null && GetParentChildrenLayoutForThis(effectiveParent) == ChildrenLayout.LeftToRightStack && effectiveParent.WrapsChildren)
         {
             // The row needs what this child contributes to it, measured from the row's start.
             return _wrappedLineStart + GetStackedLineDimension(effectiveParent);
         }
-        else if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.TopToBottomStack
+        else if (effectiveParent != null && GetParentChildrenLayoutForThis(effectiveParent) == ChildrenLayout.TopToBottomStack
             && mYUnits != GeneralUnitType.PixelsFromSmall)
         {
             // Symmetric to GetRequiredParentWidth's LeftToRightStack branch: the parent owns this
@@ -233,7 +233,7 @@ public partial class GraphicalUiElement
 
         if (this.Parent != null)
         {
-            if (Parent.ChildrenLayout == ChildrenLayout.AutoGridVertical || Parent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
+            if (!ignoredByParentLayout && (Parent.ChildrenLayout == ChildrenLayout.AutoGridVertical || Parent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal))
             {
                 var effectiveHorizontalCells = Parent.AutoGridHorizontalCells;
                 if (effectiveHorizontalCells < 1) effectiveHorizontalCells = 1;
@@ -242,7 +242,7 @@ public partial class GraphicalUiElement
 
                 var setCellCount = effectiveHorizontalCells * effectiveVerticalCells;
 
-                if (Parent.GetVisibleChildCount() > setCellCount)
+                if (Parent.GetPlacedChildCount() > setCellCount)
                 {
                     // Matches GetCellDimensions: a horizontal grid fixes its columns and grows rows,
                     // a vertical grid fixes its rows and grows columns.
@@ -250,14 +250,14 @@ public partial class GraphicalUiElement
                     {
                         if (Parent.HeightUnits == DimensionUnitType.RelativeToChildren)
                         {
-                            effectiveVerticalCells = (int)System.Math.Ceiling((float)Parent.GetVisibleChildCount() / effectiveHorizontalCells);
+                            effectiveVerticalCells = (int)System.Math.Ceiling((float)Parent.GetPlacedChildCount() / effectiveHorizontalCells);
                         }
                     }
                     else
                     {
                         if (Parent.WidthUnits == DimensionUnitType.RelativeToChildren)
                         {
-                            effectiveHorizontalCells = (int)System.Math.Ceiling((float)Parent.GetVisibleChildCount() / effectiveVerticalCells);
+                            effectiveHorizontalCells = (int)System.Math.Ceiling((float)Parent.GetPlacedChildCount() / effectiveVerticalCells);
                         }
                     }
                 }

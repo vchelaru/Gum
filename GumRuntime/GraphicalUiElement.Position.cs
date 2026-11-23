@@ -50,8 +50,8 @@ public partial class GraphicalUiElement
         XOrY? wrappedLineAxis, ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
     {
 
-        var shouldAdd = Parent is GraphicalUiElement parentGue &&
-            (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.AutoGridVertical || parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.AutoGridHorizontal);
+        var parentLayout = Parent is GraphicalUiElement parentGue ? GetParentChildrenLayoutForThis(parentGue) : ChildrenLayout.Regular;
+        var shouldAdd = parentLayout == ChildrenLayout.AutoGridVertical || parentLayout == ChildrenLayout.AutoGridHorizontal;
 
         if (!wasHandledX)
         {
@@ -287,8 +287,8 @@ public partial class GraphicalUiElement
         // Wrap the object if:
         bool shouldWrap =
             effectiveParent != null &&
-        // * The parent stacks
-            effectiveParent.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular &&
+        // * The parent stacks this child
+            GetParentChildrenLayoutForThis(effectiveParent) != Gum.Managers.ChildrenLayout.Regular &&
 
             // * And the parent wraps
             effectiveParent.WrapsChildren &&
@@ -479,12 +479,13 @@ public partial class GraphicalUiElement
 
     /// <summary>
     /// Whether this is a child after the first in a parent stacking along the given axis. The stack sets
-    /// such a child's leading edge, so its main-axis units and origin are ignored (#695, #5766).
+    /// such a child's leading edge, so its main-axis units and origin are ignored (#695, #5766). Siblings
+    /// the stack skips (<see cref="IgnoredByParentLayout"/>) do not make a child later.
     /// </summary>
     private bool IsLaterChildInStack(ChildrenLayout stackLayout)
     {
         var effectiveParentGue = this.EffectiveParentGue;
-        if (effectiveParentGue?.ChildrenLayout != stackLayout)
+        if (effectiveParentGue == null || GetParentChildrenLayoutForThis(effectiveParentGue) != stackLayout)
         {
             return false;
         }
@@ -495,7 +496,21 @@ public partial class GraphicalUiElement
             ? effectiveParentGue.mWhatThisContains
             : (this.Parent as GraphicalUiElement)?.Children as System.Collections.IList;
 
-        return (siblings?.IndexOf(this) ?? -1) > 0;
+        if (siblings == null)
+        {
+            return false;
+        }
+        bool hasStackedSiblingBefore = false;
+        for (int i = 0; i < siblings.Count; i++)
+        {
+            var sibling = (GraphicalUiElement)siblings[i]!;
+            if (sibling == this)
+            {
+                return hasStackedSiblingBefore;
+            }
+            hasStackedSiblingBefore |= !sibling.ignoredByParentLayout;
+        }
+        return false;
     }
 
     private void AdjustOffsetsByOrigin(bool isParentFlippedHorizontally, ref float unitOffsetX, ref float unitOffsetY)
@@ -582,10 +597,10 @@ public partial class GraphicalUiElement
                 effectiveParent.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack &&
                 effectiveParent.Children?.Count > 0)
             {
-                var visibleIndex = this.GetIndexInVisibleSiblings();
+                var visibleIndex = this.GetIndexInPlacedSiblings();
                 if (visibleIndex > 0)
                 {
-                    var firstChild = effectiveParent.GetFirstVisibleChild()!;
+                    var firstChild = effectiveParent.GetFirstPlacedChild()!;
                     // Stack after the first child's laid-out top, which includes its own Y offset.
                     var firstChildTop = ((IPositionedSizedObject)firstChild).Y;
                     unitOffsetY += firstChildTop + visibleIndex * (firstChild.AbsoluteHeight + effectiveParent.StackSpacing);
@@ -637,7 +652,7 @@ public partial class GraphicalUiElement
         }
         else if (GetIfParentIsAutoGrid())
         {
-            var indexInSiblingList = this.GetIndexInVisibleSiblings();
+            var indexInSiblingList = this.GetIndexInPlacedSiblings();
             int xIndex, yIndex;
             float cellWidth, cellHeight;
             GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);

@@ -940,6 +940,9 @@ public class StandardElementsManager
         stateSave.Variables.Add(variableSave);
 
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IgnoredByParentSize", Category = "Parent" });
+        stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IgnoredByParentLayout", Category = "Parent",
+            MinimumGumxVersion = (int)GumProjectSave.GumxVersions.BbCodeTextEffects,
+            DetailText = "When true, the parent's Children Layout (stack or grid) skips this, and it is positioned by its own X and Y as if the parent were Regular." });
     }
 
     public Func<string, StateSave?>? CustomGetDefaultState;

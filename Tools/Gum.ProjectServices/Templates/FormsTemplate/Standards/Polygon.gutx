@@ -18,6 +18,9 @@
     <Variable Type="bool" Name="HasEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="bool" Name="IgnoredByParentLayout" Category="Parent" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="bool" Name="IgnoredByParentSize" Category="Parent" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>

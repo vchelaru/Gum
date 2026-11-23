@@ -5184,6 +5184,8 @@ public class CodeGenerator
     {
         // #4880: older NineSliceRuntime/SpriteRuntime lack ColorOperation.
         ["ColorOperation"] = 5,
+        // #8410: older GraphicalUiElement lacks IgnoredByParentLayout.
+        ["IgnoredByParentLayout"] = 8,
     };
 
     // #8263: Blend.Subtract exists only from runtime syntax version 8 on. Older runtimes get a comment

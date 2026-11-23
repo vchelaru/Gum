@@ -146,6 +146,27 @@ public partial class GraphicalUiElement
         }
     }
 
+    bool ignoredByParentLayout;
+    /// <summary>
+    /// Whether the parent's <see cref="ChildrenLayout"/> skips this child. The child is positioned by its own
+    /// X, Y, units and origin as if the parent's ChildrenLayout were Regular, and its siblings stack or fill grid
+    /// cells as if it were not there. It still counts toward a parent sized to its children, the way a child of a
+    /// Regular parent does; <see cref="IgnoredByParentSize"/> controls that separately.
+    /// </summary>
+    public bool IgnoredByParentLayout
+    {
+        get => ignoredByParentLayout;
+        set
+        {
+            if (ignoredByParentLayout != value)
+            {
+                ignoredByParentLayout = value;
+                UpdateLayout();
+                ReportTypedPropertyChanged(nameof(IgnoredByParentLayout));
+            }
+        }
+    }
+
     ChildrenLayout childrenLayout;
     public ChildrenLayout ChildrenLayout
     {

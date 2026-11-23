@@ -193,7 +193,8 @@ public class GumProjectSave
         /// format as <see cref="RaiseChildrenEventsExpansion"/>; the bump exists because those tags were literal
         /// text before, so text in an older project that happens to contain them keeps drawing them as written.
         /// See <see cref="GumProjectSave.SupportsBbCodeTextEffects"/>. The NineSlice
-        /// <c>CustomFrameTextureCoordinateLeft/Top/Right/Bottom</c> variables (#8354) share this slot.
+        /// <c>CustomFrameTextureCoordinateLeft/Top/Right/Bottom</c> variables (#8354) and the
+        /// <c>IgnoredByParentLayout</c> variable on every standard element (#8410) share this slot.
         /// </summary>
         BbCodeTextEffects = 9,
     }
