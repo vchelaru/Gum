@@ -161,7 +161,11 @@ public partial class GraphicalUiElement
             if (ignoredByParentLayout != value)
             {
                 ignoredByParentLayout = value;
-                UpdateLayout();
+                // Only a stacking or grid parent reads the flag; a Regular parent reads it when its layout changes.
+                if (EffectiveParentGue is GraphicalUiElement parent && parent.ChildrenLayout != ChildrenLayout.Regular)
+                {
+                    UpdateLayout();
+                }
                 ReportTypedPropertyChanged(nameof(IgnoredByParentLayout));
             }
         }

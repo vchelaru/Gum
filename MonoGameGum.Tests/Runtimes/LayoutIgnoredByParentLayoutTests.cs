@@ -358,6 +358,45 @@ public class LayoutIgnoredByParentLayoutTests : BaseTestClass
         flagged.AbsoluteTop.ShouldBe(100);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Toggling_ShouldNotLayOut_WhenParentIsRegularOrAbsent(bool hasParent)
+    {
+        ContainerRuntime child = Box(10, 20, x: 5, y: 6);
+        if (hasParent)
+        {
+            ContainerRuntime parent = Box(200, 200);
+            parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+            parent.AddChild(child);
+        }
+        int callsBefore = GraphicalUiElement.UpdateLayoutCallCount;
+
+        child.IgnoredByParentLayout = true;
+        child.IgnoredByParentLayout.ShouldBeTrue();
+        child.IgnoredByParentLayout = false;
+
+        GraphicalUiElement.UpdateLayoutCallCount.ShouldBe(callsBefore);
+    }
+
+    [Fact]
+    public void FlaggedChildOfRegularParent_ShouldBeSkipped_WhenParentLaterStacks()
+    {
+        ContainerRuntime parent = Box(200, 200);
+        ContainerRuntime a = Box(10, 20);
+        ContainerRuntime flagged = Box(10, 30, x: 0, y: 100);
+        ContainerRuntime b = Box(10, 20);
+        parent.AddChild(a);
+        parent.AddChild(flagged);
+        parent.AddChild(b);
+        flagged.IgnoredByParentLayout = true;
+
+        parent.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+
+        b.AbsoluteTop.ShouldBe(20);
+        flagged.AbsoluteTop.ShouldBe(100);
+    }
+
     #endregion
 
     #region AutoGrid
@@ -548,23 +587,45 @@ public class LayoutIgnoredByParentLayoutTests : BaseTestClass
         ChildrenLayout.AutoGridHorizontal, ChildrenLayout.AutoGridVertical,
     };
 
-    record SweepCase(ChildrenLayout Layout, bool Wraps, float Spacing, List<(float Width, float Height)> Siblings,
-        int FlaggedIndex, float FlaggedWidth, float FlaggedHeight, float FlaggedX, float FlaggedY, bool SizedToChildren);
+    record SweepChild(float Width, float Height, float X, float Y, bool IsFlagged);
+
+    record SweepCase(ChildrenLayout Layout, bool Wraps, float Spacing, List<SweepChild> Children, bool SizedToChildren);
 
     static SweepCase MakeSweepCase(Random random, bool sizedToChildren)
     {
         var layout = SweepLayouts[random.Next(SweepLayouts.Length)];
-        int count = random.Next(1, 6);
-        List<(float, float)> siblings = new();
+        int count = random.Next(1, 7);
+        // How many are flagged: none, one, several or all, at random indices.
+        int flaggedCount = random.Next(4) switch
+        {
+            0 => 0,
+            1 => 1,
+            2 => random.Next(1, count + 1),
+            _ => count,
+        };
+        List<int> indices = new();
         for (int i = 0; i < count; i++)
         {
-            siblings.Add((random.Next(5, 41), random.Next(5, 41)));
+            indices.Add(i);
         }
-        return new SweepCase(layout, random.Next(2) == 0, new[] { 0f, 3f, 7f }[random.Next(3)], siblings,
-            random.Next(0, count + 1), random.Next(5, 120), random.Next(5, 120), random.Next(0, 31), random.Next(0, 31), sizedToChildren);
+        HashSet<int> flaggedIndices = new();
+        for (int i = 0; i < flaggedCount; i++)
+        {
+            int pick = random.Next(indices.Count);
+            flaggedIndices.Add(indices[pick]);
+            indices.RemoveAt(pick);
+        }
+        List<SweepChild> children = new();
+        for (int i = 0; i < count; i++)
+        {
+            children.Add(flaggedIndices.Contains(i)
+                ? new SweepChild(random.Next(5, 120), random.Next(5, 120), random.Next(0, 31), random.Next(0, 31), IsFlagged: true)
+                : new SweepChild(random.Next(5, 41), random.Next(5, 41), 0, 0, IsFlagged: false));
+        }
+        return new SweepCase(layout, random.Next(2) == 0, new[] { 0f, 3f, 7f }[random.Next(3)], children, sizedToChildren);
     }
 
-    static (ContainerRuntime Parent, List<ContainerRuntime> Siblings, ContainerRuntime? Flagged) BuildSweepTree(SweepCase sweepCase, bool includeFlagged)
+    static (ContainerRuntime Parent, List<ContainerRuntime> Unflagged, List<ContainerRuntime> Flagged) BuildSweepTree(SweepCase sweepCase, bool includeFlagged)
     {
         ContainerRuntime parent = Parent(sweepCase.Layout, 100, 100);
         parent.WrapsChildren = sweepCase.Wraps;
@@ -578,63 +639,80 @@ public class LayoutIgnoredByParentLayoutTests : BaseTestClass
             parent.Width = 0;
             parent.Height = 0;
         }
-        List<ContainerRuntime> siblings = new();
-        ContainerRuntime? flagged = null;
-        for (int i = 0; i <= sweepCase.Siblings.Count; i++)
+        List<ContainerRuntime> unflagged = new();
+        List<ContainerRuntime> flagged = new();
+        foreach (SweepChild child in sweepCase.Children)
         {
-            if (i == sweepCase.FlaggedIndex && includeFlagged)
+            if (child.IsFlagged)
             {
-                flagged = Flagged(sweepCase.FlaggedWidth, sweepCase.FlaggedHeight, sweepCase.FlaggedX, sweepCase.FlaggedY);
-                parent.AddChild(flagged);
+                if (includeFlagged)
+                {
+                    ContainerRuntime element = Flagged(child.Width, child.Height, child.X, child.Y);
+                    flagged.Add(element);
+                    parent.AddChild(element);
+                }
             }
-            if (i < sweepCase.Siblings.Count)
+            else
             {
-                ContainerRuntime sibling = Box(sweepCase.Siblings[i].Width, sweepCase.Siblings[i].Height);
-                siblings.Add(sibling);
-                parent.AddChild(sibling);
+                ContainerRuntime element = Box(child.Width, child.Height);
+                unflagged.Add(element);
+                parent.AddChild(element);
             }
         }
-        return (parent, siblings, flagged);
+        return (parent, unflagged, flagged);
     }
 
     [Fact]
-    public void Sweep_ShouldPlaceSiblingsAsInTheTreeWithoutTheFlaggedChild_AndSizeTheParentAsARegularParentWould()
+    public void Sweep_ShouldPlaceSiblingsAsInTheTreeWithoutTheFlaggedChildren_AndSizeTheParentAsARegularParentWould()
     {
-        // Each case builds the tree with and without a flagged child. Siblings must not move, the flagged child sits at
-        // its own position, and a parent sized to its children grows only to the flagged child's far edges.
+        // Each case flags none, one, several or all children at random indices, and builds the tree with and without
+        // the flagged ones. Unflagged children must not move, each flagged child sits at its own position and size, and
+        // a parent sized to its children grows only to the flagged children's far edges.
         Random random = new Random(8411);
         List<string> failures = new();
         int caseCount = SweepScale.Cases(300);
         for (int iteration = 0; iteration < caseCount; iteration++)
         {
             SweepCase sweepCase = MakeSweepCase(random, sizedToChildren: iteration % 2 == 1);
-            var (withParent, withSiblings, flagged) = BuildSweepTree(sweepCase, includeFlagged: true);
-            var (withoutParent, withoutSiblings, _) = BuildSweepTree(sweepCase, includeFlagged: false);
-            string tag = $"#{iteration} {sweepCase.Layout} wrap={sweepCase.Wraps} spacing={sweepCase.Spacing} n={sweepCase.Siblings.Count} " +
-                $"flaggedIndex={sweepCase.FlaggedIndex} flagged=({sweepCase.FlaggedX},{sweepCase.FlaggedY},{sweepCase.FlaggedWidth}x{sweepCase.FlaggedHeight}) sized={sweepCase.SizedToChildren}";
+            var (withParent, withUnflagged, flagged) = BuildSweepTree(sweepCase, includeFlagged: true);
+            var (withoutParent, withoutUnflagged, _) = BuildSweepTree(sweepCase, includeFlagged: false);
+            List<SweepChild> flaggedSpecs = sweepCase.Children.FindAll(child => child.IsFlagged);
+            string flaggedText = string.Join(" ", sweepCase.Children.ConvertAll(child =>
+                child.IsFlagged ? $"F({child.X},{child.Y},{child.Width}x{child.Height})" : $"({child.Width}x{child.Height})"));
+            string tag = $"#{iteration} {sweepCase.Layout} wrap={sweepCase.Wraps} spacing={sweepCase.Spacing} sized={sweepCase.SizedToChildren} children={flaggedText}";
+
+            for (int i = 0; i < flagged.Count; i++)
+            {
+                SweepChild spec = flaggedSpecs[i];
+                if (flagged[i].AbsoluteLeft != spec.X || flagged[i].AbsoluteTop != spec.Y ||
+                    flagged[i].AbsoluteWidth != spec.Width || flagged[i].AbsoluteHeight != spec.Height)
+                {
+                    failures.Add($"{tag} flagged {i} at {flagged[i].AbsoluteLeft},{flagged[i].AbsoluteTop} {flagged[i].AbsoluteWidth}x{flagged[i].AbsoluteHeight}");
+                }
+            }
 
             if (!sweepCase.SizedToChildren)
             {
-                for (int i = 0; i < withoutSiblings.Count; i++)
+                for (int i = 0; i < withoutUnflagged.Count; i++)
                 {
-                    GraphicalUiElement expected = withoutSiblings[i];
-                    GraphicalUiElement actual = withSiblings[i];
+                    GraphicalUiElement expected = withoutUnflagged[i];
+                    GraphicalUiElement actual = withUnflagged[i];
                     if (expected.AbsoluteLeft != actual.AbsoluteLeft || expected.AbsoluteTop != actual.AbsoluteTop ||
                         expected.AbsoluteWidth != actual.AbsoluteWidth || expected.AbsoluteHeight != actual.AbsoluteHeight)
                     {
                         failures.Add($"{tag} sibling {i}: {expected.AbsoluteLeft},{expected.AbsoluteTop} vs {actual.AbsoluteLeft},{actual.AbsoluteTop}");
                     }
                 }
-                if (flagged!.AbsoluteLeft != sweepCase.FlaggedX || flagged.AbsoluteTop != sweepCase.FlaggedY ||
-                    flagged.AbsoluteWidth != sweepCase.FlaggedWidth || flagged.AbsoluteHeight != sweepCase.FlaggedHeight)
-                {
-                    failures.Add($"{tag} flagged at {flagged.AbsoluteLeft},{flagged.AbsoluteTop} {flagged.AbsoluteWidth}x{flagged.AbsoluteHeight}");
-                }
             }
             else
             {
-                float expectedWidth = Math.Max(withoutParent.AbsoluteWidth, sweepCase.FlaggedX + sweepCase.FlaggedWidth);
-                float expectedHeight = Math.Max(withoutParent.AbsoluteHeight, sweepCase.FlaggedY + sweepCase.FlaggedHeight);
+                float expectedWidth = withoutParent.AbsoluteWidth;
+                float expectedHeight = withoutParent.AbsoluteHeight;
+                foreach (SweepChild spec in flaggedSpecs)
+                {
+                    expectedWidth = Math.Max(expectedWidth, spec.X + spec.Width);
+                    expectedHeight = Math.Max(expectedHeight, spec.Y + spec.Height);
+                }
                 if (withParent.AbsoluteWidth != expectedWidth || withParent.AbsoluteHeight != expectedHeight)
                 {
                     failures.Add($"{tag} parent {withParent.AbsoluteWidth}x{withParent.AbsoluteHeight} expected {expectedWidth}x{expectedHeight}");
