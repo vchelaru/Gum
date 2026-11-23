@@ -83,6 +83,27 @@ for(int i = 0; i < 40; i++)
 
 The ListBox property returns a fully functional ListBox instance. For more information on how to customize the ListBox, see the [ListBox page](listbox.md).
 
+### Sizing to Children
+
+The drop-down can size itself to its items instead of using a fixed height. In code-only projects, cast `comboBox.ListBox.Visual` to `ListBoxVisual` and call `MakeHeightSizedToChildren`. Setting `ClipContainerInstance.MaxHeight` limits how tall the drop-down grows; past that height its items scroll.
+
+```csharp
+// Initialize
+var comboBox = new ComboBox();
+comboBox.AddToRoot();
+
+var listBoxVisual = (Gum.Forms.DefaultVisuals.V3.ListBoxVisual)comboBox.ListBox.Visual;
+listBoxVisual.MakeHeightSizedToChildren();
+listBoxVisual.ClipContainerInstance.MaxHeight = 200;
+
+for(int i = 0; i < 5; i++)
+{
+    comboBox.Items.Add($"Item {i+1}");
+}
+```
+
+For more information, see [Sizing to Children](listbox.md#sizing-to-children) on the ListBox page.
+
 ## Performance with Many Items
 
 If all items in the ComboBox dropdown are the same height (no text wrapping or variable-sized icons), you can improve dropdown open performance by setting `UseFixedStackChildrenSize` on the ListBox's inner panel. This tells the layout engine to measure only the first child and assume all others are the same size, skipping per-child measurement.

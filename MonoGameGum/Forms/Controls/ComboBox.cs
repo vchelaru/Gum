@@ -541,6 +541,12 @@ public class ComboBox :
     // ComboBox moves or resizes (including through an ancestor) or the canvas is resized.
     PopupPlacement _popupPlacement;
 
+#if !FRB
+    // The rows' height when the drop-down was last placed. A drop-down sized to its children is
+    // placed again when this changes, so it grows and shrinks with its items while open (#8412).
+    float _placedRowsHeight;
+#endif
+
     #endregion
 
     #region Events
@@ -963,6 +969,9 @@ public class ComboBox :
         // Recorded last, with the list box detached: this is the state later frames compare against,
         // and a ComboBox sized to its children has a different rect while the list box is attached.
         _popupPlacement.Record(Visual, listBoxVisual);
+#if !FRB
+        _placedRowsHeight = listBox.InnerPanel.AbsoluteHeight;
+#endif
     }
 
     private void RestoreListBoxLayoutValues()
@@ -1040,7 +1049,8 @@ public class ComboBox :
             return;
         }
 
-        if (_popupPlacement.DidBoundsChange(listBox.Visual) || _popupPlacement.DidOwnerChange(Visual))
+        if (_popupPlacement.DidBoundsChange(listBox.Visual) || _popupPlacement.DidOwnerChange(Visual) ||
+            (listBoxHeightUnits == DimensionUnitType.RelativeToChildren && listBox.InnerPanel.AbsoluteHeight != _placedRowsHeight))
         {
             PlaceListBoxRelativeToComboBox();
         }

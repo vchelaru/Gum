@@ -313,9 +313,6 @@ public class ListBoxVisual : InteractiveGue
     }
 
     /// <summary>
-    /// Returns the strongly-typed ListBox Forms control backing this visual.
-    /// </summary>
-    /// <summary>
     /// Configures the list box and its containers to size their height to children content
     /// rather than using a fixed height.
     /// </summary>
