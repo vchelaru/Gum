@@ -152,7 +152,7 @@ public class StandardElementsManagerTests : BaseTestClass
         StandardElementsManager self = StandardElementsManager.Self;
         self.RefreshDefaults();
 
-        StateSave state = self.DefaultStates![standardName];
+        StateSave state = self.DefaultStates[standardName];
 
         state.Variables.ShouldContain(v => v.Name == "HasEvents" && !v.IsHiddenInPropertyGrid);
         state.Variables.ShouldContain(v => v.Name == "ExposeChildrenEvents");
@@ -174,7 +174,7 @@ public class StandardElementsManagerTests : BaseTestClass
         StandardElementsManager self = StandardElementsManager.Self;
         self.RefreshDefaults();
 
-        StateSave state = self.DefaultStates![standardName];
+        StateSave state = self.DefaultStates[standardName];
 
         VariableSave variable = state.Variables.Single(v => v.Name == "IgnoredByParentLayout");
         variable.Category.ShouldBe("Parent");
@@ -290,6 +290,23 @@ public class StandardElementsManagerTests : BaseTestClass
         // Older runtimes (and FRB1's generated ones) lack the property, so the load-time back-fill
         // must skip it for projects saved before the version that introduced it.
         variable.MinimumGumxVersion.ShouldBe((int)GumProjectSave.GumxVersions.ColorOperationExpansion);
+    }
+
+    [Fact]
+    public void DefaultStateLookups_BeforeInitialize_ShouldInitializeOnDemand()
+    {
+        // A backend that never calls Initialize still loads projects: every lookup fills the defaults first.
+        StandardElementsManager getManager = new StandardElementsManager();
+        StandardElementsManager tryGetManager = new StandardElementsManager();
+        StandardElementsManager statesManager = new StandardElementsManager();
+        StandardElementsManager populateManager = new StandardElementsManager();
+        GumProjectSave project = new GumProjectSave();
+
+        getManager.GetDefaultStateFor("Sprite").ShouldNotBeNull();
+        tryGetManager.TryGetDefaultStateFor("NineSlice").ShouldNotBeNull();
+        statesManager.DefaultStates.ShouldContainKey("Container");
+        populateManager.PopulateProjectWithDefaultStandards(project);
+        project.StandardElements.ShouldContain(item => item.Name == "Sprite");
     }
 
     [Fact]

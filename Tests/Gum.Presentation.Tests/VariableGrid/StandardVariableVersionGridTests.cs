@@ -116,7 +116,7 @@ public class StandardVariableVersionGridTests : BaseTestClass
     {
         List<string> shownTooEarly = new List<string>();
 
-        foreach (KeyValuePair<string, StateSave> pair in StandardElementsManager.Self.DefaultStates!)
+        foreach (KeyValuePair<string, StateSave> pair in StandardElementsManager.Self.DefaultStates)
         {
             // Stroke and Blend on the shapes stay visible on older projects by design (pinned by the
             // gate's existing behavior), so they are not part of this rule.

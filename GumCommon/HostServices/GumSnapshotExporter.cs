@@ -62,19 +62,11 @@ public class GumSnapshotExporter
         // directory anyway, so this changes only the directory computation, not where the project is written.
         filePath = Path.GetFullPath(filePath);
 
-        // A code-only game may never have triggered standards population; ensure the catalog exists
-        // before reading it (as the serializer's baseline) and writing it (as the project's standards).
-        if (StandardElementsManager.Self.DefaultStates == null)
-        {
-            StandardElementsManager.Self.Initialize();
-        }
-
         string screenName = Path.GetFileNameWithoutExtension(filePath);
 
-        // Non-null here: the guard above initializes the catalog when it was missing. The baseline provider
-        // lets the serializer collapse Forms-control subtrees (Button, CheckBox, ...) into synthesized
-        // components by diffing each against the control type's pristine default-template visual.
-        RuntimeSnapshotSerializer serializer = new(StandardElementsManager.Self.DefaultStates!,
+        // The baseline provider lets the serializer collapse Forms-control subtrees (Button, CheckBox, ...)
+        // into synthesized components by diffing each against the control type's pristine default-template visual.
+        RuntimeSnapshotSerializer serializer = new(StandardElementsManager.Self.DefaultStates,
             type => FrameworkElement.GetGraphicalUiElementForFrameworkElement(type));
         ScreenSave screen = serializer.CreateScreenSave(root, screenName, shake);
 

@@ -73,8 +73,18 @@ public class StandardElementsManager
 
     Dictionary<string, StateSave>? mDefaults;
 
-    Dictionary<string, StateSave> Defaults => mDefaults ??
-        throw new InvalidOperationException("You must first call Initialize on StandardElementsManager before calling this function");
+    // Every lookup initializes on demand, so a host that never calls Initialize still loads projects.
+    Dictionary<string, StateSave> Defaults
+    {
+        get
+        {
+            if (mDefaults == null)
+            {
+                Initialize();
+            }
+            return mDefaults!;
+        }
+    }
 
     static StandardElementsManager? mSelf;
 
@@ -130,8 +140,8 @@ public class StandardElementsManager
 
     public string DefaultType => "Container";
 
-    /// <summary>The default state of each standard type, or null before <see cref="Initialize"/>.</summary>
-    public Dictionary<string, StateSave>? DefaultStates => mDefaults;
+    /// <summary>The default state of each standard type. Reading it initializes the defaults if needed.</summary>
+    public Dictionary<string, StateSave> DefaultStates => Defaults;
 
     #endregion
 
@@ -949,18 +959,13 @@ public class StandardElementsManager
 
     public StateSave? TryGetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
     {
-        if(mDefaults == null)
-        {
-            return null;
-        }
         if (string.IsNullOrEmpty(type))
         {
             return null;
         }
-        if (mDefaults.ContainsKey(type))
+        if (Defaults.TryGetValue(type, out StateSave? defaultState))
         {
-            return mDefaults[type];
-
+            return defaultState;
         }
         else
         {
@@ -996,10 +1001,6 @@ public class StandardElementsManager
     /// <returns>The default state, or null if <paramref name="type"/> is unknown and <paramref name="throwExceptionOnMissing"/> is false.</returns>
     public StateSave? GetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
     {
-        if (mDefaults == null)
-        {
-            throw new Exception("You must first call Initialize on StandardElementsManager before calling this function");
-        }
         return TryGetDefaultStateFor(type, throwExceptionOnMissing);
     }
 
@@ -1010,12 +1011,6 @@ public class StandardElementsManager
 
     public void PopulateProjectWithDefaultStandards(GumProjectSave gumProjectSave)
     {
-        if (mDefaults == null)
-        {
-            throw new Exception("You must first call Initialize on this StandardElementsManager");
-        }
-
-
         foreach (string type in SeedableStandardTypes)
         {
             AddStandardElementSaveInstance(gumProjectSave, type);

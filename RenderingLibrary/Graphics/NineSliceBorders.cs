@@ -7,7 +7,7 @@ namespace RenderingLibrary.Graphics;
 /// texture (source), once each side's border scale and the nine-slice's size are applied. One
 /// source for every runtime so they all agree, including the 0-scale case where a side collapses.
 /// </summary>
-internal readonly struct NineSliceBorders
+public readonly struct NineSliceBorders
 {
     /// <summary>Destination thickness of the left band, in screen units.</summary>
     public float DestLeft { get; }
