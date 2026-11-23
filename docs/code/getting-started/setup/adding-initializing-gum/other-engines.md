@@ -2,6 +2,10 @@
 
 ## Introduction
 
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 Gum's layout, project loading and variables live in the `FlatRedBall.GumCommon` NuGet package, which has no rendering code. To use Gum in an engine that has no Gum runtime, reference GumCommon and write the drawing yourself.
 
 The [Sdl3Gum sample](https://github.com/vchelaru/Gum/tree/main/Samples/Sdl3Gum) is the starting point. It draws Sprites and NineSlices with SDL3's 2D renderer in about 300 lines, comments included, from both code and a `.gumx` project. Porting it means replacing the SDL calls that load a texture and draw a source rectangle into a destination rectangle.
