@@ -43,7 +43,7 @@ public class CodeGeneratorDerivedBaseInstanceOverrideTests : BaseTestClass
     private string Generate(string elementName, OutputLibrary library, ObjectInstantiationType instantiation, Action<ComponentSave, ComponentSave, ComponentSave>? configure = null)
     {
         Project.Components.Clear();
-        StateSave containerDefaults = StandardElementsManager.Self.DefaultStates!["Container"];
+        StateSave containerDefaults = StandardElementsManager.Self.DefaultStates["Container"];
         StandardElementSave container = Project.StandardElements.Single(item => item.Name == "Container");
         container.DefaultState.Variables.Clear();
         foreach (VariableSave variable in containerDefaults.Variables)

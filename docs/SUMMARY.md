@@ -231,6 +231,7 @@
       * [Stride](code/getting-started/setup/adding-initializing-gum/stride.md)
       * [Unity](code/getting-started/setup/adding-initializing-gum/unity.md)
       * [WPF](code/getting-started/setup/adding-initializing-gum/wpf.md)
+      * [Other Engines (Custom Renderer)](code/getting-started/setup/adding-initializing-gum/other-engines.md)
     * [Loading a Gum Project (.gumj/.gumx)](code/getting-started/setup/loading-a-gum-project-.gumx.md)
     * [Setup for GumBatch (Optional)](code/getting-started/setup/setup-for-gumbatch.md)
   * [Tutorials](code/getting-started/tutorials/README.md)

@@ -7,7 +7,7 @@ namespace RenderingLibrary.Graphics;
 /// Where a nine-slice cuts its source texture: how many texels each border band takes from the
 /// left, top, right and bottom edges of the used source region. One source for every runtime.
 /// </summary>
-internal readonly struct NineSliceSourceCut : System.IEquatable<NineSliceSourceCut>
+public readonly struct NineSliceSourceCut : System.IEquatable<NineSliceSourceCut>
 {
     /// <summary>Texels the left band takes from the source region.</summary>
     public int Left { get; }

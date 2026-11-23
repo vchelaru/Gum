@@ -41,6 +41,10 @@ raylib and Skia render shapes natively. MonoGame's shape rendering comes from th
 
 **MonoGame/KNI host init (landmine).** Referencing the package is not enough — the game host must call `ShapeRenderer.Self.Initialize()` (namespace `Gum.Renderables`; the old `MonoGameAndGum.Renderables` is an obsolete shim) **after** `GumService.Default.Initialize(...)`, **and** set `GraphicsProfile.HiDef` (Apos.Shapes uses an SM4 effect that Reach can't load). Miss either and shape fills/effects silently do not draw — no error. See `docs/code/standard-visuals/shapes-apos.shapes.md`.
 
+## Custom-renderer sample (Sdl3Gum)
+
+`Samples/Sdl3Gum/` is the "write your own backend" reference: SDL3's `SDL_Renderer` drawing Sprite and NineSlice over GumCommon alone, from code and from its own small `.gumx`. It is not a feature sample; don't mirror feature screens into it. See [[gum-runtime-systemmanagers-init]].
+
 ## Multi-service sample (MultiGumServiceSample)
 
 `Samples/MultiGumServiceSample/` runs two `GumService`s in one MonoGame window, each loading its own `.gumj` from `Content/Game` and `Content/Editor`. Its screens are generated JSON, so edit them in the Gum tool or by script, and run `gumcli check` on both projects afterward.

@@ -14,10 +14,16 @@ A conforming `Initialize()` must, in some order:
 1. **`LoaderManager.Self.ContentLoader = new <Backend>ContentLoader();`** — wires asset loading (textures, fonts).
 2. **`GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;`** (+ usually `AddRenderableToManagers`, `RemoveRenderableFromManagers`, `UpdateFontFromProperties`) — routes `.gumx` property assignments into the backend's renderables.
 3. **`ElementSaveExtensions.CustomCreateGraphicalComponentFunc = <backend's factory>;`** — the backend's own `IRenderable` factory, tried by the fallback path (see below) before `FallbackRenderableFactory`.
-4. **`StandardElementsManager.Self.Initialize();`** — registers default states for the standard element types.
+4. **`StandardElementsManager.Self.Initialize();`** — registers default states for the standard element types. Optional since every lookup initializes on demand; existing backends still call it.
 5. **Register the 8 standard shape types** via `ElementSaveExtensions.RegisterGueInstantiation(name, () => new XRuntime())`: **Circle, ColoredRectangle, Container, NineSlice, Polygon, Rectangle, Sprite, Text**. This is the *primary* registry Gum uses to build the `GraphicalUiElement` visual tree — see the two-registry model documented at the top of `Gum/Wireframe/FallbackRenderableFactory.cs`.
 
 Reference implementations: `RenderingLibrary/SystemManagers.cs` (MonoGame/KNI/FNA, the most complete — also loads embedded default fonts and installs a mobile/browser file-stream hook), `Runtimes/RaylibGum/RenderingLibrary/SystemManagers.cs`, `Runtimes/SkiaGum/RenderingLibrary/SystemManagers.cs`.
+
+## Minimal backend over GumCommon alone
+
+`Samples/Sdl3Gum` is the smallest working backend: it references only GumCommon, has no `SystemManagers`, and needs only step 3 plus `CanvasWidth`/`CanvasHeight`. `SetPropertyOnRenderable` defaults to reflection, so a renderable's public `SourceFile` property receives the `.gumx` variable. Point porters to engines Gum doesn't support there, and keep it Sprite/NineSlice only.
+
+- **A renderable's `Children` holds the child `GraphicalUiElement`s, not their renderables.** A hand-written draw walk must reach through `IHasRenderableComponent.RenderableComponent`; checking `child is MySprite` finds nothing and draws an empty frame.
 
 ## Landmines
 
