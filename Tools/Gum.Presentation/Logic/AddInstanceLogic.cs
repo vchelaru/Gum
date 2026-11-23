@@ -1,3 +1,4 @@
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Managers;
@@ -10,6 +11,7 @@ using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
+using System;
 
 namespace Gum.Logic;
 
@@ -25,6 +27,7 @@ public class AddInstanceLogic : IAddInstanceLogic
     private readonly IAddDestinationTracker _addDestinationTracker;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IProjectRestrictions _projectRestrictions;
+    private readonly IFileCommands _fileCommands;
 
     public AddInstanceLogic(ISelectedState selectedState,
         IElementCommands elementCommands,
@@ -34,8 +37,10 @@ public class AddInstanceLogic : IAddInstanceLogic
         ISetVariableLogic setVariableLogic,
         IAddDestinationTracker addDestinationTracker,
         IWireframeObjectManager wireframeObjectManager,
-        IProjectRestrictions projectRestrictions)
+        IProjectRestrictions projectRestrictions,
+        IFileCommands fileCommands)
     {
+        _fileCommands = fileCommands;
         _projectRestrictions = projectRestrictions;
         _wireframeObjectManager = wireframeObjectManager;
         _selectedState = selectedState;
@@ -143,6 +148,9 @@ public class AddInstanceLogic : IAddInstanceLogic
         // One undo entry for the add and its parenting, recorded on the target even when a drop
         // targets an element that was not selected: selecting it under the lock captures no baseline.
         using UndoLock undoLock = _undoManager.RequestLock(target);
+        // The add saves the element and so does setting its Parent below: one write once both are
+        // done, while the undo lock is still held (#8417).
+        using IDisposable saveBatch = _fileCommands.BeginAutoSaveBatch();
 
         name ??= _elementCommands.GetUniqueNameForNewInstance(elementToAdd, target);
 

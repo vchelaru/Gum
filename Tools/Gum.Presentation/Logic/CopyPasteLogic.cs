@@ -434,6 +434,8 @@ public class CopyPasteLogic : ICopyPasteLogic
         }
 
         using var undoLock = _undoManager.RequestLock();
+        // A paste saves its target element at more than one step: one write once all are done (#8417).
+        using IDisposable saveBatch = _fileCommands.BeginAutoSaveBatch();
 
         // To make sure we didn't copy one type and paste another
         if (_copyType == CopyType.InstanceOrElement)
