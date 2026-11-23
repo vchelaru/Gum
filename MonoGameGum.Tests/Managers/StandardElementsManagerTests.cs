@@ -160,6 +160,30 @@ public class StandardElementsManagerTests : BaseTestClass
             && v.MinimumGumxVersion == (int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion);
     }
 
+    [Theory]
+    [InlineData("Circle")]
+    [InlineData("Container")]
+    [InlineData("NineSlice")]
+    [InlineData("Polygon")]
+    [InlineData("Rectangle")]
+    [InlineData("Sprite")]
+    [InlineData("Text")]
+    public void DefaultStates_PositionedStandards_ShouldIncludeIgnoredByParentLayoutNextToIgnoredByParentSize(string standardName)
+    {
+        // #8410: shown in the Parent category beside IgnoredByParentSize, back-filled only from v9.
+        StandardElementsManager self = StandardElementsManager.Self;
+        self.RefreshDefaults();
+
+        StateSave state = self.DefaultStates![standardName];
+
+        VariableSave variable = state.Variables.Single(v => v.Name == "IgnoredByParentLayout");
+        variable.Category.ShouldBe("Parent");
+        variable.Value.ShouldBe(false);
+        variable.IsHiddenInPropertyGrid.ShouldBeFalse();
+        variable.MinimumGumxVersion.ShouldBe((int)GumProjectSave.GumxVersions.BbCodeTextEffects);
+        state.Variables.IndexOf(variable).ShouldBe(state.Variables.FindIndex(v => v.Name == "IgnoredByParentSize") + 1);
+    }
+
     [Fact]
     public void DefaultStates_ShouldStillIncludeColoredRectangle_ForLegacyLoad()
     {

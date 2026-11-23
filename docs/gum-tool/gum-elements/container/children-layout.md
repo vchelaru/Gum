@@ -142,6 +142,10 @@ Alternatively, children order can be changed by clicking on the item in the tree
 
 For more information on ordering, see the [Order](../general-properties/order.md) page.
 
+### Leaving a Child Out of the Stack or Grid
+
+A child with `Ignored By Parent Layout` set to true is skipped by its parent's stack or grid. It is positioned by its own `X` and `Y` as in a `Regular` container, and its siblings are placed as if it were not there. This is useful for a background or outline that covers a stacked component. For more information, see the [Ignored By Parent Layout](../general-properties/ignored-by-parent-layout.md) page.
+
 ## Auto Grid Horizontal and Auto Grid Vertical
 
 `Auto Grid Horizontal` and `Auto Grid Vertical` layouts result in each child of the container being placed in its own cell. All position and size values are relative to the entire cell, so children can expand to fill their cell or be positioned according to any side or corner.

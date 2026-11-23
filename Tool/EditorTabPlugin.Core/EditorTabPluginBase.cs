@@ -89,6 +89,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             "Height",
             "HeightUnits",
             "HorizontalAlignment",
+            nameof(GraphicalUiElement.IgnoredByParentLayout),
             nameof(GraphicalUiElement.IgnoredByParentSize),
             "IsBold",
             "IsItalic",

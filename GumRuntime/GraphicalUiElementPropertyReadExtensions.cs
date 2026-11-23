@@ -131,6 +131,9 @@ public static class GraphicalUiElementPropertyReadExtensions
             case nameof(GraphicalUiElement.IgnoredByParentSize):
                 value = element.IgnoredByParentSize;
                 return true;
+            case nameof(GraphicalUiElement.IgnoredByParentLayout):
+                value = element.IgnoredByParentLayout;
+                return true;
             case nameof(GraphicalUiElement.MaxHeight):
                 value = element.MaxHeight;
                 return true;

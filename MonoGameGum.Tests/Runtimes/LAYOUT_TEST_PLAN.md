@@ -62,6 +62,7 @@ covered by that test now.
 
 ### 1.5 Flags
 - [x] IgnoredByParentSize: excluded from size, still stacks, still positions, still takes a grid cell
+- [x] IgnoredByParentLayout (`LayoutIgnoredByParentLayoutTests`): no stack slot or spacing (both stacks, wrap on/off, first/middle/last, several, all), no wrapped-line size, no grid cell and sized from the whole parent, units/origin honored and the next child stays first, Ratio siblings and fixed-size stacks ignore it, nested stack, Regular parent unchanged; parent sizing matrix with IgnoredByParentSize (stacks and grids); fixed-size stacks count its extent; toggle and show re-layout; `SetProperty` and save to runtime; a seeded differential sweep (with vs without the flagged child) over stacks and grids. Not in the random tree sweep
 - [x] ClipsChildren pushed to `ISetClipsChildren`, kept across layouts, settable by `SetProperty`
 - [x] Rotation does not change size, triggers full layout; rotated parent rotates child offsets; near-90 rotations snap (`GetRightAndUpFromRotation`); `AbsoluteRight/Bottom` with rotation (Left + Width, rotation ignored); rotated child in a stack and an AutoGrid, top-left and center origin (current behavior pinned, #5809)
 - [x] FlipHorizontal: no size change; flipped parent mirrors child X units, origin and Percentage; flipped LeftToRightStack, wrapping TopToBottomStack and AutoGrid mirror the unflipped layout (#5776, H42, H43)

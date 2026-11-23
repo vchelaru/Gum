@@ -6,3 +6,5 @@
 
 <figure><img src="../../../.gitbook/assets/08_07 42 34.gif" alt=""><figcaption><p><code>Ignored By Parent Size</code> controls whether the parent ignores the child when performing a layout</p></figcaption></figure>
 
+`Ignored By Parent Size` does not change whether a stacking or grid parent places the instance. To take an instance out of the parent's stack or grid, see [Ignored By Parent Layout](ignored-by-parent-layout.md).
+

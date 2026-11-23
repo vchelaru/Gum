@@ -46,7 +46,8 @@ public partial class GraphicalUiElement
 
     ChildType GetChildLayoutType(GraphicalUiElement parent)
     {
-        var doesParentWrapStack = parent.WrapsChildren && (parent.ChildrenLayout == ChildrenLayout.LeftToRightStack || parent.ChildrenLayout == ChildrenLayout.TopToBottomStack);
+        var parentLayout = GetParentChildrenLayoutForThis(parent);
+        var doesParentWrapStack = parent.WrapsChildren && (parentLayout == ChildrenLayout.LeftToRightStack || parentLayout == ChildrenLayout.TopToBottomStack);
 
         var parentWidthDependencyType = parent.WidthUnits.GetDependencyType();
         var parentHeightDependencyType = parent.HeightUnits.GetDependencyType();
@@ -100,7 +101,8 @@ public partial class GraphicalUiElement
     ChildType GetChildLayoutType(XOrY xOrY, GraphicalUiElement parent)
     {
         bool isAbsolute;
-        var doesParentWrapStack = parent.WrapsChildren && (parent.ChildrenLayout == ChildrenLayout.LeftToRightStack || parent.ChildrenLayout == ChildrenLayout.TopToBottomStack);
+        var parentLayout = GetParentChildrenLayoutForThis(parent);
+        var doesParentWrapStack = parent.WrapsChildren && (parentLayout == ChildrenLayout.LeftToRightStack || parentLayout == ChildrenLayout.TopToBottomStack);
 
         if (xOrY == XOrY.X)
         {
@@ -620,11 +622,12 @@ public partial class GraphicalUiElement
 
     /// <summary>
     /// The axis on which this child's wrapped line, not the whole parent, is its parent for position:
-    /// Y in a wrapping LeftToRightStack, X in a wrapping TopToBottomStack, otherwise null (#5802).
+    /// Y in a wrapping LeftToRightStack, X in a wrapping TopToBottomStack, otherwise null (#5802). A child
+    /// the stack skips (<see cref="IgnoredByParentLayout"/>) is in no line.
     /// </summary>
-    private static XOrY? GetWrappedLineAxis(GraphicalUiElement? parent)
+    private XOrY? GetWrappedLineAxis(GraphicalUiElement? parent)
     {
-        if (parent == null || !parent.WrapsChildren)
+        if (parent == null || !parent.WrapsChildren || ignoredByParentLayout)
         {
             return null;
         }

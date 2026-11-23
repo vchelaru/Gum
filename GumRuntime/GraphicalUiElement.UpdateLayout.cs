@@ -469,7 +469,7 @@ public partial class GraphicalUiElement
                     this.Children.Count > 1)
                 {
 
-                    var firstChild = GetFirstVisibleChild();
+                    var firstChild = GetFirstPlacedChild();
 
                     if (firstChild == null)
                     {

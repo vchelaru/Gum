@@ -89,7 +89,7 @@ public partial class GraphicalUiElement
                 for (int i = 0; i < siblings.Count; i++)
                 {
                     GraphicalUiElement child = siblings[i];
-                    if (child.Visible)
+                    if (child.IsPlacedByParentLayout)
                     {
                         if (child.StackedRowOrColumnIndex == indexToUpdate)
                         {
@@ -118,7 +118,7 @@ public partial class GraphicalUiElement
         if (columnCount < 1) columnCount = 1;
         if (rowCount < 1) rowCount = 1;
 
-        var childCount = effectiveParent.GetVisibleChildCount();
+        var childCount = effectiveParent.GetPlacedChildCount();
 
         if (effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
         {
@@ -175,11 +175,31 @@ public partial class GraphicalUiElement
 
     }
 
-    private GraphicalUiElement? GetFirstVisibleChild()
+    /// <summary>
+    /// Whether this element's parent stack or grid places it: it is visible and not <see cref="IgnoredByParentLayout"/>.
+    /// </summary>
+    private bool IsPlacedByParentLayout => Visible && !ignoredByParentLayout;
+
+    /// <summary>
+    /// The parent's <see cref="ChildrenLayout"/> as it applies to this child: Regular when this is
+    /// <see cref="IgnoredByParentLayout"/>, so the child is placed by its own position and units.
+    /// </summary>
+    private ChildrenLayout GetParentChildrenLayoutForThis(GraphicalUiElement parent) =>
+        ignoredByParentLayout ? ChildrenLayout.Regular : parent.ChildrenLayout;
+
+    /// <summary>
+    /// Whether a sibling takes none of the space this Ratio-sized element shares: the parent stacks or grids its
+    /// children and skips that sibling (<see cref="IgnoredByParentLayout"/>). In a Regular parent the flag changes nothing.
+    /// </summary>
+    private bool IsSiblingSkippedByParentLayout(GraphicalUiElement sibling) =>
+        sibling != this && sibling.ignoredByParentLayout &&
+        EffectiveParentGue is GraphicalUiElement parent && parent.ChildrenLayout != ChildrenLayout.Regular;
+
+    private GraphicalUiElement? GetFirstPlacedChild()
     {
         for (int i = 0; i < Children.Count; i++)
         {
-            if (Children[i].Visible)
+            if (Children[i].IsPlacedByParentLayout)
             {
                 return Children[i];
             }
@@ -187,15 +207,15 @@ public partial class GraphicalUiElement
         return null;
     }
 
-    // Counts the children a grid or stack places: visible ones, from the same list GetIndexInVisibleSiblings walks.
-    private int GetVisibleChildCount()
+    // Counts the children a grid or stack places, from the same list GetIndexInPlacedSiblings walks.
+    private int GetPlacedChildCount()
     {
         int count = 0;
         if (mContainedObjectAsIpso != null)
         {
             for (int i = 0; i < Children.Count; i++)
             {
-                if (Children[i].Visible)
+                if (Children[i].IsPlacedByParentLayout)
                 {
                     count++;
                 }
@@ -206,7 +226,7 @@ public partial class GraphicalUiElement
             for (int i = 0; i < mWhatThisContains.Count; i++)
             {
                 var child = mWhatThisContains[i];
-                if (child.Parent == null && child.Visible)
+                if (child.Parent == null && child.IsPlacedByParentLayout)
                 {
                     count++;
                 }
@@ -215,7 +235,7 @@ public partial class GraphicalUiElement
         return count;
     }
 
-    private int GetIndexInVisibleSiblings()
+    private int GetIndexInPlacedSiblings()
     {
         System.Collections.IList? siblings = null;
 
@@ -237,7 +257,7 @@ public partial class GraphicalUiElement
                 {
                     break;
                 }
-                if (((IVisible)siblings[i]!).Visible)
+                if (((GraphicalUiElement)siblings[i]!).IsPlacedByParentLayout)
                 {
                     thisIndex++;
                 }
@@ -249,14 +269,14 @@ public partial class GraphicalUiElement
 
     private bool GetIfParentStacks()
     {
-        return this.EffectiveParentGue != null &&
+        return this.EffectiveParentGue != null && !ignoredByParentLayout &&
             (this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack ||
             this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack);
     }
 
     private bool GetIfParentIsAutoGrid()
     {
-        return this.EffectiveParentGue != null &&
+        return this.EffectiveParentGue != null && !ignoredByParentLayout &&
             (this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.AutoGridHorizontal ||
             this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.AutoGridVertical);
     }
@@ -434,7 +454,7 @@ public partial class GraphicalUiElement
             var index = thisIndex - 1;
             while (index > -1)
             {
-                if (((IVisible)siblings[index]!).Visible)
+                if (((GraphicalUiElement)siblings[index]!).IsPlacedByParentLayout)
                 {
                     whatToStackAfter = siblings[index] as GraphicalUiElement;
                     break;

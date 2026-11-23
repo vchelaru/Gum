@@ -410,6 +410,19 @@ public class StandardElementBackfillVersionGateTests : BaseTestClass
         defaultState.Variables.Any(v => v.Name == "RaiseChildrenEventsOutsideOfBounds").ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData((int)GumProjectSave.GumxVersions.RaiseChildrenEventsExpansion, false)]
+    [InlineData((int)GumProjectSave.GumxVersions.BbCodeTextEffects, true)]
+    public void Initialize_InjectsIgnoredByParentLayout_OnlyFromV9(int version, bool expected)
+    {
+        // #8410: runtimes before v9 lack IgnoredByParentLayout, so an older project must not get it.
+        GumProjectSave project = MakeProjectWithBareStandard("Container", version, "Width", "Height", "Visible");
+
+        StateSave defaultState = DefaultStateAfterInitialize(project, "Container");
+
+        defaultState.Variables.Any(v => v.Name == "IgnoredByParentLayout").ShouldBe(expected);
+    }
+
     // ShaderParameters (#6988) is absent from older runtimes, so a project saved before it existed
     // must not have it back-filled into its Container standard.
     [Fact]

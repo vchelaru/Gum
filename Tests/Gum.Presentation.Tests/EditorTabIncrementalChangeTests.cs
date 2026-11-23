@@ -14,4 +14,11 @@ public class EditorTabIncrementalChangeTests
     {
         EditorTabPluginBase.PropertiesSupportingIncrementalChange.ShouldContain("OutlineThickness");
     }
+
+    // Toggling it in the Variables tab re-lays out the stack in place, like IgnoredByParentSize (#8410).
+    [Fact]
+    public void PropertiesSupportingIncrementalChange_ShouldContainIgnoredByParentLayout()
+    {
+        EditorTabPluginBase.PropertiesSupportingIncrementalChange.ShouldContain("IgnoredByParentLayout");
+    }
 }
