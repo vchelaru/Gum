@@ -602,8 +602,8 @@ public partial class GraphicalUiElement
     private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight) =>
         System.Math.Max(GetMaxCellHeight(considerWrappedStacked, maxHeight, out float ignoredByLayoutHeight), ignoredByLayoutHeight);
 
-    /// <param name="ignoredByLayoutHeight">The height needed by the counted children the stack or grid skips
-    /// (<see cref="IgnoredByParentLayout"/>), measured as in a Regular parent and left out of the return value.</param>
+    // ignoredByLayoutHeight: the height needed by the counted children the stack or grid skips
+    // (IgnoredByParentLayout), measured as in a Regular parent and left out of the return value.
     private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight, out float ignoredByLayoutHeight)
     {
         float maxCellHeight = maxHeight;
@@ -918,8 +918,8 @@ public partial class GraphicalUiElement
     private float GetMaxCellWidth(bool considerWrappedStacked, float maxWidth) =>
         System.Math.Max(GetMaxCellWidth(considerWrappedStacked, maxWidth, out float ignoredByLayoutWidth), ignoredByLayoutWidth);
 
-    /// <param name="ignoredByLayoutWidth">The width needed by the counted children the stack or grid skips
-    /// (<see cref="IgnoredByParentLayout"/>), measured as in a Regular parent and left out of the return value.</param>
+    // ignoredByLayoutWidth: the width needed by the counted children the stack or grid skips
+    // (IgnoredByParentLayout), measured as in a Regular parent and left out of the return value.
     private float GetMaxCellWidth(bool considerWrappedStacked, float maxWidth, out float ignoredByLayoutWidth)
     {
         float maxCellWidth = maxWidth;

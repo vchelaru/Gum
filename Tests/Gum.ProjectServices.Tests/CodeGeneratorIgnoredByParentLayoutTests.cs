@@ -18,7 +18,7 @@ public class CodeGeneratorIgnoredByParentLayoutTests : BaseTestClass
     private static CodeGenerator CreateCodeGenerator()
     {
         Mock<INameVerifier> mockNameVerifier = new Mock<INameVerifier>();
-        string whyNotValid;
+        string? whyNotValid;
         CommonValidationError error;
         mockNameVerifier
             .Setup(v => v.IsValidCSharpName(It.IsAny<string>(), out whyNotValid, out error))
@@ -34,14 +34,14 @@ public class CodeGeneratorIgnoredByParentLayoutTests : BaseTestClass
     private string Generate(int syntaxVersion)
     {
         StandardElementSave container = Project.StandardElements.First(item => item.Name == "Container");
-        if (!container.DefaultState.Variables.Any(v => v.Name == "IgnoredByParentLayout"))
+        if (!container.DefaultState!.Variables.Any(v => v.Name == "IgnoredByParentLayout"))
         {
-            container.DefaultState.Variables.Add(new VariableSave { Name = "IgnoredByParentLayout", Type = "bool", Value = false, SetsValue = true });
+            container.DefaultState!.Variables.Add(new VariableSave { Name = "IgnoredByParentLayout", Type = "bool", Value = false, SetsValue = true });
         }
         ComponentSave component = new ComponentSave { Name = "Unit", BaseType = "Container" };
         component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
         component.Instances.Add(new InstanceSave { Name = "Outline", BaseType = "Container", ParentContainer = component });
-        component.DefaultState.Variables.Add(new VariableSave { Name = "Outline.IgnoredByParentLayout", Type = "bool", Value = true, SetsValue = true });
+        component.DefaultState!.Variables.Add(new VariableSave { Name = "Outline.IgnoredByParentLayout", Type = "bool", Value = true, SetsValue = true });
         Project.Components.Add(component);
         ObjectFinder.Self.GumProjectSave = Project;
 
