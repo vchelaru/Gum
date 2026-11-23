@@ -61,6 +61,26 @@ public class AddDestinationTrackerTests
     }
 
     [Fact]
+    public void DescribeCallers_NamesTheCallingMethodsAndSkipsTheTracker()
+    {
+        string callers = AddDestinationTracker.DescribeCallers(new System.Diagnostics.StackTrace(), maxFrames: 2);
+
+        callers.ShouldStartWith($"{nameof(AddDestinationTrackerTests)}.{nameof(DescribeCallers_NamesTheCallingMethodsAndSkipsTheTracker)}");
+        callers.ShouldNotContain(nameof(AddDestinationTracker) + ".");
+        callers.Split(" <- ").Length.ShouldBeLessThanOrEqualTo(2);
+    }
+
+    [Fact]
+    public async Task DescribeCallers_InAnAsyncMethod_NamesTheMethodRatherThanItsStateMachine()
+    {
+        await Task.Yield();
+
+        string callers = AddDestinationTracker.DescribeCallers(new System.Diagnostics.StackTrace(), maxFrames: 1);
+
+        callers.ShouldBe($"{nameof(AddDestinationTrackerTests)}.{nameof(DescribeCallers_InAnAsyncMethod_NamesTheMethodRatherThanItsStateMachine)}");
+    }
+
+    [Fact]
     public void MarkSelectionChanged_ForgetsDestinationAndMarksUserSelection()
     {
         _tracker.Anchor(new InstanceSave());

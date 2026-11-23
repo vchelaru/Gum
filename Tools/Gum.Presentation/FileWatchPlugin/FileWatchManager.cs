@@ -195,6 +195,12 @@ public class FileWatchManager : IFileWatchManager
             // a UI thread busy past the window, Gum's own save would reload as an external edit.
             // The ignore list is thread-safe.
             bool isOnIgnoreList = _ignoreList.TryGetIgnoreFileChange(new FilePath(path));
+            if (isOnIgnoreList)
+            {
+                // Not in Output (one line per save would be noise), but a self-save that leaks through as an
+                // outside edit is found by the missing line here and a reload line in Output (#8414).
+                Gum.Diagnostics.ToolLog.Write("filewatch.ownsave", detail: path);
+            }
             _dispatcher.Post(() =>
             {
                 try

@@ -51,7 +51,8 @@ public class FileWatchManagerTests : BaseTestClass
         IDispatcher? dispatcher = null,
         ICrashReporter? crashReporter = null,
         IFileSystemWatcherFactory? watcherFactory = null,
-        IProjectRestrictions? projectRestrictions = null)
+        IProjectRestrictions? projectRestrictions = null,
+        IOutputManager? outputManager = null)
     {
         guiCommandsMock = new Mock<IGuiCommands>();
         pluginManagerMock = new Mock<IPluginManager>();
@@ -68,7 +69,7 @@ public class FileWatchManagerTests : BaseTestClass
             new Mock<IWireframeCommands>().Object,
             guiCommandsMock.Object,
             new Mock<IFileCommands>().Object,
-            new Mock<IOutputManager>().Object,
+            outputManager ?? new Mock<IOutputManager>().Object,
             new Mock<IWireframeObjectManager>().Object,
             new Mock<IProjectState>().Object,
             new Mock<IStandardElementsManagerGumTool>().Object,
@@ -464,6 +465,27 @@ public class FileWatchManagerTests : BaseTestClass
         uiThread.RunPending();
 
         sut.ChangedFilesWaitingForFlush.ShouldNotContain(new FilePath(args.FullPath));
+    }
+
+    [Fact]
+    public void HandleFileSystemChange_ForGumsOwnSave_PrintsNothingAtTheFlush()
+    {
+        // A self-save would print a line per save; only reloads print (#8414).
+        FilePath watchedDirectory = new FilePath(_tempDirectory + "/");
+        Mock<IOutputManager> outputMock = new Mock<IOutputManager>();
+        FileWatchManager sut = BuildSut(
+            out Mock<IGuiCommands> guiCommandsMock, out _, out Mock<IFileWatchIgnoreList> ignoreListMock, watchedDirectory,
+            outputManager: outputMock.Object);
+        File.WriteAllText(Path.Combine(_tempDirectory, "MainScreen.gusx"), "<ScreenSave />");
+        ignoreListMock.Setup(i => i.TryGetIgnoreFileChange(It.IsAny<FilePath>())).Returns(true);
+        sut.EnableWithDirectories(new HashSet<FilePath> { watchedDirectory });
+        var args = new FileSystemEventArgs(WatcherChangeTypes.Changed, _tempDirectory, "MainScreen.gusx");
+
+        sut.HandleFileSystemChange(null, args);
+        sut.Flush();
+
+        outputMock.Verify(o => o.AddOutput(It.IsAny<string>()), Times.Never);
+        guiCommandsMock.Verify(g => g.PrintOutput(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]

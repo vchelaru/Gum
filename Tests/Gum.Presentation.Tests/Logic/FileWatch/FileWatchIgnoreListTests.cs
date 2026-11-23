@@ -108,6 +108,26 @@ public class FileWatchIgnoreListTests : IDisposable
     }
 
     [Fact]
+    public void TryGetIgnoreFileChange_WhenTheToolStartsAnotherSaveWhileTheEventIsChecked_Ignores()
+    {
+        // A chip add saves the element twice a few milliseconds apart (#8414). The first write's event is
+        // checked on the watcher thread while the second write is under way, so the file holds neither
+        // recorded write.
+        FilePath file = WriteFile("Screen.gusx", "first save");
+        FileWatchIgnoreList? ignoreList = null;
+        ignoreList = new FileWatchIgnoreList(path =>
+        {
+            ignoreList!.IgnoreNextChangeUntil(path, DateTime.Now.AddMinutes(1));
+            File.WriteAllText(path.FullPath, "second sa");
+            return FileWatchIgnoreList.ComputeContentHash(path);
+        });
+        ignoreList.IgnoreNextChangeUntil(file, DateTime.Now.AddMinutes(1));
+        ignoreList.RecordWrittenContent(file, System.Text.Encoding.UTF8.GetBytes("first save"));
+
+        ignoreList.TryGetIgnoreFileChange(file).ShouldBeTrue();
+    }
+
+    [Fact]
     public void RecordWrittenContent_WithTheBytes_IgnoresOnlyWhileTheFileHoldsThoseBytes()
     {
         FileWatchIgnoreList ignoreList = new FileWatchIgnoreList();

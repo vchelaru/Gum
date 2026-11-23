@@ -134,6 +134,7 @@ namespace Gum.Managers
                     if (filesToCheck != null && _owner.AnyIsReferencedFileAndForgetWhatTheyList(filesToCheck))
                     {
                         shouldRefresh = true;
+                        _owner.PrintCanvasReloadFor(filesToCheck.Where(_owner.IsReferencedFile).ToList());
                     }
                 }
                 catch (Exception ex)
@@ -208,48 +209,87 @@ namespace Gum.Managers
 
         public void ReactToFileChanged(FilePath file)
         {
+            // What the reaction did, for one Output line: a reload replaces objects and can change the
+            // selection, so it is never silent (#8414).
+            string? whatHappened = ReactToFileChangedInCore(file);
+
+            _pluginManager.ReactToFileChanged(file);
+
+            if (whatHappened == null && HasItsOwnReaction(file.Extension))
+            {
+                // A plugin owns these (animations, font ranges, code settings) and reports nothing back.
+                whatHappened = "Passed to plugins";
+            }
+            if (whatHappened != null)
+            {
+                PrintChangedOnDisk(whatHappened, file);
+            }
+        }
+
+        private void PrintChangedOnDisk(string whatHappened, FilePath file) =>
+            _outputManager.AddOutput($"{whatHappened}: {RelativeToProject(file)} changed on disk");
+
+        // One line for a whole flush, so a build touching many referenced files stays readable.
+        private void PrintCanvasReloadFor(List<FilePath> files)
+        {
+            const int maxNamed = 3;
+            if (files.Count == 0)
+            {
+                return;
+            }
+            string named = string.Join(", ", files.Take(maxNamed).Select(RelativeToProject));
+            string more = files.Count > maxNamed ? $" and {files.Count - maxNamed} more" : "";
+            _outputManager.AddOutput($"Reloaded the canvas: {named}{more} changed on disk");
+        }
+
+        private string RelativeToProject(FilePath file) =>
+            _fileCommands.ProjectDirectory is { } projectDirectory
+                ? file.RelativeTo(projectDirectory).Replace("\\", "/")
+                : file.FullPath;
+
+        private static string Reloaded(string name) => "Reloaded " + name;
+
+        private static string KeptUnsavedChangesTo(string name) => "Kept unsaved changes to " + name;
+
+        /// <summary>Runs the core reaction for <paramref name="file"/> and returns what it did, or null when nothing reacted.</summary>
+        private string? ReactToFileChangedInCore(FilePath file)
+        {
             var extension = file.Extension;
 
             if(IsElementExtension(extension))
             {
-                ReactToElementSaveChanged(file);
+                return ReactToElementSaveChanged(file);
             }
-            else if(extension == GumProjectSave.ProjectExtension || extension == GumProjectSave.ProjectJsonExtension)
+            if(extension == GumProjectSave.ProjectExtension || extension == GumProjectSave.ProjectJsonExtension)
             {
                 var isCurrentProject = _projectState.GumProjectSave?.FullFileName is { } projectFileName && file == projectFileName;
-                if(isCurrentProject)
-                {
-                    ReactToProjectChanged(file);
-                }
+                return isCurrentProject ? ReactToProjectChanged(file) : null;
             }
             // .ganx/.ganj (animation collection) reload is handled by the StateAnimationPlugin via the
-            // _pluginManager.ReactToFileChanged call below. The animation data is a per-element
-            // sidecar owned by that plugin (not part of GumProjectSave), so there is no core-side
-            // reload to perform here (issue #3410).
-            else if(extension == BehaviorReference.Extension || extension == BehaviorReference.JsonExtension)
+            // _pluginManager.ReactToFileChanged call. The animation data is a per-element sidecar owned
+            // by that plugin (not part of GumProjectSave), so there is no core-side reload to perform
+            // here (issue #3410).
+            if(extension == BehaviorReference.Extension || extension == BehaviorReference.JsonExtension)
             {
-                ReactToBehaviorChanged(file);
+                return ReactToBehaviorChanged(file);
             }
-            else if(extension == "csv" || extension == "resx")
+            if(extension == "csv" || extension == "resx")
             {
-                ReactToLocalizationFileChanged(file);
+                return ReactToLocalizationFileChanged(file) ? "Reloaded localization" : null;
             }
-            else if(IsEngineProfile(file))
+            if(IsEngineProfile(file))
             {
                 ReactToEngineProfileChanged();
+                return "Reloaded the engine profile";
             }
-            else if(IsShaderFile(file) || _shaderIncludes.IsIncluded(file))
+            if(IsShaderFile(file) || _shaderIncludes.IsIncluded(file))
             {
-                ReactToShaderFileChanged(file);
+                return ReactToShaderFileChanged(file) ? "Rebuilt the canvas" : null;
             }
-            else
-            {
-                // Images, svg, lottie, animation chains, fonts and any other file a variable names: no list of
-                // extensions, the project's references decide (#7027).
-                ReactToReferencedFileChanged(file);
-            }
-
-            _pluginManager.ReactToFileChanged(file);
+            // Images, svg, lottie, animation chains, fonts and any other file a variable names: no list of
+            // extensions, the project's references decide (#7027). Inside a flush the decision waits for
+            // the flush to end, which prints it then.
+            return ReactToReferencedFileChanged(file) ? "Reloaded the canvas" : null;
         }
 
         /// <summary>
@@ -454,14 +494,14 @@ namespace Gum.Managers
             return element != null && element.IsSourceFileMissing;
         }
 
-        private void ReactToLocalizationFileChanged(FilePath file)
+        private bool ReactToLocalizationFileChanged(FilePath file)
         {
             var gumProject = _projectState.GumProjectSave;
             var projectFiles = gumProject?.LocalizationFiles;
 
             if(projectFiles == null || projectFiles.Count == 0)
             {
-                return;
+                return false;
             }
 
             var projectDirectory = _projectState.ProjectDirectory;
@@ -479,7 +519,9 @@ namespace Gum.Managers
                 // but if flickering becomes noticeable this should be gated on whether the changed
                 // satellite matches the active language.
                 _wireframeCommands.Refresh();
+                return true;
             }
+            return false;
         }
 
         /// <summary>
@@ -527,7 +569,7 @@ namespace Gum.Managers
             return changedName.StartsWith(baseName + ".", StringComparison.OrdinalIgnoreCase);
         }
 
-        private void ReactToProjectChanged(FilePath file)
+        private string ReactToProjectChanged(FilePath file)
         {
             ForgetReferencedFiles();
 
@@ -536,7 +578,7 @@ namespace Gum.Managers
             if (_projectState.GumProjectSave is { } project && _unsavedChangesTracker.HasAnyUnsavedChanges(project)
                 && UserKeepsUnsavedChanges(ProjectPromptName, file))
             {
-                return;
+                return KeptUnsavedChangesTo(ProjectPromptName);
             }
 
             var currentElement = _selectedState.SelectedElement;
@@ -548,6 +590,7 @@ namespace Gum.Managers
             // calling thread (#4871), so this needs its own error reporting - a faulted task here
             // wouldn't otherwise surface anywhere.
             _ = ReloadProjectAndReselectAsync(file, elementName);
+            return Reloaded(ProjectPromptName);
         }
 
         private async Task ReloadProjectAndReselectAsync(FilePath file, string? elementName)
@@ -582,18 +625,20 @@ namespace Gum.Managers
         /// element in the project references it or the canvas cached it (a font the tool generated is cached
         /// without a variable naming it); anything else, such as build output, does nothing.
         /// A flush of several such files reloads once, when its scope closes.
+        /// Returns true when the file was judged and the canvas reloads for it; false when it is not the tool's
+        /// business or the judgment waits for the open scope (which reports it).
         /// </summary>
-        private void ReactToReferencedFileChanged(FilePath file)
+        private bool ReactToReferencedFileChanged(FilePath file)
         {
             if (_referencedFileChecksWhileDeferring != null)
             {
                 _referencedFileChecksWhileDeferring.Add(file);
-                return;
+                return false;
             }
 
             if (!IsReferencedFile(file))
             {
-                return;
+                return false;
             }
 
             if (ListsOtherFiles(file))
@@ -610,6 +655,7 @@ namespace Gum.Managers
             {
                 RefreshCanvasAndVariables();
             }
+            return true;
         }
 
         /// <summary>
@@ -731,14 +777,14 @@ namespace Gum.Managers
         /// rebuilt now, which also rebuilds the selected instance's rows. Images and fonts stay cached, so the
         /// rebuild is cheap. A shader no element references shows nothing, so nothing is touched.
         /// </summary>
-        private void ReactToShaderFileChanged(FilePath file)
+        private bool ReactToShaderFileChanged(FilePath file)
         {
             List<FilePath> shaders = new List<FilePath> { file };
             shaders.AddRange(_shaderIncludes.GetShadersIncluding(file));
             shaders = shaders.Where(IsReferencedByProject).ToList();
             if (shaders.Count == 0)
             {
-                return;
+                return false;
             }
 
             foreach (FilePath shader in shaders)
@@ -752,6 +798,7 @@ namespace Gum.Managers
             {
                 _wireframeObjectManager.RefreshAll(true);
             }
+            return true;
         }
 
         private static void DropCachedEffect(FilePath file)
@@ -809,7 +856,7 @@ namespace Gum.Managers
             _shaderFiles = null;
         }
 
-        private void ReactToElementSaveChanged(FilePath file)
+        private string? ReactToElementSaveChanged(FilePath file)
         {
             // What the project references may have changed.
             ForgetReferencedFiles();
@@ -817,23 +864,25 @@ namespace Gum.Managers
             var projectDirectory = _fileCommands.ProjectDirectory;
             var relativeToFolderForType = GetElementNameForElementFile(file, projectDirectory);
             ////////////////////////Early Out////////////////////////////
-            if (relativeToFolderForType == null) return;
+            if (relativeToFolderForType == null) return null;
             ///////////////////////End Early Out/////////////////////////
 
             var element = ObjectFinder.Self.GetElementSave(relativeToFolderForType);
 
             var refreshingSelected = element == _selectedState.SelectedElement;
             bool dependentsUpdated = false;
+            string? whatHappened = null;
 
             if (element != null && _unsavedChangesTracker.HasUnsavedChanges(element)
                 && UserKeepsUnsavedChanges(element.Name, file))
             {
                 KeepUnsavedElement(element);
-                return;
+                return KeptUnsavedChangesTo(element.Name);
             }
 
             if(element != null)
             {
+                whatHappened = Reloaded(element.Name);
                 // The copy the reload replaces, to find what its behaviors materialized and no longer do.
                 ElementSave previousElement = element;
                 // File changes are only watched while a project is open.
@@ -906,7 +955,9 @@ namespace Gum.Managers
             {
                 // todo - this isn't working if I rename a variable...
                 RefreshCanvasAndVariables();
+                whatHappened ??= "Rebuilt the canvas";
             }
+            return whatHappened;
         }
 
         private List<string> GetSelectedInstanceNames()
@@ -999,7 +1050,7 @@ namespace Gum.Managers
             }
         }
 
-        private void ReactToBehaviorChanged(FilePath file)
+        private string? ReactToBehaviorChanged(FilePath file)
         {
             ForgetReferencedFiles();
             // File changes are only watched while a project is open.
@@ -1013,11 +1064,13 @@ namespace Gum.Managers
             if (behavior != null && _unsavedChangesTracker.HasUnsavedChanges(behavior)
                 && UserKeepsUnsavedChanges(behavior.Name, file))
             {
-                return;
+                return KeptUnsavedChangesTo(behavior.Name);
             }
 
+            string? whatHappened = null;
             if (behavior != null)
             {
+                whatHappened = Reloaded(behavior.Name);
                 // The copy the reload replaces, to find the variables its removed lines materialized.
                 BehaviorSave previousBehavior = behavior;
                 gumProject.ReloadBehavior(behavior);
@@ -1052,6 +1105,7 @@ namespace Gum.Managers
                     RefreshCanvasAndVariables();
                 }
             }
+            return whatHappened;
         }
 
     }

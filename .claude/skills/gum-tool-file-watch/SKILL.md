@@ -79,9 +79,11 @@ during `ProjectLoad` are ignored (`IsNotifyingProjectLoad`).
 - `AnimationCollectionViewModelManager.cs` — animation save
 - `TextureCoordinateSelectionPlugin` — sprite sheet edits
 
-The ignore list (`FileWatchIgnoreList`) is time-based by default. A save path that also calls `RecordWrittenContent(path)` after the write (element and behavior saves in `FileCommands`, the project and element files in `ProjectManager.SaveProject`) adds a content check: inside the window an event is ignored only while the file still holds the bytes the tool wrote, so an outside edit shortly after a save still reloads. `IgnoreNextChangeUntil` clears the record, so events during the next save are ignored by time until that write is recorded. Other callers (JSON conversion, theme/gumx import, font generation, animation and sprite-sheet saves) are time-only; add `RecordWrittenContent` after their write when it can be followed by an outside edit.
+The ignore list (`FileWatchIgnoreList`) is time-based by default. A save path that also calls `RecordWrittenContent(path)` after the write (element and behavior saves in `FileCommands`, the project and element files in `ProjectManager.SaveProject`) adds a content check: inside the window an event is ignored only while the file still holds the bytes the tool wrote, so an outside edit shortly after a save still reloads. `IgnoreNextChangeUntil` clears the record, so events during the next save are ignored by time until that write is recorded. The check runs on the watcher thread while saves run on the UI thread, so an event whose check overlaps another save of the same file (an add saves its element twice within milliseconds) is ignored rather than compared against bytes that are still being written. Other callers (JSON conversion, theme/gumx import, font generation, animation and sprite-sheet saves) are time-only; add `RecordWrittenContent` after their write when it can be followed by an outside edit.
 
 ## ReactToFileChanged Extension Dispatch
+
+Every change that a reaction acts on prints one Output line from `ReactToFileChanged` (`Reloaded MainScreen: Screens/MainScreen.gusx changed on disk`, or `Kept unsaved changes to ...`); a new reaction returns its description instead of printing. Referenced files judged at the end of a flush print one line from the deferral scope. Events the ignore list skips print nothing and go to tool.log as `filewatch.ownsave`.
 
 | Extension | Action |
 |-----------|--------|

@@ -59,7 +59,8 @@ public class FileChangeReactionLogicTests : BaseTestClass
         out Mock<ISelectedState> selectedStateMock,
         out Mock<IWireframeObjectManager> wireframeObjectManagerMock,
         IDialogService dialogService,
-        IUnsavedChangesTracker unsavedChangesTracker)
+        IUnsavedChangesTracker unsavedChangesTracker,
+        IOutputManager? outputManager = null)
     {
         guiCommandsMock = new Mock<IGuiCommands>();
         fileCommandsMock = new Mock<IFileCommands>();
@@ -75,7 +76,7 @@ public class FileChangeReactionLogicTests : BaseTestClass
             new Mock<IWireframeCommands>().Object,
             guiCommandsMock.Object,
             fileCommandsMock.Object,
-            new Mock<IOutputManager>().Object,
+            outputManager ?? new Mock<IOutputManager>().Object,
             wireframeObjectManagerMock.Object,
             projectStateMock.Object,
             new Mock<IStandardElementsManagerGumTool>().Object,
@@ -539,6 +540,57 @@ public class FileChangeReactionLogicTests : BaseTestClass
         }
     }
 
+    [Theory]
+    [InlineData(MessageDialogResult.Affirmative, "Reloaded MyButton: Components/MyButton.gucx changed on disk")]
+    [InlineData(MessageDialogResult.Negative, "Kept unsaved changes to MyButton: Components/MyButton.gucx changed on disk")]
+    public void ReactToFileChanged_PrintsWhatItDidWithTheElement_WhenItsFileChanges(MessageDialogResult answer, string expectedLine)
+    {
+        // A reload replaces the element and reselects it, so it must never happen silently (#8414).
+        Mock<IDialogService> dialogServiceMock = new Mock<IDialogService>();
+        dialogServiceMock
+            .Setup(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Returns(answer);
+        UnsavedChangesTracker tracker = new UnsavedChangesTracker();
+        Mock<IOutputManager> outputMock = new Mock<IOutputManager>();
+        FileChangeReactionLogic sut = BuildReloadSut(dialogServiceMock.Object, tracker,
+            out _, out _, out _, out string tempDir, out GumProjectSave project, outputMock.Object);
+        ComponentSave component = new ComponentSave { Name = "MyButton" };
+        project.Components.Add(component);
+        tracker.MarkUnsaved(component);
+        try
+        {
+            sut.ReactToFileChanged(new FilePath(Path.Combine(tempDir, "Components", "MyButton.gucx")));
+
+            outputMock.Verify(o => o.AddOutput(expectedLine), Times.Once);
+            outputMock.Verify(o => o.AddOutput(It.IsAny<string>()), Times.Once);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_PrintsTheProjectReload_AndNothingForAFileNoReactionUses()
+    {
+        Mock<IOutputManager> outputMock = new Mock<IOutputManager>();
+        FileChangeReactionLogic sut = BuildReloadSut(new Mock<IDialogService>().Object, new UnsavedChangesTracker(),
+            out _, out _, out Mock<IFileCommands> fileCommandsMock, out string tempDir, out GumProjectSave project, outputMock.Object);
+        fileCommandsMock.Setup(f => f.LoadProjectAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+        try
+        {
+            sut.ReactToFileChanged(new FilePath(Path.Combine(tempDir, "Unreferenced.png")));
+            outputMock.Verify(o => o.AddOutput(It.IsAny<string>()), Times.Never);
+
+            sut.ReactToFileChanged(new FilePath(project.FullFileName!));
+            outputMock.Verify(o => o.AddOutput("Reloaded the project: Project.gumx changed on disk"), Times.Once);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
     private static FileChangeReactionLogic BuildReloadSut(
         IDialogService dialogService,
         IUnsavedChangesTracker tracker,
@@ -555,7 +607,8 @@ public class FileChangeReactionLogicTests : BaseTestClass
         out Mock<IPluginManager> pluginManagerMock,
         out Mock<IFileCommands> fileCommandsMock,
         out string tempDir,
-        out GumProjectSave project)
+        out GumProjectSave project,
+        IOutputManager? outputManager = null)
     {
         FileChangeReactionLogic sut = BuildSut(
             out guiCommandsMock,
@@ -565,7 +618,8 @@ public class FileChangeReactionLogicTests : BaseTestClass
             out _,
             out _,
             dialogService,
-            tracker);
+            tracker,
+            outputManager);
         tempDir = Path.Combine(Path.GetTempPath(), "GumUnsavedReloadTest_" + Guid.NewGuid().ToString("N"));
         fileCommandsMock.Setup(f => f.ProjectDirectory).Returns(new FilePath(tempDir + Path.DirectorySeparatorChar));
         project = new GumProjectSave { FullFileName = Path.Combine(tempDir, "Project.gumx") };
