@@ -83,6 +83,8 @@ The ignore list (`FileWatchIgnoreList`) is time-based by default. A save path th
 
 ## ReactToFileChanged Extension Dispatch
 
+Every change that a reaction acts on prints one Output line from `ReactToFileChanged` (`Reloaded MainScreen: Screens/MainScreen.gusx changed on disk`, or `Kept unsaved changes to ...`); a new reaction returns its description instead of printing. Referenced files judged at the end of a flush print one line from the deferral scope. Events the ignore list skips print nothing and go to tool.log as `filewatch.ownsave`.
+
 | Extension | Action |
 |-----------|--------|
 | Any file a container's `SourceShaderFile` names (any extension) | Drop the cached effect and rebuild the shown element if any element references the shader (`FileChangeReactionLogic.IsShaderFile`: named by a `SourceShaderFile` variable; `slang`/`fx` also count, so an unreferenced one stays untouched) |
