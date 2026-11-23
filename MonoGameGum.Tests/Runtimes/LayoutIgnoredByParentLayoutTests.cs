@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -223,6 +225,43 @@ public class LayoutIgnoredByParentLayoutTests : BaseTestClass
         b.AbsoluteTop.ShouldBe(20);
         c.AbsoluteTop.ShouldBe(40);
         flagged.AbsoluteTop.ShouldBe(5);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(2)]
+    public void FixedSizeStackSizedToChildren_ShouldCountFlaggedChildExtent(int flaggedIndex)
+    {
+        // The fixed-size measure reads only the first stacked child; a flagged child still counts as in a Regular parent.
+        ContainerRuntime parent = Parent(ChildrenLayout.TopToBottomStack, 100, 0);
+        parent.UseFixedStackChildrenSize = true;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.AddChild(Box(10, 20));
+        parent.AddChild(Box(10, 20));
+        parent.Children.Insert(flaggedIndex, Flagged(10, 200, x: 0, y: 0));
+        parent.UpdateLayout();
+
+        parent.AbsoluteHeight.ShouldBe(200);
+    }
+
+    [Fact]
+    public void FixedSizeStackSizedToChildren_ShouldMeasureFlaggedChildSizedByItsOwnContent()
+    {
+        // Built while suspended, so the flagged child's size is known only once the stack lays it out.
+        ContainerRuntime parent = Parent(ChildrenLayout.TopToBottomStack, 100, 0);
+        parent.UseFixedStackChildrenSize = true;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.SuspendLayout(true);
+        parent.AddChild(Box(10, 20));
+        parent.AddChild(Box(10, 20));
+        ContainerRuntime flagged = Flagged(0, 0, x: 0, y: 0);
+        flagged.WidthUnits = DimensionUnitType.RelativeToChildren;
+        flagged.HeightUnits = DimensionUnitType.RelativeToChildren;
+        flagged.AddChild(Box(10, 200));
+        parent.AddChild(flagged);
+        parent.ResumeLayout(true);
+
+        parent.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -497,6 +536,112 @@ public class LayoutIgnoredByParentLayoutTests : BaseTestClass
         outline.AbsoluteTop.ShouldBe(0);
         outline.AbsoluteWidth.ShouldBe(32);
         outline.AbsoluteHeight.ShouldBe(42);
+    }
+
+    #endregion
+
+    #region Sweep
+
+    static readonly ChildrenLayout[] SweepLayouts =
+    {
+        ChildrenLayout.TopToBottomStack, ChildrenLayout.LeftToRightStack,
+        ChildrenLayout.AutoGridHorizontal, ChildrenLayout.AutoGridVertical,
+    };
+
+    record SweepCase(ChildrenLayout Layout, bool Wraps, float Spacing, List<(float Width, float Height)> Siblings,
+        int FlaggedIndex, float FlaggedWidth, float FlaggedHeight, float FlaggedX, float FlaggedY, bool SizedToChildren);
+
+    static SweepCase MakeSweepCase(Random random, bool sizedToChildren)
+    {
+        var layout = SweepLayouts[random.Next(SweepLayouts.Length)];
+        int count = random.Next(1, 6);
+        List<(float, float)> siblings = new();
+        for (int i = 0; i < count; i++)
+        {
+            siblings.Add((random.Next(5, 41), random.Next(5, 41)));
+        }
+        return new SweepCase(layout, random.Next(2) == 0, new[] { 0f, 3f, 7f }[random.Next(3)], siblings,
+            random.Next(0, count + 1), random.Next(5, 120), random.Next(5, 120), random.Next(0, 31), random.Next(0, 31), sizedToChildren);
+    }
+
+    static (ContainerRuntime Parent, List<ContainerRuntime> Siblings, ContainerRuntime? Flagged) BuildSweepTree(SweepCase sweepCase, bool includeFlagged)
+    {
+        ContainerRuntime parent = Parent(sweepCase.Layout, 100, 100);
+        parent.WrapsChildren = sweepCase.Wraps;
+        parent.StackSpacing = sweepCase.Spacing;
+        parent.AutoGridHorizontalCells = 2;
+        parent.AutoGridVerticalCells = 2;
+        if (sweepCase.SizedToChildren)
+        {
+            parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+            parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+            parent.Width = 0;
+            parent.Height = 0;
+        }
+        List<ContainerRuntime> siblings = new();
+        ContainerRuntime? flagged = null;
+        for (int i = 0; i <= sweepCase.Siblings.Count; i++)
+        {
+            if (i == sweepCase.FlaggedIndex && includeFlagged)
+            {
+                flagged = Flagged(sweepCase.FlaggedWidth, sweepCase.FlaggedHeight, sweepCase.FlaggedX, sweepCase.FlaggedY);
+                parent.AddChild(flagged);
+            }
+            if (i < sweepCase.Siblings.Count)
+            {
+                ContainerRuntime sibling = Box(sweepCase.Siblings[i].Width, sweepCase.Siblings[i].Height);
+                siblings.Add(sibling);
+                parent.AddChild(sibling);
+            }
+        }
+        return (parent, siblings, flagged);
+    }
+
+    [Fact]
+    public void Sweep_ShouldPlaceSiblingsAsInTheTreeWithoutTheFlaggedChild_AndSizeTheParentAsARegularParentWould()
+    {
+        // Each case builds the tree with and without a flagged child. Siblings must not move, the flagged child sits at
+        // its own position, and a parent sized to its children grows only to the flagged child's far edges.
+        Random random = new Random(8411);
+        List<string> failures = new();
+        int caseCount = SweepScale.Cases(300);
+        for (int iteration = 0; iteration < caseCount; iteration++)
+        {
+            SweepCase sweepCase = MakeSweepCase(random, sizedToChildren: iteration % 2 == 1);
+            var (withParent, withSiblings, flagged) = BuildSweepTree(sweepCase, includeFlagged: true);
+            var (withoutParent, withoutSiblings, _) = BuildSweepTree(sweepCase, includeFlagged: false);
+            string tag = $"#{iteration} {sweepCase.Layout} wrap={sweepCase.Wraps} spacing={sweepCase.Spacing} n={sweepCase.Siblings.Count} " +
+                $"flaggedIndex={sweepCase.FlaggedIndex} flagged=({sweepCase.FlaggedX},{sweepCase.FlaggedY},{sweepCase.FlaggedWidth}x{sweepCase.FlaggedHeight}) sized={sweepCase.SizedToChildren}";
+
+            if (!sweepCase.SizedToChildren)
+            {
+                for (int i = 0; i < withoutSiblings.Count; i++)
+                {
+                    GraphicalUiElement expected = withoutSiblings[i];
+                    GraphicalUiElement actual = withSiblings[i];
+                    if (expected.AbsoluteLeft != actual.AbsoluteLeft || expected.AbsoluteTop != actual.AbsoluteTop ||
+                        expected.AbsoluteWidth != actual.AbsoluteWidth || expected.AbsoluteHeight != actual.AbsoluteHeight)
+                    {
+                        failures.Add($"{tag} sibling {i}: {expected.AbsoluteLeft},{expected.AbsoluteTop} vs {actual.AbsoluteLeft},{actual.AbsoluteTop}");
+                    }
+                }
+                if (flagged!.AbsoluteLeft != sweepCase.FlaggedX || flagged.AbsoluteTop != sweepCase.FlaggedY ||
+                    flagged.AbsoluteWidth != sweepCase.FlaggedWidth || flagged.AbsoluteHeight != sweepCase.FlaggedHeight)
+                {
+                    failures.Add($"{tag} flagged at {flagged.AbsoluteLeft},{flagged.AbsoluteTop} {flagged.AbsoluteWidth}x{flagged.AbsoluteHeight}");
+                }
+            }
+            else
+            {
+                float expectedWidth = Math.Max(withoutParent.AbsoluteWidth, sweepCase.FlaggedX + sweepCase.FlaggedWidth);
+                float expectedHeight = Math.Max(withoutParent.AbsoluteHeight, sweepCase.FlaggedY + sweepCase.FlaggedHeight);
+                if (withParent.AbsoluteWidth != expectedWidth || withParent.AbsoluteHeight != expectedHeight)
+                {
+                    failures.Add($"{tag} parent {withParent.AbsoluteWidth}x{withParent.AbsoluteHeight} expected {expectedWidth}x{expectedHeight}");
+                }
+            }
+        }
+        failures.ShouldBeEmpty(string.Join("\n", failures));
     }
 
     #endregion

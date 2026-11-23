@@ -206,6 +206,8 @@ public partial class GraphicalUiElement
                                 maxHeight = 0;
                             }
                             maxHeight += (StackSpacing + elementHeight) * (GetPlacedChildCount() - 1);
+                            // The first child stands in only for the stacked children; skipped ones count as in a Regular parent.
+                            maxHeight = System.Math.Max(maxHeight, GetIgnoredByParentLayoutHeight());
                         }
                         else
                         {
@@ -598,6 +600,23 @@ public partial class GraphicalUiElement
     // A zero, negative or non-finite aspect ratio (such as from an empty texture) cannot size the
     // other axis, so MaintainFileAspectRatio falls back as if the renderable had no aspect ratio.
     static bool IsUsableAspectRatio(float aspectRatio) => aspectRatio > 0 && !float.IsInfinity(aspectRatio);
+
+    // The height needed by the counted children this stack skips (IgnoredByParentLayout), for the fixed-size measure,
+    // which reads only one stacked child. Visits the flagged children only, so a long list costs a flag check per child.
+    private float GetIgnoredByParentLayoutHeight()
+    {
+        float height = 0;
+        for (int i = 0; i < Children!.Count; i++)
+        {
+            var element = Children[i];
+            if (element.ignoredByParentLayout && element.Visible && !element.IgnoredByParentSize &&
+                element.GetChildLayoutType(XOrY.Y, this) == ChildType.Absolute)
+            {
+                height = System.Math.Max(height, element.GetRequiredParentHeight());
+            }
+        }
+        return height;
+    }
 
     private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight) =>
         System.Math.Max(GetMaxCellHeight(considerWrappedStacked, maxHeight, out float ignoredByLayoutHeight), ignoredByLayoutHeight);
