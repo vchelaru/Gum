@@ -271,7 +271,7 @@ public class StandardElementsManager
             AddDimensionsVariables(stateSave, 100, 100, DimensionVariableAction.DefaultToPercentageOfFile);
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = null, Name = "RenderTargetTextureSource", Category = "Source", MinimumGumxVersion = V3StandardSurfaceVersion,
-                DetailText = "Displays the render target of another Container whose Is Render Target is checked. Takes precedence over SourceFile when set." });
+                DetailText = "Shows another Container's render target. Overrides Source File." });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
 
@@ -295,13 +295,13 @@ public class StandardElementsManager
 
 
             VariableSave textureWidthScaleVariable = new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "TextureWidthScale", Category = "Source",
-                DetailText="Multiplies the size of the displayed image. e.g. a value of 2 makes the image show twice as wide"};
+                DetailText="Multiplies the displayed image's width."};
             textureWidthScaleVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .02m;
             textureWidthScaleVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .1m;
             stateSave.Variables.Add(textureWidthScaleVariable);
 
             VariableSave textureHeightScaleVariable = new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "TextureHeightScale", Category = "Source",
-                DetailText = "Multiplies the size of the displayed image. e.g. a value of 2 makes the image show twice as tall"};
+                DetailText = "Multiplies the displayed image's height."};
             textureHeightScaleVariable.PropertiesToSetOnDisplayer["LabelDragChangeMultiplier"] = .02m;
             textureHeightScaleVariable.PropertiesToSetOnDisplayer["LabelDragValueRounding"] = .1m;
             stateSave.Variables.Add(textureHeightScaleVariable);
@@ -355,7 +355,7 @@ public class StandardElementsManager
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsRenderTarget", Category = "Rendering" });
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceShaderFile", IsFile = true, Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion,
-                DetailText = "A .fx post-process shader applied to this container's contents when it is drawn to the screen." });
+                DetailText = "A .fx shader applied to this container's contents." });
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "ShaderParameters", Category = "Rendering",
                 MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion });
@@ -499,10 +499,10 @@ public class StandardElementsManager
             // Issue #3617 — per-corner overrides for CornerRadius, mirroring RectangleRuntime's
             // CustomRadius* runtime properties (null falls back to CornerRadius). The variable grid
             // collapses these 5 into one composite row; see CompositeMemberRegistry.
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomRadiusTopLeft", Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion, DetailText = "Overrides the top-left corner's radius. Leave blank to use Corner Radius." });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomRadiusTopRight", Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion, DetailText = "Overrides the top-right corner's radius. Leave blank to use Corner Radius." });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomRadiusBottomLeft", Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion, DetailText = "Overrides the bottom-left corner's radius. Leave blank to use Corner Radius." });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomRadiusBottomRight", Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion, DetailText = "Overrides the bottom-right corner's radius. Leave blank to use Corner Radius." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomRadiusTopLeft", Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion, DetailText = "Overrides Corner Radius when set." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomRadiusTopRight", Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion, DetailText = "Overrides Corner Radius when set." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomRadiusBottomLeft", Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion, DetailText = "Overrides Corner Radius when set." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomRadiusBottomRight", Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion, DetailText = "Overrides Corner Radius when set." });
             // Issue #3009 — Rectangle drives the gradient start from the active body color, so no
             // standalone Color1 (Red1/Green1/Blue1/Alpha1).
             AddGradientVariables(stateSave, includeStartColor: false, minimumGumxVersion: V3StandardSurfaceVersion);
@@ -590,10 +590,10 @@ public class StandardElementsManager
             // Issue #6983 - per-side overrides for BorderScale, mirroring the runtime's
             // CustomBorderScale* properties (null falls back to BorderScale, 0 draws no border on that
             // side). The variable grid collapses BorderScale and these into one linked/unlinked row.
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomBorderScaleLeft", Category = "Dimensions", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, DetailText = "Overrides the left border's scale. Leave blank to use Border Scale." });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomBorderScaleTop", Category = "Dimensions", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, DetailText = "Overrides the top border's scale. Leave blank to use Border Scale." });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomBorderScaleRight", Category = "Dimensions", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, DetailText = "Overrides the right border's scale. Leave blank to use Border Scale." });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomBorderScaleBottom", Category = "Dimensions", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, DetailText = "Overrides the bottom border's scale. Leave blank to use Border Scale." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomBorderScaleLeft", Category = "Dimensions", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, DetailText = "Overrides Border Scale when set." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomBorderScaleTop", Category = "Dimensions", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, DetailText = "Overrides Border Scale when set." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomBorderScaleRight", Category = "Dimensions", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, DetailText = "Overrides Border Scale when set." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomBorderScaleBottom", Category = "Dimensions", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.ShaderParametersExpansion, DetailText = "Overrides Border Scale when set." });
 
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
@@ -624,10 +624,10 @@ public class StandardElementsManager
             // Issue #8354 - a source cut per side, mirroring the runtime's CustomFrameTextureCoordinate*
             // properties (null falls back to CustomFrameTextureCoordinateWidth). The variable grid collapses
             // the width and these into one linked/unlinked row, like BorderScale.
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateLeft", Category = "Source", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.BbCodeTextEffects, DetailText = "Texels the left border takes from the texture. Leave blank to use Custom Frame Texture Coordinate Width." });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateTop", Category = "Source", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.BbCodeTextEffects, DetailText = "Texels the top border takes from the texture. Leave blank to use Custom Frame Texture Coordinate Width." });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateRight", Category = "Source", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.BbCodeTextEffects, DetailText = "Texels the right border takes from the texture. Leave blank to use Custom Frame Texture Coordinate Width." });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateBottom", Category = "Source", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.BbCodeTextEffects, DetailText = "Texels the bottom border takes from the texture. Leave blank to use Custom Frame Texture Coordinate Width." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateLeft", Category = "Source", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.BbCodeTextEffects, DetailText = "Overrides Custom Frame Texture Coordinate Width when set." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateTop", Category = "Source", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.BbCodeTextEffects, DetailText = "Overrides Custom Frame Texture Coordinate Width when set." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateRight", Category = "Source", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.BbCodeTextEffects, DetailText = "Overrides Custom Frame Texture Coordinate Width when set." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateBottom", Category = "Source", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.BbCodeTextEffects, DetailText = "Overrides Custom Frame Texture Coordinate Width when set." });
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsTilingMiddleSections", Category = "Source", MinimumGumxVersion = V3StandardSurfaceVersion });
 
@@ -952,7 +952,7 @@ public class StandardElementsManager
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IgnoredByParentSize", Category = "Parent" });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IgnoredByParentLayout", Category = "Parent",
             MinimumGumxVersion = (int)GumProjectSave.GumxVersions.BbCodeTextEffects,
-            DetailText = "When true, the parent's Children Layout (stack or grid) skips this, and it is positioned by its own X and Y as if the parent were Regular." });
+            DetailText = "Skipped by the parent's stack or grid." });
     }
 
     public Func<string, StateSave?>? CustomGetDefaultState;
