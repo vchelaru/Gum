@@ -208,7 +208,7 @@ public class TextBox : TextBoxBase
     /// backspace, delete, cut, or native on-screen keyboard entry). This event is not raised
     /// when Text is changed in code, such as by assigning the <see cref="Text"/> property or
     /// calling <see cref="SetTextNoTranslate"/>. This is the text analog of
-    /// <see cref="Primitives.RangeBase.ValueChangedByUi"/>. It is raised after the change is applied
+    /// <see cref="Primitives.ThumbRangeBase.ValueChangedByUi"/>. It is raised after the change is applied
     /// and fires with the same cadence as <see cref="TextChanged"/> for user-driven changes.
     /// </summary>
     public event EventHandler? TextChangedByUi;

@@ -19,7 +19,7 @@ namespace Gum.Themes.Bubblegum;
 /// Bubblegum slider thumb. 20 px white circle with a 2 px Accent border and a
 /// subtle pink-tinted shadow underneath, matching <c>.bb-sldr-thumb</c>.
 /// Implemented as an <see cref="InteractiveGue"/> with a <c>ButtonCategoryState</c>
-/// so RangeBase wraps it in a <see cref="Button"/> like the V3 default thumb.
+/// so ThumbRangeBase wraps it in a <see cref="Button"/> like the V3 default thumb.
 /// </summary>
 public class SliderThumbVisual : InteractiveGue
 {

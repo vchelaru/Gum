@@ -17,7 +17,7 @@ namespace Gum.Themes.DarkPro;
 
 /// <summary>
 /// Dark Pro scroll-bar thumb. An <see cref="InteractiveGue"/> with a rounded-rect
-/// body sized so <c>RangeBase</c> can wrap it in a <see cref="Button"/> and drive
+/// body sized so <c>ThumbRangeBase</c> can wrap it in a <see cref="Button"/> and drive
 /// its visual states via <c>"ButtonCategoryState"</c>. Mirrors the
 /// <see cref="SliderThumbVisual"/> trick — the V3 ScrollBar instantiates
 /// <c>new ButtonVisual()</c> directly for its thumb, so the Dark Pro Button

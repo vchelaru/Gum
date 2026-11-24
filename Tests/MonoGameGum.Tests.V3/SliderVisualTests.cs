@@ -76,7 +76,7 @@ public class SliderVisualTests
     [Fact]
     public void RefreshInternalVisualReferences_ShouldFindTrack()
     {
-        // Track is found by RangeBase.RefreshInternalVisualReferences
+        // Track is found by ThumbRangeBase.RefreshInternalVisualReferences
         Slider slider = new();
 
         slider.Track.ShouldNotBeNull();

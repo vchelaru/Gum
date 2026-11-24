@@ -122,6 +122,18 @@ public class SliderTests : BaseTestClass
     }
 
     [Fact]
+    public void Value_ShouldRaiseValueChangeCompleted_WhenSetInCode()
+    {
+        Slider slider = new();
+        int completedCount = 0;
+        slider.ValueChangeCompleted += (_, _) => completedCount++;
+
+        slider.Value = 40;
+
+        completedCount.ShouldBe(1);
+    }
+
+    [Fact]
     public void Value_ShouldBeAdjusted_WhenMinimumAndMaximumChange()
     {
         Slider slider = new ()
@@ -267,7 +279,7 @@ public class SliderTests : BaseTestClass
 
     class RangeBaseCallingSlider : Slider
     {
-        // Binds to RangeBase's virtual, the same call RangeBase's track-repeat path makes.
+        // Binds to ThumbRangeBase's virtual, the same call ThumbRangeBase's track-repeat path makes.
         public void ApplyThroughRangeBase(double value) => ApplyValueConsideringSnapping(value);
     }
 }

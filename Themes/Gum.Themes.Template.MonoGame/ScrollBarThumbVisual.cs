@@ -9,7 +9,7 @@ namespace Gum.Themes.Template;
 
 /// <summary>
 /// Template scroll-bar thumb. An <see cref="InteractiveGue"/> with a rounded-rect
-/// body sized so <c>RangeBase</c> can wrap it in a <see cref="Button"/> and drive
+/// body sized so <c>ThumbRangeBase</c> can wrap it in a <see cref="Button"/> and drive
 /// its visual states via the "ButtonCategory" state set. Mirrors the
 /// <see cref="SliderThumbVisual"/> trick — the V3 ScrollBar instantiates
 /// <c>new ButtonVisual()</c> directly for its thumb, so the Template Button

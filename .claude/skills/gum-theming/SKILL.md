@@ -77,7 +77,7 @@ The dotted-rectangle materialization approach (place N tiny rectangles at fixed 
 
 **How to apply:** Any time you write `new ContainerRuntime()` inside a visual subclass, immediately set `HasEvents = false` unless you specifically want that container to absorb clicks (rare — usually only the Forms-control root and explicit drag-handle InteractiveGues should). Same goes for any other `InteractiveGue`-derived wrapper you introduce.
 
-The thumb visuals (SliderThumbVisual, ScrollBarThumbVisual) are the explicit exception — they *do* want `HasEvents = true` so RangeBase's drag pickup works.
+The thumb visuals (SliderThumbVisual, ScrollBarThumbVisual) are the explicit exception — they *do* want `HasEvents = true` so ThumbRangeBase's drag pickup works.
 
 ## Hover/press color consistency
 
@@ -85,7 +85,7 @@ A control with a Pushed state (Button) shouldn't switch border color families be
 
 ## Slider and scroll bar thumbs fall back to the Button template
 
-`V3.SliderVisual` creates its thumb as `new SliderThumb()` and `V3.ScrollBarVisual` as `new ScrollBarThumb()`. Template lookup walks base types, so each resolves through its own type, then `typeof(Thumb)` (both bars), then `typeof(Button)`. With nothing registered, the thumb is your theme's Button, the wrong shape for a thumb in most designs. Register a `ButtonVisual`-based template for `SliderThumb` or `ScrollBarThumb` to restyle one bar's thumb. To build the slider thumb inside a `SliderVisual` subclass instead: pass `tryCreateFormsObject:false` to the base, detach `ThumbInstance.Parent`, add your own thumb visual named `"ThumbInstance"` to `TrackInstance`, then create the Forms `Slider` yourself at the end of the ctor. `RangeBase.ReactToVisualChanged` looks up `"ThumbInstance"` by name and wraps it in a Button — your thumb just needs `"ButtonCategory"` state callbacks (use `Button.ButtonCategoryName`) and `HasEvents = true`.
+`V3.SliderVisual` creates its thumb as `new SliderThumb()` and `V3.ScrollBarVisual` as `new ScrollBarThumb()`. Template lookup walks base types, so each resolves through its own type, then `typeof(Thumb)` (both bars), then `typeof(Button)`. With nothing registered, the thumb is your theme's Button, the wrong shape for a thumb in most designs. Register a `ButtonVisual`-based template for `SliderThumb` or `ScrollBarThumb` to restyle one bar's thumb. To build the slider thumb inside a `SliderVisual` subclass instead: pass `tryCreateFormsObject:false` to the base, detach `ThumbInstance.Parent`, add your own thumb visual named `"ThumbInstance"` to `TrackInstance`, then create the Forms `Slider` yourself at the end of the ctor. `ThumbRangeBase` looks up `"ThumbInstance"` by name and wraps it in a Button — your thumb just needs `"ButtonCategory"` state callbacks (use `Button.ButtonCategoryName`) and `HasEvents = true`.
 
 ## Value-driven visuals
 

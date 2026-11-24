@@ -28,7 +28,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
     /// Gap (in pixels, per side) between the thumb and the bar's edge. The same
     /// value is used on both axes so the thumb reads as visually symmetric at
     /// scroll extremes. Short-axis lives on the thumb itself; long-axis lives on
-    /// the ThumbContainer so RangeBase still sizes and positions the thumb freely
+    /// the ThumbContainer so ThumbRangeBase still sizes and positions the thumb freely
     /// within the shrunken container.
     /// </summary>
     private const float ThumbInset = 2f;
@@ -46,7 +46,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
         // The base ctor creates the V3 ThumbInstance (a plain V3 ButtonVisual)
         // and assigns the Forms ScrollBar to FormsControlAsObject when
         // tryCreateFormsObject is true. We accept that, then replace the
-        // thumb visual in-place and re-run RangeBase's "find ThumbInstance by
+        // thumb visual in-place and re-run ThumbRangeBase's "find ThumbInstance by
         // name and wrap it in a Button" pass.
         : base(fullInstantiation, tryCreateFormsObject: false)
     {
@@ -62,7 +62,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
 
         // Detach the V3 ThumbInstance (a V3.ButtonVisual the base ctor created
         // with no opportunity for our Button template to apply) and add our
-        // own thumb visual named "ThumbInstance" so RangeBase.ReactToVisualChanged
+        // own thumb visual named "ThumbInstance" so ThumbRangeBase
         // wraps it in a Button.
         ThumbInstance.Parent = null;
 

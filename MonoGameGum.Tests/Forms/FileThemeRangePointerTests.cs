@@ -13,7 +13,7 @@ namespace MonoGameGum.Tests.Forms;
 /// </summary>
 public class FileThemeRangePointerTests : FileThemeInputTestBase
 {
-    private void DragThumb(RangeBase range, int fromOffset, int toX, int toY)
+    private void DragThumb(ThumbRangeBase range, int fromOffset, int toX, int toY)
     {
         toX = System.Math.Clamp(toX, 1, (int)GraphicalUiElement.CanvasWidth - 1);
         toY = System.Math.Clamp(toY, 1, (int)GraphicalUiElement.CanvasHeight - 1);
@@ -77,6 +77,27 @@ public class FileThemeRangePointerTests : FileThemeInputTestBase
         Driver.Click((int)(track.AbsoluteLeft + track.AbsoluteWidth * 0.9f), CenterY(track));
 
         slider.Value.ShouldBeGreaterThan(0, theme + " track click did not move the value");
+    }
+
+    [Theory]
+    [MemberData(nameof(RepresentativeThemes))]
+    public void DragThumb_Slider_RaisesValueChangeCompletedOnlyOnRelease(string theme)
+    {
+        Slider slider = Place<Slider>(LoadTheme(theme), "Slider");
+        slider.Minimum = 0;
+        slider.Maximum = 100;
+        slider.Value = 0;
+        Driver.Step(2);
+        GraphicalUiElement track = slider.Visual.GetGraphicalUiElementByName("TrackInstance")!;
+        int changedCount = 0;
+        int completedCount = 0;
+        slider.ValueChanged += (_, _) => changedCount++;
+        slider.ValueChangeCompleted += (_, _) => completedCount++;
+
+        DragThumb(slider, 0, CenterX(track), CenterY(track));
+
+        changedCount.ShouldBeGreaterThan(1, theme);
+        completedCount.ShouldBe(1, theme);
     }
 
     [Theory]

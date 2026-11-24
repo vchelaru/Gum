@@ -79,8 +79,8 @@ FrameworkElement
 ├── Panel
 │   └── StackPanel
 ├── Label
-├── Slider (RangeBase)
-├── ScrollBar (RangeBase)
+├── Slider (ThumbRangeBase)
+├── ScrollBar (ThumbRangeBase)
 ├── ListBoxItem
 ├── MenuItem
 ├── UserControl

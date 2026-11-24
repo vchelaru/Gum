@@ -79,6 +79,7 @@
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\Panel.cs" Link="Forms\Controls\Panel.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\Primitives\ButtonBase.cs" Link="Forms\Controls\Primitives\ButtonBase.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\Primitives\RangeBase.cs" Link="Forms\Controls\Primitives\RangeBase.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\Controls\Primitives\ThumbRangeBase.cs" Link="Forms\Controls\Primitives\ThumbRangeBase.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\Primitives\ItemSelection.cs" Link="Forms\Controls\Primitives\ItemSelection.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\RadioButton.cs" Link="Forms\Controls\RadioButton.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\ScrollBar.cs" Link="Forms\Controls\ScrollBar.cs" />
@@ -214,6 +215,7 @@
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Panel.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Primitives\ButtonBase.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Primitives\RangeBase.cs" />
+	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Primitives\ThumbRangeBase.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Primitives\ItemSelection.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\RadioButton.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\RowDefinition.cs" />

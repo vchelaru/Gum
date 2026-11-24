@@ -17,7 +17,7 @@ using Gum.Forms.Controls.Primitives;
 namespace Gum.Forms.Controls;
 #endif
 
-public class ScrollBar : RangeBase
+public class ScrollBar : ThumbRangeBase
 {
     #region Fields/Properties
 
@@ -212,12 +212,12 @@ public class ScrollBar : RangeBase
         }
     }
 
-    // NOTE: This overrides RangeBase's hiding `virtual`, NOT FrameworkElement's original `virtual`.
+    // NOTE: This overrides ThumbRangeBase's hiding `virtual`, NOT FrameworkElement's original `virtual`.
     // This means ScrollBar.RefreshInternalVisualReferences runs twice — once from ScrollBar.ReactToVisualChanged
-    // and once from RangeBase.ReactToVisualChanged. The lookups are idempotent so this is harmless but wasteful.
-    // RangeBase.RefreshInternalVisualReferences (AssignExplicitTrack) never runs for ScrollBar because this
+    // and once from ThumbRangeBase's visual setup. The lookups are idempotent so this is harmless but wasteful.
+    // ThumbRangeBase.RefreshInternalVisualReferences (AssignExplicitTrack) never runs for ScrollBar because this
     // override doesn't call base. ScrollBar.Track works via its fallback path (thumb.Visual.EffectiveParentGue).
-    // See the comment on RangeBase.RefreshInternalVisualReferences for why this isn't changed to a proper chain.
+    // See the comment on ThumbRangeBase.RefreshInternalVisualReferences for why this isn't changed to a proper chain.
     protected override void RefreshInternalVisualReferences()
     {
         upButton = null;

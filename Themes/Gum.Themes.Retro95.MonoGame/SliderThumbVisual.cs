@@ -18,7 +18,7 @@ namespace Gum.Themes.Retro95;
 /// <summary>
 /// Retro95 slider thumb. A 12 × 22 raised-bevel gray rectangle (matches <c>.rc-sldr-thumb</c>).
 /// Inverts to a sunken bevel when pressed.
-/// Wrapped by RangeBase in a <see cref="Button"/>; the Retro95 Button template never gets to
+/// Wrapped by ThumbRangeBase in a <see cref="Button"/>; the Retro95 Button template never gets to
 /// apply because V3 ScrollBar / Slider instantiate the thumb directly — this visual stands in.
 /// </summary>
 public class SliderThumbVisual : InteractiveGue
@@ -52,7 +52,7 @@ public class SliderThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         // The thumb's button category is driven by the inner Button wrapper
-        // RangeBase creates around our ThumbInstance — its Focused state fires
+        // ThumbRangeBase creates around our ThumbInstance — its Focused state fires
         // only when the BUTTON has keyboard focus. For a Slider, focus lives
         // on the Slider control itself, so the thumb button never sees the
         // Focused state. SliderVisual drives the focus rect explicitly via

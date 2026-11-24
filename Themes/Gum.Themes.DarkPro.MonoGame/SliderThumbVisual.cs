@@ -17,7 +17,7 @@ namespace Gum.Themes.DarkPro;
 
 /// <summary>
 /// Dark Pro slider thumb. An <see cref="InteractiveGue"/> with a circle body and
-/// a focus ring sized so RangeBase can wrap it in a <see cref="Button"/> and drive
+/// a focus ring sized so ThumbRangeBase can wrap it in a <see cref="Button"/> and drive
 /// its visual states via <c>"ButtonCategoryState"</c>. Not a Dark Pro
 /// <see cref="ButtonVisual"/> subclass — that visual is built around rounded
 /// rectangles with corner radius 2, and forcing it into a circle would need to
