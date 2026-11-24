@@ -255,4 +255,40 @@ public class ComponentExtractionExposedVariableTests : BaseTestClass
         // Header.Width stays exposed on the replacement and Footer is outside the subtree.
         whyNot.ShouldBeNull();
     }
+
+    [Fact]
+    public void CreateComponent_WithReplace_PointsAReferenceThatReadsAnExposedMovedVariableAtTheExposedName()
+    {
+        Expose(_cardDefault, "Title.Text", "string", "Hi", "TitleText");
+        VariableListSave<string> reading = new VariableListSave<string> { Name = "Footer.VariableReferences", Type = "string" };
+        reading.ValueAsIList.Add("Text = Title.Text");
+        _cardDefault.VariableLists.Add(reading);
+
+        Extract(replace: true);
+
+        _cardDefault.VariableLists.ShouldHaveSingleItem().ValueAsIList.ShouldBe(new object[] { "Text = Header.TitleText" });
+    }
+
+    [Fact]
+    public void CreateComponent_WithReplace_MovesADerivedElementsOverrideOfAnExposedVariableToTheExposedName()
+    {
+        Expose(_cardDefault, "Title.Text", "string", "Hi", "TitleText");
+        ComponentSave fancy = EditingTestProject.AddComponent(Project, "FancyCard", "Card");
+        fancy.GetDefaultStateOrThrow().SetValue("Title.Text", "Fancy", "string");
+
+        Extract(replace: true);
+
+        fancy.GetDefaultStateOrThrow().GetValue("Header.TitleText").ShouldBe("Fancy");
+    }
+
+    [Fact]
+    public void CreateComponent_WithReplace_KeepsAMovedChildsExposedEventExposed()
+    {
+        _card.Events.Add(new EventSave { Name = "Title.Click", ExposedAsName = "TitleClick" });
+
+        ComponentSave component = Extract(replace: true);
+
+        component.Events.ShouldContain(item => item.Name == "Title.Click" && item.ExposedAsName == "TitleClick");
+        _card.Events.ShouldContain(item => item.Name == "Header.TitleClick" && item.ExposedAsName == "TitleClick");
+    }
 }
