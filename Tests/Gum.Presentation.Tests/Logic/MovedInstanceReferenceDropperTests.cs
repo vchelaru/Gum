@@ -198,16 +198,19 @@ public class MovedInstanceReferenceDropperTests : BaseTestClass
     [Fact]
     public void Drop_ThroughAnExposedVariable_RepointsLinesAndMovesDerivedOverrides_AndUndoRestoresThem()
     {
+        _button.DefaultState.ShouldNotBeNull();
         _button.DefaultState.Variables.Add(new VariableSave
         {
             Name = "Label.Text", Type = "string", Value = "Hi", SetsValue = true, ExposedAsName = "LabelText"
         });
         _button.DefaultState.VariableLists.Add(References("Caption.VariableReferences", "Text = Label.Text"));
         ComponentSave bigButton = AddComponent("BigButton", "Button");
+        bigButton.DefaultState.ShouldNotBeNull();
         bigButton.DefaultState.SetValue("Label.Text", "Big", "string");
         ScreenSave menu = AddScreen("Menu");
         AddInstance(menu, "OkButton", "Button");
         AddInstance(menu, "Title", "Text");
+        menu.DefaultState.ShouldNotBeNull();
         menu.DefaultState.VariableLists.Add(References("Title.VariableReferences", "Text = Components/Button.Label.Text"));
 
         MovedInstanceReference[] result = DropInsideUndoLock();

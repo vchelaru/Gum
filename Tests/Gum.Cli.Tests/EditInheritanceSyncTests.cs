@@ -185,9 +185,11 @@ public class EditInheritanceSyncTests : BaseTestClass
         result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
         GumProjectSave project = new ProjectLoader().Load(projectPath).Project.ShouldNotBeNull();
         ElementSave panel = project.Components.Single(item => item.Name == "Panel");
+        panel.DefaultState.ShouldNotBeNull();
         panel.DefaultState.VariableLists.Single(item => item.Name == "Caption.VariableReferences").ValueAsIList
             .ShouldBe(new object[] { "Text = Box.InsideText" });
         ElementSave derived = project.Components.Single(item => item.Name == "DerivedPanel");
+        derived.DefaultState.ShouldNotBeNull();
         derived.DefaultState.GetValue("Box.InsideText").ShouldBe("Derived");
         derived.DefaultState.GetVariableSave("Inside.Text").ShouldBeNull();
     }
