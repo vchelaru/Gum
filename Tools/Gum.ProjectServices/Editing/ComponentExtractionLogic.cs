@@ -230,6 +230,15 @@ public class ComponentExtractionLogic : IComponentExtractionLogic
             componentDefault.VariableLists.Add(clone);
         }
 
+        // An event of a moved instance moves with it, exposure included, the same as its variables.
+        foreach (EventSave sourceEvent in sourceElement.Events)
+        {
+            if (sourceEvent.GetSourceObject() is { } owner && descendantNames.Contains(owner))
+            {
+                component.Events.Add(CloneEvent(sourceEvent, sourceEvent.Name));
+            }
+        }
+
         return new ComponentExtraction(component, instance, sourceElement, descendants);
     }
 
@@ -256,6 +265,7 @@ public class ComponentExtractionLogic : IComponentExtractionLogic
                 .Where(item => item.SourceObject == instance.Name)
                 .Select(item => (state, item.Clone())))
             .ToList();
+        List<EventSave> keptEvents = GetEventsKeptByReplacement(instance, sourceElement, descendants);
 
         foreach (InstanceSave descendant in descendants)
         {
@@ -281,6 +291,11 @@ public class ComponentExtractionLogic : IComponentExtractionLogic
             state.VariableLists.RemoveAll(item => item.Name == list.Name);
             state.VariableLists.Add(list);
         }
+        foreach (EventSave keptEvent in keptEvents)
+        {
+            sourceElement.Events.RemoveAll(item => item.Name == keptEvent.Name);
+            sourceElement.Events.Add(keptEvent);
+        }
 
         return replacement;
     }
@@ -297,21 +312,65 @@ public class ComponentExtractionLogic : IComponentExtractionLogic
         Dictionary<string, string> names = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (VariableSave variable in sourceDefault.Variables)
         {
-            if (string.IsNullOrEmpty(variable.ExposedAsName) || variable.SourceObject is not { } owner)
+            if (GetNameOnReplacement(variable.Name, variable.SourceObject, variable.ExposedAsName, promotedName, moved)
+                is { } newName)
             {
-                continue;
-            }
-            if (owner == promotedName)
-            {
-                names[variable.Name] = variable.Name;
-            }
-            else if (moved.Contains(owner))
-            {
-                names[variable.Name] = $"{promotedName}.{variable.ExposedAsName}";
+                names[variable.Name] = newName;
             }
         }
         return names;
     }
+
+    /// <summary>
+    /// The name an exposed variable or event of the subtree has on the replacement instance, or null when the subtree
+    /// does not expose it. Variables and events share it so both follow one rule.
+    /// </summary>
+    private static string? GetNameOnReplacement(string name, string? owner, string? exposedAs, string promotedName,
+        HashSet<string> moved)
+    {
+        if (string.IsNullOrEmpty(exposedAs) || owner == null)
+        {
+            return null;
+        }
+        if (owner == promotedName)
+        {
+            return name;
+        }
+        return moved.Contains(owner) ? $"{promotedName}.{exposedAs}" : null;
+    }
+
+    /// <summary>
+    /// The events the source element keeps through the replacement: the promoted instance's own events, which name an
+    /// instance that still exists, and each exposed event of a moved instance under the name the new component
+    /// exposes it as. Removing the instances removes the originals.
+    /// </summary>
+    private static List<EventSave> GetEventsKeptByReplacement(InstanceSave instance, ElementSave sourceElement,
+        IReadOnlyList<InstanceSave> descendants)
+    {
+        HashSet<string> moved = new HashSet<string>(descendants.Select(item => item.Name), StringComparer.Ordinal);
+        List<EventSave> kept = new List<EventSave>();
+        foreach (EventSave sourceEvent in sourceElement.Events)
+        {
+            string? owner = sourceEvent.GetSourceObject();
+            if (owner == instance.Name)
+            {
+                kept.Add(CloneEvent(sourceEvent, sourceEvent.Name));
+            }
+            else if (GetNameOnReplacement(sourceEvent.Name, owner, sourceEvent.ExposedAsName, instance.Name, moved)
+                is { } newName)
+            {
+                kept.Add(CloneEvent(sourceEvent, newName));
+            }
+        }
+        return kept;
+    }
+
+    private static EventSave CloneEvent(EventSave sourceEvent, string name) => new EventSave
+    {
+        Name = name,
+        Enabled = sourceEvent.Enabled,
+        ExposedAsName = sourceEvent.ExposedAsName,
+    };
 
     /// <summary>
     /// The variables that keep the source element's exposures of the subtree working through the replacement, in
