@@ -1,5 +1,4 @@
 using Gum.DataTypes;
-using Gum.DataTypes.Variables;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
@@ -132,42 +131,5 @@ public class ProgressBarTests : BaseTestClass
 
         newIndicator.Width.ShouldBe(60);
         oldIndicator.Width.ShouldBe(20);
-    }
-
-    [Fact]
-    public void IsIndeterminate_ShouldApplyIndeterminateState()
-    {
-        ContainerRuntime visual = CreateVisual(out _);
-        StateSaveCategory category = new() { Name = ProgressBar.ProgressBarCategoryName };
-        string? appliedState = null;
-        StateSave determinate = new() { Name = ProgressBar.DeterminateStateName };
-        determinate.Apply = () => appliedState = determinate.Name;
-        StateSave indeterminate = new() { Name = ProgressBar.IndeterminateStateName };
-        indeterminate.Apply = () => appliedState = indeterminate.Name;
-        category.States.Add(determinate);
-        category.States.Add(indeterminate);
-        visual.AddCategory(category);
-        ProgressBar progressBar = new(visual);
-        appliedState.ShouldBe("Determinate");
-
-        progressBar.IsIndeterminate = true;
-        appliedState.ShouldBe("Indeterminate");
-
-        progressBar.IsIndeterminate = false;
-        appliedState.ShouldBe("Determinate");
-    }
-
-    [Fact]
-    public void Value_ShouldNotChangeIndicatorWidth_WhileIndeterminate()
-    {
-        ProgressBar progressBar = CreateProgressBar(out ContainerRuntime indicator);
-        progressBar.IsIndeterminate = true;
-        indicator.Width = 30;
-
-        progressBar.Value = 80;
-        indicator.Width.ShouldBe(30);
-
-        progressBar.IsIndeterminate = false;
-        indicator.Width.ShouldBe(80);
     }
 }

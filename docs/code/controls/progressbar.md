@@ -39,19 +39,6 @@ progressBar.Value = 75;
 
 `ValueChanged` is raised whenever `Value` changes.
 
-## IsIndeterminate
-
-Set `IsIndeterminate` to `true` when the amount of progress is unknown. The indicator then moves across the track repeatedly instead of showing `Value`. Setting it back to `false` shows `Value` again.
-
-```csharp
-// Initialize
-progressBar.IsIndeterminate = true;
-```
-
-The indicator only moves while the ProgressBar is part of the root that `GumUI.Update` animates, such as after `AddToRoot`.
-
 ## Custom Visuals
 
 A custom visual needs a child named `IndicatorInstance`. The ProgressBar sets its `Width` as a percentage of its parent, so place it inside the element that acts as the track, usually named `TrackInstance`.
-
-`IsIndeterminate` sets the `ProgressBarCategoryState` state to `Indeterminate` or `Determinate`. The visual decides how the Indeterminate state looks and moves. While indeterminate, the ProgressBar does not change the indicator's width.

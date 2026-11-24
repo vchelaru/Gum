@@ -13,46 +13,11 @@ namespace Gum.Forms.Controls;
 /// <summary>
 /// A control which displays progress as a value between Minimum and Maximum. It does not take input.
 /// The Visual's IndicatorInstance is sized as a percentage of its parent (usually TrackInstance)
-/// according to Value. Setting IsIndeterminate shows activity without a known amount of progress.
+/// according to Value.
 /// </summary>
 public class ProgressBar : RangeBase
 {
-    #region Fields/Properties
-
-    /// <summary>The state category this control sets: Determinate or Indeterminate.</summary>
-    public const string ProgressBarCategoryName = "ProgressBarCategory";
-
-    /// <summary>The state applied while IsIndeterminate is false.</summary>
-    public const string DeterminateStateName = "Determinate";
-
-    /// <summary>The state applied while IsIndeterminate is true.</summary>
-    public const string IndeterminateStateName = "Indeterminate";
-
     GraphicalUiElement? _indicator;
-
-    bool _isIndeterminate;
-
-    /// <summary>
-    /// Whether the progress bar shows ongoing activity rather than Value. While true, the visual is set to
-    /// its Indeterminate state, which owns how the indicator looks and moves, and Value no longer sizes
-    /// the indicator.
-    /// </summary>
-    public bool IsIndeterminate
-    {
-        get => _isIndeterminate;
-        set
-        {
-            if (value != _isIndeterminate)
-            {
-                _isIndeterminate = value;
-                UpdateState();
-                UpdateIndicatorWidth();
-                ReportFormsPropertyChanged();
-            }
-        }
-    }
-
-    #endregion
 
     #region Initialize
 
@@ -69,7 +34,6 @@ public class ProgressBar : RangeBase
     {
         base.ReactToVisualChanged();
 
-        UpdateState();
         // The range defaults assigned in base may not change Value, so the new indicator is sized here.
         UpdateIndicatorWidth();
     }
@@ -98,8 +62,7 @@ public class ProgressBar : RangeBase
 
     private void UpdateIndicatorWidth()
     {
-        // While indeterminate the visual's Indeterminate state owns the indicator.
-        if (_indicator == null || IsIndeterminate)
+        if (_indicator == null)
         {
             return;
         }
@@ -110,20 +73,6 @@ public class ProgressBar : RangeBase
 
         _indicator.WidthUnits = DimensionUnitType.PercentageOfParent;
         _indicator.Width = (float)(ratio * 100);
-    }
-
-    #endregion
-
-    #region UpdateTo Methods
-
-    public override void UpdateState()
-    {
-        if (Visual == null)
-        {
-            return;
-        }
-        Visual.SetProperty(ProgressBarCategoryName + "State",
-            IsIndeterminate ? IndeterminateStateName : DeterminateStateName);
     }
 
     #endregion
