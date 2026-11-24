@@ -67,7 +67,7 @@ public class ComponentExtractionLogicTests : BaseTestClass
         componentDefault.Variables.ShouldNotContain(item => (item.Name == "X" || item.Name == "Y") && item.SetsValue);
         componentDefault.GetVariableSave("ChildText.Parent").ShouldBeNull();
         componentDefault.GetValue("GrandChild.Parent").ShouldBe("ChildText");
-        componentDefault.GetVariableSave("ChildText.Text")!.ExposedAsName.ShouldBeNull();
+        componentDefault.GetVariableSave("ChildText.Text")!.ExposedAsName.ShouldBe("Caption");
         componentDefault.GetValue("ChildText.FontSize").ShouldBe(28);
         componentDefault.GetVariableSave("UnrelatedSibling.Text").ShouldBeNull();
         componentDefault.VariableLists.Select(item => item.Name).ShouldBe(new[] { "ChildText.Points" });

@@ -120,8 +120,8 @@ public class ComponentExtractionLogic : IComponentExtractionLogic
                 continue;
             }
 
+            // The exposure moves with the variable, so the new component exposes it under the same name.
             VariableSave clone = variable.Clone();
-            clone.ExposedAsName = null;
 
             if (clone.GetRootName() == "Parent" && clone.Value is string parentValue)
             {
@@ -164,6 +164,7 @@ public class ComponentExtractionLogic : IComponentExtractionLogic
             {
                 continue;
             }
+            // The component's own variable has no instance to be exposed from; the replacement keeps that exposure.
             VariableSave clone = variable.Clone();
             clone.Name = rootName;
             clone.ExposedAsName = null;
@@ -207,6 +208,7 @@ public class ComponentExtractionLogic : IComponentExtractionLogic
         // Removing the instance strips everything that names it, but the replacement keeps its name.
         List<(StateSave State, VariableSave Variable)> keptVariables =
             GetVariablesKeptByReplacement(instance, sourceElement, sourceDefault, descendants);
+        keptVariables.AddRange(GetExposedVariablesCarriedByReplacement(instance, sourceElement, sourceDefault, descendants));
         List<(StateSave State, VariableListSave List)> keptLists = sourceElement.AllStates
             .Where(state => state != sourceDefault)
             .SelectMany(state => state.VariableLists
@@ -240,6 +242,65 @@ public class ComponentExtractionLogic : IComponentExtractionLogic
         }
 
         return replacement;
+    }
+
+    /// <summary>
+    /// Maps each variable of the subtree that <paramref name="sourceDefault"/> exposes to its name on the replacement
+    /// instance: a moved Title.Text exposed as TitleText becomes Header.TitleText, because the new component exposes
+    /// it under the same name. The promoted instance's own exposed variables keep their names.
+    /// </summary>
+    public static Dictionary<string, string> GetExposedVariableNamesOnReplacement(StateSave sourceDefault,
+        string promotedName, IEnumerable<string> movedNames)
+    {
+        HashSet<string> moved = new HashSet<string>(movedNames, StringComparer.Ordinal);
+        Dictionary<string, string> names = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (VariableSave variable in sourceDefault.Variables)
+        {
+            if (string.IsNullOrEmpty(variable.ExposedAsName) || variable.SourceObject is not { } owner)
+            {
+                continue;
+            }
+            if (owner == promotedName)
+            {
+                names[variable.Name] = variable.Name;
+            }
+            else if (moved.Contains(owner))
+            {
+                names[variable.Name] = $"{promotedName}.{variable.ExposedAsName}";
+            }
+        }
+        return names;
+    }
+
+    /// <summary>
+    /// The variables that keep the source element's exposures of the subtree working through the replacement, in
+    /// every state, so what other elements set or read through an exposed name still applies. Clears the exposure
+    /// on the variables about to be removed so the removal does not clear those outside values.
+    /// </summary>
+    private static List<(StateSave State, VariableSave Variable)> GetExposedVariablesCarriedByReplacement(
+        InstanceSave instance, ElementSave sourceElement, StateSave sourceDefault, IReadOnlyList<InstanceSave> descendants)
+    {
+        Dictionary<string, string> newNames = GetExposedVariableNamesOnReplacement(sourceDefault, instance.Name,
+            descendants.Select(item => item.Name));
+        List<(StateSave State, VariableSave Variable)> carried = new List<(StateSave State, VariableSave Variable)>();
+        foreach (StateSave state in sourceElement.AllStates)
+        {
+            foreach (VariableSave variable in state.Variables)
+            {
+                if (!newNames.TryGetValue(variable.Name, out string? newName))
+                {
+                    continue;
+                }
+                VariableSave clone = variable.Clone();
+                clone.Name = newName;
+                if (state == sourceDefault)
+                {
+                    variable.ExposedAsName = null;
+                }
+                carried.Add((state, clone));
+            }
+        }
+        return carried;
     }
 
     /// <summary>

@@ -129,10 +129,14 @@ public class MovedInstanceReferenceDropLogic : IMovedInstanceReferenceDropLogic
             promotedInstance.Name
         };
         StateSave defaultState = sourceElement.GetDefaultStateOrThrow();
+        // The replacement carries these under the names the source exposes, in every state.
+        HashSet<string> carriedNames = new HashSet<string>(ComponentExtractionLogic.GetExposedVariableNamesOnReplacement(
+            defaultState, promotedInstance.Name, movedInstances.Select(item => item.Name)).Keys, StringComparer.Ordinal);
 
         foreach (InstanceSave moved in movedInstances)
         {
-            FindReferencesTo(moved.Name, sourceElement, promotedInstance.Name, insideNames, defaultState, animations, drops);
+            FindReferencesTo(moved.Name, sourceElement, promotedInstance.Name, insideNames, carriedNames, defaultState,
+                animations, drops);
         }
 
         drops.Reports.AddRange(GetLinesReadingOutside(sourceElement, defaultState, insideNames));
@@ -167,7 +171,7 @@ public class MovedInstanceReferenceDropLogic : IMovedInstanceReferenceDropLogic
     }
 
     private void FindReferencesTo(string name, ElementSave sourceElement, string promotedName, HashSet<string> insideNames,
-        StateSave defaultState, ElementAnimationsSave? animations, MovedInstanceReferenceDrops drops)
+        HashSet<string> carriedNames, StateSave defaultState, ElementAnimationsSave? animations, MovedInstanceReferenceDrops drops)
     {
         InstanceSave moved = sourceElement.GetInstance(name)!;
         InstanceReferences references = _referenceFinder.GetReferencesToInstance(sourceElement, moved, name);
@@ -202,17 +206,10 @@ public class MovedInstanceReferenceDropLogic : IMovedInstanceReferenceDropLogic
             {
                 if (variable.SourceObject == name)
                 {
-                    if (!isDefault)
+                    if (!isDefault && !carriedNames.Contains(variable.Name))
                     {
                         drops.AddVariable(name, sourceElement, state, variable,
                             $"{sourceElement.Name} ({state.Name}): {variable.Name} = {variable.Value}");
-                    }
-                    else if (!string.IsNullOrEmpty(variable.ExposedAsName))
-                    {
-                        // The variable itself moves into the component, unexposed; what other elements set
-                        // or read through the exposed name no longer applies.
-                        drops.Report(name, $"{sourceElement.Name}: exposed variable {variable.ExposedAsName} ({variable.Name})");
-                        FindUsesOfExposedVariable(name, sourceElement, variable, drops);
                     }
                 }
                 else if (!insideNames.Contains(variable.SourceObject ?? "") &&
@@ -262,25 +259,6 @@ public class MovedInstanceReferenceDropLogic : IMovedInstanceReferenceDropLogic
                     drops.InstancesWithSubAnimations.Add(name);
                 }
             }
-        }
-    }
-
-    private void FindUsesOfExposedVariable(string name, ElementSave sourceElement, VariableSave exposed, MovedInstanceReferenceDrops drops)
-    {
-        VariableChangeResponse uses = _referenceFinder.GetReferencesToVariable(sourceElement, exposed.Name, exposed.ExposedAsName!);
-        foreach (VariableChange use in uses.VariableChanges)
-        {
-            // A non-removable change is another element exposing a variable of its own under that name.
-            if (use.Container is ElementSave container && use.IsRemovableValue)
-            {
-                drops.AddVariable(name, container, use.State, use.Variable,
-                    $"{container.Name} ({use.State.Name}): {use.Variable.Name} = {use.Variable.Value}");
-            }
-        }
-        foreach (VariableReferenceChange change in uses.VariableReferenceChanges)
-        {
-            StateSave state = change.Container.AllStates.First(item => item.VariableLists.Contains(change.VariableReferenceList));
-            drops.AddLine(name, change.Container, state, change.VariableReferenceList, change.LineIndex);
         }
     }
 
