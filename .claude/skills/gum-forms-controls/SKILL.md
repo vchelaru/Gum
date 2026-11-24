@@ -79,6 +79,7 @@ FrameworkElement
 ├── Panel
 │   └── StackPanel
 ├── Label
+├── ProgressBar (RangeBase)
 ├── Slider (ThumbRangeBase)
 ├── ScrollBar (ThumbRangeBase)
 ├── ListBoxItem
