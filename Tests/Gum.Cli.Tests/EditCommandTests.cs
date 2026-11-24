@@ -486,7 +486,7 @@ public class EditCommandTests : BaseTestClass
         panelDefault.GetVariableSave("X")?.SetsValue.ShouldNotBe(true);
         panelDefault.GetVariableSave("Label.Parent").ShouldBeNull();
         panelDefault.GetValue("Label.Text").ShouldBe("Hi");
-        panelDefault.GetVariableSave("Label.Text")!.ExposedAsName.ShouldBeNull();
+        panelDefault.GetVariableSave("Label.Text")!.ExposedAsName.ShouldBe("LabelText");
         ComponentSave hud = project.Components.Single(item => item.Name == "Hud");
         StateSave hudDefault = hud.GetDefaultStateOrThrow();
         StateSave big = hud.Categories.Single().States.Single();
@@ -497,10 +497,11 @@ public class EditCommandTests : BaseTestClass
                 .ShouldBe(new[] { "Panel:Controls/PanelComponent", "Caption:Text" });
             hudDefault.GetValue("Panel.X").ShouldBe(50f);
             hudDefault.GetVariableSave("Panel.Width").ShouldBeNull();
-            hudDefault.Variables.ShouldNotContain(item => item.ExposedAsName == "LabelText");
+            hudDefault.Variables.Single(item => item.ExposedAsName == "LabelText").Name.ShouldBe("Panel.LabelText");
             big.GetValue("Panel.Width").ShouldBe(300f);
             big.GetVariableSave("Label.Text").ShouldBeNull();
-            gameDefault.GetVariableSave("HudInstance.LabelText").ShouldBeNull();
+            big.GetValue("Panel.LabelText").ShouldBe("Big");
+            gameDefault.GetValue("HudInstance.LabelText").ShouldBe("Yo");
         }
         else
         {
@@ -509,6 +510,37 @@ public class EditCommandTests : BaseTestClass
             big.GetValue("Label.Text").ShouldBe("Big");
             gameDefault.GetValue("HudInstance.LabelText").ShouldBe("Yo");
         }
+    }
+
+    [Fact]
+    public void Edit_ExtractToComponent_RefusesWhenTheInstancesTypeAlreadyExposesAnExposedName()
+    {
+        string projectPath = CreateEmptyProject();
+        string setup = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "Panel" },
+              { "op": "addInstance", "element": "Panel", "name": "Inner", "type": "Text" },
+              { "op": "exposeVariable", "element": "Panel", "instance": "Inner", "variable": "Text", "name": "TitleText" },
+              { "op": "addComponent", "name": "Card" },
+              { "op": "addInstance", "element": "Card", "name": "Header", "type": "Panel" },
+              { "op": "addInstance", "element": "Card", "name": "Title", "type": "Text", "parent": "Header" },
+              { "op": "exposeVariable", "element": "Card", "instance": "Title", "variable": "Text", "name": "TitleText" }
+            ] }
+            """);
+        CliTestHelper.Run("edit", projectPath, setup).ExitCode.ShouldBe(0);
+        Dictionary<string, string> before = ReadProjectFiles(projectPath);
+        string operations = WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "extractToComponent", "element": "Card", "instance": "Header", "name": "HeaderComponent", "replace": true }
+            ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(1);
+        result.StandardError.ShouldContain("Title.Text");
+        result.StandardError.ShouldContain("TitleText");
+        ReadProjectFiles(projectPath).ShouldBe(before);
     }
 
     [Fact]

@@ -2,6 +2,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.ProjectServices.Editing;
 using Gum.Services.Dialogs;
 
 namespace Gum.Dialogs;
@@ -20,6 +21,7 @@ public class CreateComponentDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly INameVerifier _nameVerifier;
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IGuiCommands _guiCommands;
+    private readonly IComponentExtractionLogic _componentExtraction;
 
     private InstanceSave? _instance;
 
@@ -42,11 +44,13 @@ public class CreateComponentDialogViewModel : GetUserStringDialogBaseViewModel
 
     public CreateComponentDialogViewModel(INameVerifier nameVerifier,
         ICopyPasteLogic copyPasteLogic,
-        IGuiCommands guiCommands)
+        IGuiCommands guiCommands,
+        IComponentExtractionLogic componentExtraction)
     {
         _nameVerifier = nameVerifier;
         _copyPasteLogic = copyPasteLogic;
         _guiCommands = guiCommands;
+        _componentExtraction = componentExtraction;
     }
 
     public override void OnAffirmative()
@@ -67,6 +71,12 @@ public class CreateComponentDialogViewModel : GetUserStringDialogBaseViewModel
         if (!ObjectFinder.Self.IsProjectSaved())
         {
             return "You must first save the project before adding a new component";
+        }
+
+        if (Instance != null && _componentExtraction.GetWhyCannotCreateComponent(Instance, (name, element) =>
+                _nameVerifier.IsVariableNameValid(name, element, null, out string? why) ? null : why) is { } whyCannotCreate)
+        {
+            return whyCannotCreate;
         }
 
         return _nameVerifier.IsElementNameValid(value, null, null, out string? whyNotValid)

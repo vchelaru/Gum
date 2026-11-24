@@ -220,4 +220,39 @@ public class ComponentExtractionExposedVariableTests : BaseTestClass
             .ExposedAsName.ShouldBe("CaptionText");
         screenDefault.GetVariableSave("Panel.CaptionText").ShouldNotBeNull().ExposedAsName.ShouldBe("CaptionText");
     }
+
+    [Fact]
+    public void GetWhyCannotCreateComponent_WhenTheInstancesTypeAlreadyExposesTheName_NamesTheNameAndTheVariable()
+    {
+        ComponentSave panel = EditingTestProject.AddComponent(Project, "Panel");
+        EditingTestProject.AddInstance(panel, "Inner", "Text");
+        Expose(panel.GetDefaultStateOrThrow(), "Inner.Text", "string", "In", "TitleText");
+        _header.BaseType = "Panel";
+        Expose(_cardDefault, "Title.Text", "string", "Hi", "TitleText");
+        ElementNameValidator validator = new ElementNameValidator(topLevelNameSource: null);
+        ComponentExtractionLogic logic = new ComponentExtractionLogic(new ElementCreationLogic());
+
+        string? whyNot = logic.GetWhyCannotCreateComponent(_header, (name, element) =>
+            validator.IsVariableNameValid(name, element, variable: null, out string? why) ? null : why);
+
+        whyNot.ShouldNotBeNull();
+        whyNot.ShouldContain("Title.Text");
+        whyNot.ShouldContain("TitleText");
+    }
+
+    [Fact]
+    public void GetWhyCannotCreateComponent_WhenTheExposedNamesAreFree_ReturnsNull()
+    {
+        Expose(_cardDefault, "Title.Text", "string", "Hi", "TitleText");
+        Expose(_cardDefault, "Header.Width", "float", 200f, "HeaderWidth");
+        Expose(_cardDefault, "Footer.Text", "string", "Bye", "Width");
+        ElementNameValidator validator = new ElementNameValidator(topLevelNameSource: null);
+        ComponentExtractionLogic logic = new ComponentExtractionLogic(new ElementCreationLogic());
+
+        string? whyNot = logic.GetWhyCannotCreateComponent(_header, (name, element) =>
+            validator.IsVariableNameValid(name, element, variable: null, out string? why) ? null : why);
+
+        // Header.Width stays exposed on the replacement and Footer is outside the subtree.
+        whyNot.ShouldBeNull();
+    }
 }

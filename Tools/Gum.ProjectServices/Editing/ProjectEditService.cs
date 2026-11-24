@@ -768,6 +768,11 @@ public partial class ProjectEditService : IProjectEditService
         InstanceSave instance = element.GetInstance(instanceName)
             ?? throw new EditException($"{element.Name} has no instance named {instanceName}.");
         ValidateNewElementName(name);
+        if (_componentExtraction.GetWhyCannotCreateComponent(instance, (exposedName, component) =>
+                _nameValidator.IsVariableNameValid(exposedName, component, null, out string? why) ? null : why) is { } whyCannotCreate)
+        {
+            throw new EditException(whyCannotCreate);
+        }
 
         ComponentExtraction extraction = _componentExtraction.CreateComponent(instance, name);
         if (replace && extraction.MovedInstances.Prepend(instance)

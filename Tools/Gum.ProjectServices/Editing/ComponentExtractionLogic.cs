@@ -52,6 +52,15 @@ public interface IComponentExtractionLogic
     ComponentExtraction CreateComponent(InstanceSave instance, string componentName);
 
     /// <summary>
+    /// Why <paramref name="instance"/> cannot become a component, or null. The new component exposes what the
+    /// source element exposes from the instances under <paramref name="instance"/>, so each exposed name must be
+    /// free in a component of the instance's type, by the check Expose Variable uses.
+    /// </summary>
+    /// <param name="getWhyVariableNameInvalid">The Expose Variable name check: why a new variable name is invalid
+    /// in an element, or null when it is valid.</param>
+    string? GetWhyCannotCreateComponent(InstanceSave instance, Func<string, ElementSave, string?> getWhyVariableNameInvalid);
+
+    /// <summary>
     /// Removes the promoted instance and the instances under it from the source element and puts one instance of
     /// the new component, with the same name, in the promoted instance's place in the instance order. The
     /// replacement keeps the promoted instance's position, what other states set on it, and the values outside
@@ -81,6 +90,38 @@ public class ComponentExtractionLogic : IComponentExtractionLogic
     public ComponentExtractionLogic(IElementCreationLogic elementCreation)
     {
         _elementCreation = elementCreation;
+    }
+
+    /// <inheritdoc/>
+    public string? GetWhyCannotCreateComponent(InstanceSave instance, Func<string, ElementSave, string?> getWhyVariableNameInvalid)
+    {
+        StateSave? sourceDefault = instance.ParentContainer?.DefaultState;
+        if (sourceDefault == null)
+        {
+            return null;
+        }
+        HashSet<string> movedNames = new HashSet<string>(instance.ParentContainer!.GetInstancesAndChildrenOf(new[] { instance })
+            .Where(item => item.Name != instance.Name)
+            .Select(item => item.Name), StringComparer.Ordinal);
+        List<VariableSave> exposed = sourceDefault.Variables
+            .Where(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject is { } owner && movedNames.Contains(owner))
+            .ToList();
+        if (exposed.Count == 0)
+        {
+            return null;
+        }
+
+        // An empty component of the instance's type has every name the new component inherits.
+        ComponentSave scratch = new ComponentSave();
+        _elementCreation.PrepareNewComponent(scratch, instance.Name + "Component", instance.BaseType);
+        foreach (VariableSave variable in exposed)
+        {
+            if (getWhyVariableNameInvalid(variable.ExposedAsName!, scratch) is { } why)
+            {
+                return $"{variable.Name} is exposed as {variable.ExposedAsName}, which the new component cannot expose: {why}";
+            }
+        }
+        return null;
     }
 
     /// <inheritdoc/>
