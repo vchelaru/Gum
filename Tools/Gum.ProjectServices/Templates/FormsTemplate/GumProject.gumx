@@ -78,6 +78,7 @@
   <ComponentReference Name="Controls/MenuItem" />
   <ComponentReference Name="Controls/Panel" />
   <ComponentReference Name="Controls/PasswordBox" />
+  <ComponentReference Name="Controls/ProgressBar" />
   <ComponentReference Name="Controls/RadioButton" />
   <ComponentReference Name="Controls/ScrollBar" />
   <ComponentReference Name="Controls/ScrollBarButton" />
@@ -135,6 +136,7 @@
   <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../FormsBehaviors/PasswordBoxBehavior.behx" />
   <BehaviorReference Name="PlayerJoinViewBehavior" />
   <BehaviorReference Name="PlayerJoinViewItemBehavior" />
+  <BehaviorReference Name="ProgressBarBehavior" SourcePath="../FormsBehaviors/ProgressBarBehavior.behx" />
   <BehaviorReference Name="RadioButtonBehavior" SourcePath="../FormsBehaviors/RadioButtonBehavior.behx" />
   <BehaviorReference Name="ScrollBarBehavior" SourcePath="../FormsBehaviors/ScrollBarBehavior.behx" />
   <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../FormsBehaviors/ScrollViewerBehavior.behx" />

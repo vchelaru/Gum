@@ -74,6 +74,7 @@
   <ComponentReference Name="Bubblegum/MenuItem" />
   <ComponentReference Name="Bubblegum/Panel" />
   <ComponentReference Name="Bubblegum/PasswordBox" />
+  <ComponentReference Name="Bubblegum/ProgressBar" />
   <ComponentReference Name="Bubblegum/RadioButton" />
   <ComponentReference Name="Bubblegum/ScrollBar" />
   <ComponentReference Name="Bubblegum/ScrollBarThumb" />
@@ -114,6 +115,7 @@
   <BehaviorReference Name="OnScreenKeyboardBehavior" SourcePath="../../FormsBehaviors/OnScreenKeyboardBehavior.behx" />
   <BehaviorReference Name="PanelBehavior" SourcePath="../../FormsBehaviors/PanelBehavior.behx" />
   <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/PasswordBox" />
+  <BehaviorReference Name="ProgressBarBehavior" SourcePath="../../FormsBehaviors/ProgressBarBehavior.behx" DefaultImplementationOverride="Bubblegum/ProgressBar" />
   <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="Bubblegum/RadioButton" />
   <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="Bubblegum/ScrollBar" />
   <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="Bubblegum/ScrollViewer" />

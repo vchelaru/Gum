@@ -87,6 +87,7 @@
   <ComponentReference Name="Editor/PasswordBox" />
   <ComponentReference Name="Editor/PercentBar" />
   <ComponentReference Name="Editor/PercentBarIcon" />
+  <ComponentReference Name="Editor/ProgressBar" />
   <ComponentReference Name="Editor/RadioButton" />
   <ComponentReference Name="Editor/ScrollBar" />
   <ComponentReference Name="Editor/ScrollBarButton" />
@@ -138,6 +139,7 @@
   <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="Editor/PasswordBox" />
   <BehaviorReference Name="PlayerJoinViewBehavior" />
   <BehaviorReference Name="PlayerJoinViewItemBehavior" />
+  <BehaviorReference Name="ProgressBarBehavior" SourcePath="../../FormsBehaviors/ProgressBarBehavior.behx" DefaultImplementationOverride="Editor/ProgressBar" />
   <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="Editor/RadioButton" />
   <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="Editor/ScrollBar" />
   <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="Editor/ScrollViewer" />

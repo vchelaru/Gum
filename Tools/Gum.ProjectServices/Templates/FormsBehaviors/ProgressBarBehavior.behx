@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>ProgressBarBehavior</Name>
+  <RequiredVariables />
+  <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <FormsProperty Type="double" Name="Minimum">
+    <Value xsi:type="xsd:double">0</Value>
+  </FormsProperty>
+  <FormsProperty Type="double" Name="Maximum">
+    <Value xsi:type="xsd:double">100</Value>
+  </FormsProperty>
+  <FormsProperty Type="double" Name="Value">
+    <Value xsi:type="xsd:double">0</Value>
+  </FormsProperty>
+  <RequiredInstances>
+    <InstanceSave Name="TrackInstance" BaseType="Container">
+      <Behaviors />
+    </InstanceSave>
+  </RequiredInstances>
+  <RequiredAnimations />
+  <DefaultImplementation>Controls/ProgressBar</DefaultImplementation>
+</BehaviorSave>

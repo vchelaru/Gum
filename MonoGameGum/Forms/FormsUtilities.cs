@@ -810,6 +810,12 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileSliderRuntime), overwriteIfAlreadyExists: false);
             }
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.ProgressBarBehaviorName))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileProgressBarRuntime), overwriteIfAlreadyExists: false);
+            }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.SplitterBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(

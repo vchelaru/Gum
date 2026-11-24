@@ -74,6 +74,7 @@
   <ComponentReference Name="DarkPro/MenuItem" />
   <ComponentReference Name="DarkPro/Panel" />
   <ComponentReference Name="DarkPro/PasswordBox" />
+  <ComponentReference Name="DarkPro/ProgressBar" />
   <ComponentReference Name="DarkPro/RadioButton" />
   <ComponentReference Name="DarkPro/ScrollBar" />
   <ComponentReference Name="DarkPro/ScrollBarThumb" />
@@ -114,6 +115,7 @@
   <BehaviorReference Name="OnScreenKeyboardBehavior" SourcePath="../../FormsBehaviors/OnScreenKeyboardBehavior.behx" />
   <BehaviorReference Name="PanelBehavior" SourcePath="../../FormsBehaviors/PanelBehavior.behx" />
   <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="DarkPro/PasswordBox" />
+  <BehaviorReference Name="ProgressBarBehavior" SourcePath="../../FormsBehaviors/ProgressBarBehavior.behx" DefaultImplementationOverride="DarkPro/ProgressBar" />
   <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="DarkPro/RadioButton" />
   <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="DarkPro/ScrollBar" />
   <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="DarkPro/ScrollViewer" />

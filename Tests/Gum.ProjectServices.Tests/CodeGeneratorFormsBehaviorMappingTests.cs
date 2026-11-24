@@ -47,6 +47,7 @@ public class CodeGeneratorFormsBehaviorMappingTests : BaseTestClass
     [InlineData("DialogBoxBehavior", "global::Gum.Forms.Controls.Games.DialogBox")]
     [InlineData("UserControlBehavior", "global::Gum.Forms.Controls.UserControl")]
     [InlineData("TooltipBehavior", "global::Gum.Forms.Controls.Tooltip")]
+    [InlineData("ProgressBarBehavior", "global::Gum.Forms.Controls.ProgressBar")]
     public void GetGeneratedCodeForElement_Behavior_DerivesFromMatchingFormsClass(string behaviorName, string formsType)
     {
         string code = Generate(new[] { behaviorName });

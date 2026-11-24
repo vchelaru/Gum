@@ -74,6 +74,7 @@
   <ComponentReference Name="Hazard/MenuItem" />
   <ComponentReference Name="Hazard/Panel" />
   <ComponentReference Name="Hazard/PasswordBox" />
+  <ComponentReference Name="Hazard/ProgressBar" />
   <ComponentReference Name="Hazard/RadioButton" />
   <ComponentReference Name="Hazard/ScrollBar" />
   <ComponentReference Name="Hazard/ScrollBarThumb" />
@@ -114,6 +115,7 @@
   <BehaviorReference Name="OnScreenKeyboardBehavior" SourcePath="../../FormsBehaviors/OnScreenKeyboardBehavior.behx" />
   <BehaviorReference Name="PanelBehavior" SourcePath="../../FormsBehaviors/PanelBehavior.behx" />
   <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="Hazard/PasswordBox" />
+  <BehaviorReference Name="ProgressBarBehavior" SourcePath="../../FormsBehaviors/ProgressBarBehavior.behx" DefaultImplementationOverride="Hazard/ProgressBar" />
   <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="Hazard/RadioButton" />
   <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="Hazard/ScrollBar" />
   <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="Hazard/ScrollViewer" />

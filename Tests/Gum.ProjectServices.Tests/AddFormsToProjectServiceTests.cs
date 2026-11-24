@@ -36,6 +36,19 @@ public class AddFormsToProjectServiceTests : IDisposable
     }
 
     [Fact]
+    public void AddFormsTo_OnEmptyProject_ShouldAddProgressBarComponentAndBehavior()
+    {
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+        new ProjectCreator().Create(filePath);
+
+        AddFormsResult result = _sut.AddFormsTo(filePath);
+
+        result.Success.ShouldBeTrue();
+        result.AddedComponents.ShouldContain("Controls/ProgressBar");
+        result.AddedBehaviors.ShouldContain("ProgressBarBehavior");
+    }
+
+    [Fact]
     public void AddFormsTo_OnEmptyProject_ShouldAddNoScreens()
     {
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
