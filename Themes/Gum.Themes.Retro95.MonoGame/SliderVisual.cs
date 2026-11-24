@@ -73,7 +73,7 @@ public class SliderVisual : BaseSliderVisual
     private void WireStates()
     {
         // The thumb's button category never sees the slider's keyboard focus
-        // (focus lives on the Slider control, not the inner Button RangeBase
+        // (focus lives on the Slider control, not the inner Button ThumbRangeBase
         // wraps around our ThumbInstance) — so we drive the dotted focus rect
         // here, from the slider's own state callbacks.
         States.Enabled.Apply = () => Apply(Retro95Styling.ActiveStyle.Colors.WhiteFill, focus: false);

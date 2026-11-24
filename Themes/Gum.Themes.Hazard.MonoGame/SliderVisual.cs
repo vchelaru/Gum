@@ -33,7 +33,7 @@ public class SliderVisual : BaseSliderVisual
     private readonly SliderThumbVisual _thumb;
 
     public SliderVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
-        // Defer Forms-object construction so RangeBase doesn't wire itself to the V3
+        // Defer Forms-object construction so ThumbRangeBase doesn't wire itself to the V3
         // base's auto-created Button thumb before we swap in our circle thumb.
         : base(fullInstantiation, tryCreateFormsObject: false)
     {
@@ -61,7 +61,7 @@ public class SliderVisual : BaseSliderVisual
         TrackInstance.AddChild(_trackBorder);
 
         // Drop the V3-created Button thumb and replace with our circle thumb (named
-        // "ThumbInstance" so RangeBase can find it).
+        // "ThumbInstance" so ThumbRangeBase can find it).
         ThumbInstance!.Parent = null;
         _thumb = new SliderThumbVisual();
         _thumb.Name = "ThumbInstance";

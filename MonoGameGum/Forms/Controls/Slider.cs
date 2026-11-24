@@ -32,7 +32,7 @@ namespace Gum.Forms.Controls;
 /// <summary>
 /// A control enabling changing a value between the specified Minimum and Maximum
 /// </summary>
-public class Slider : RangeBase, IInputReceiver
+public class Slider : ThumbRangeBase, IInputReceiver
 {
     #region Fields/Properties
 

@@ -1,29 +1,19 @@
 ﻿using Gum.Wireframe;
 using System;
-using RenderingLibrary;
-using System.Diagnostics;
-using Gum.Converters;
-
-
-
-
 
 #if FRB
-using FlatRedBall.Gui;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls.Primitives;
 #endif
 
-
 #if !FRB
-using Gum.Forms.Controls;
 namespace Gum.Forms.Controls.Primitives;
-
 #endif
 
 /// <summary>
 /// Base class for controls which display or allow a user to change a value between a Minimum and Maximum.
-/// This is the base class for ScrollBar and Slider.
+/// It holds only the value; it needs no particular parts on its Visual. Controls with a draggable thumb
+/// (ScrollBar and Slider) derive from <see cref="ThumbRangeBase"/>.
 /// </summary>
 public abstract class RangeBase :
 #if FRB
@@ -33,116 +23,6 @@ public abstract class RangeBase :
 #endif
 {
     #region Fields/Properties
-
-    static TimeSpan InitialRepeatRate = TimeSpan.FromSeconds(.33);
-    static TimeSpan SubsequentRepeatRate = TimeSpan.FromSeconds(.12);
-
-    protected Button? thumb;
-
-    // version 1 of this would use the thumb's parent. But this is problematic if the thumb
-    // parent is re-assigned after the Slider is created. Instead we should look for an explicit
-    // track:
-    InteractiveGue? explicitTrack;
-    public InteractiveGue? Track => explicitTrack ?? 
-        // tolerate this so users can create and assign Visual later
-        thumb?.Visual.EffectiveParentGue as InteractiveGue;
-
-    /// <summary>
-    /// Represents the X or Y offset of the cursor relative to the thumb when the thumb was grabbed.
-    /// If the element is horizontal, this is an X value. If the element is vertical, this is a Y value.
-    /// </summary>
-    protected float cursorGrabOffsetRelativeToThumb = 0;
-
-    /// <summary>
-    /// The amount to change Value when the user clicks on the track. 
-    /// Only applies if IsMoveToPointEnabled is false.
-    /// </summary>
-    public double LargeChange
-    {
-        get => _largeChange;
-        set
-        {
-            double previous = _largeChange;
-            _largeChange = value;
-            IsLargeChangeSet = true;
-            if (previous != value)
-            {
-                ReportFormsPropertyChanged();
-            }
-        }
-    }
-
-    double _largeChange;
-
-    /// <summary>
-    /// Whether <see cref="LargeChange"/> was assigned (in code, or authored on the Visual in the
-    /// Gum tool). A subclass that derives LargeChange from its layout skips that computation
-    /// while this is true.
-    /// </summary>
-    protected bool IsLargeChangeSet { get; private set; }
-
-    /// <summary>
-    /// Assigns a layout-derived <see cref="LargeChange"/> without marking it as set, so a later
-    /// computation can replace it. Does nothing once <see cref="LargeChange"/> has been assigned.
-    /// </summary>
-    protected internal void SetComputedLargeChange(double value)
-    {
-        if (!IsLargeChangeSet && _largeChange != value)
-        {
-            _largeChange = value;
-            ReportFormsPropertyChanged(nameof(LargeChange));
-            ComputedChangeReported?.Invoke(this, nameof(LargeChange));
-        }
-    }
-
-    /// <summary>
-    /// Raised after a layout-derived SmallChange or LargeChange changed, for the owner (a ScrollViewer) that
-    /// exposes the value of this bar as its own and reports it to the references that read it.
-    /// </summary>
-    internal Action<RangeBase, string>? ComputedChangeReported;
-
-    /// <summary>
-    /// The amount to change Value when the user presses the up or down buttons on a scrollbar, 
-    /// per mouse wheel tick on a scrollbar, or the amount to change the value in response
-    /// to left/right presses on gamepad or keyboard on a Slider.
-    /// </summary>
-    public double SmallChange
-    {
-        get => _smallChange;
-        set
-        {
-            double previous = _smallChange;
-            _smallChange = value;
-            IsSmallChangeSet = true;
-            if (previous != value)
-            {
-                ReportFormsPropertyChanged();
-            }
-        }
-    }
-
-    double _smallChange;
-
-    /// <summary>
-    /// Whether <see cref="SmallChange"/> was assigned (in code, or authored on the Visual in the
-    /// Gum tool). A subclass that derives SmallChange from its layout skips that computation
-    /// while this is true.
-    /// </summary>
-    protected bool IsSmallChangeSet { get; private set; }
-
-    /// <summary>
-    /// Assigns a layout-derived <see cref="SmallChange"/> without marking it as set, so a later
-    /// computation can replace it. Does nothing once <see cref="SmallChange"/> has been assigned.
-    /// </summary>
-    protected internal void SetComputedSmallChange(double value)
-    {
-        if (!IsSmallChangeSet && _smallChange != value)
-        {
-            _smallChange = value;
-            ReportFormsPropertyChanged(nameof(SmallChange));
-            ComputedChangeReported?.Invoke(this, nameof(SmallChange));
-        }
-    }
 
     double minimum = 0;
     /// <summary>
@@ -186,9 +66,6 @@ public abstract class RangeBase :
     }
 
     double value;
-    private double TrackPushedTime;
-    private float TrackPushedSignRelativeToValue;
-    private double LastRepeatRate;
 
     /// <summary>
     /// The current value of the RangeBase. This value is clamped to be between Minimum and Maximum.
@@ -222,48 +99,12 @@ public abstract class RangeBase :
 
                 ValueChanged?.Invoke(this, EventArgs.Empty);
 
-                var shouldRaiseChangeCompleted = true;
-
-                if(thumb != null && MainCursor?.WindowPushed == thumb.Visual)
-                {
-                    shouldRaiseChangeCompleted = false;
-                }
-
-                if(MainCursor?.WindowPushed == Track && IsMoveToPointEnabled)
-                {
-                    shouldRaiseChangeCompleted = false;
-                }
-
-                if (shouldRaiseChangeCompleted)
-                {
-                    // Make sure the user isn't currently grabbing the thumb
-                    ValueChangeCompleted?.Invoke(this, EventArgs.Empty);
-                }
+                OnValueChangeRaised();
 
                 PushValueToViewModel();
             }
         }
     }
-
-    public override bool IsEnabled 
-    { 
-        get => base.IsEnabled;
-        set
-        {
-            base.IsEnabled = value;
-            if (thumb != null)
-            {
-                thumb.IsEnabled = value;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Controls whether clicking on the track sets the value to the clicked position.
-    /// If true, the value moves to the clicked position. If false, the value increases or decreases
-    /// according to the LargeChange value.
-    /// </summary>
-    public bool IsMoveToPointEnabled { get; set; }
 
     Orientation _orientation = Orientation.Horizontal;
 
@@ -294,26 +135,6 @@ public abstract class RangeBase :
     public event EventHandler? ValueChanged;
 
     /// <summary>
-    /// Event raised whenever a Value change has completed. This event is raised for discrete
-    /// changes such as pressing left/right on a keyboard, or pushes on the track when
-    /// IsMoveToPointEnabled is set to false.
-    /// </summary>
-    /// <remarks>
-    /// This event can be used to prevent responding to changes every frame as a user
-    /// is dragging a thumb or clicking on a track with IsMoveToPointEnabled set to true.
-    /// Examples of when to use ValueChangeCompleted would be to play an audio cue when changing
-    /// volume, or committing changes which are too expensive to perform every frame such as saving
-    /// settings to disk.
-    /// </remarks>
-    public event EventHandler? ValueChangeCompleted;
-
-    /// <summary>
-    /// Event raised whenever a Value change is initiated by the UI. This event is not raised
-    /// when Value changes are performed in code, such as by assigning the Value property.
-    /// </summary>
-    public event EventHandler? ValueChangedByUi;
-
-    /// <summary>
     /// Event raised when the Orientation property is changed.
     /// </summary>
     public event EventHandler? OrientationChanged;
@@ -330,366 +151,30 @@ public abstract class RangeBase :
     {
         base.ReactToVisualChanged();
 
-        var thumbInstanceUncasted =
-            this.Visual.GetGraphicalUiElementByName("ThumbInstance");
-        var thumbVisual = thumbInstanceUncasted as InteractiveGue;
-
-#if FULL_DIAGNOSTICS
-        if (thumbInstanceUncasted != null && thumbVisual == null)
-        {
-            throw new InvalidOperationException(
-                $"The {this.GetType()} contains a visual {thumbInstanceUncasted} which is not an InteractiveGue. " +
-                "The type of the thumb should be an InteractiveGue");
-        }
-#endif
-
-        RefreshInternalVisualReferences();
-
-        if (thumbVisual != null)
-        {
-            if (thumbVisual.FormsControlAsObject == null)
-            {
-                thumb = new Button(thumbVisual);
-            }
-            else
-            {
-                thumb = thumbVisual.FormsControlAsObject as Button;
-            }
-            if (thumb != null)
-            {
-                thumb.IsDragHandle = true;
-                // An internal part of this control, never a tab stop of its own (#7422).
-                thumb.GamepadTabbingFocusBehavior = TabbingFocusBehavior.SkipOnTab;
-                thumb.Push += HandleThumbPush;
-
-                // A visual assigned (or reassigned) while this control is disabled
-                // must start out disabled too. Only disable here: an enabled control
-                // must not re-enable a thumb the Visual authored as disabled.
-                if (!IsEnabled)
-                {
-                    thumb.IsEnabled = false;
-                }
-            }
-        }
-#if FRB
-        if(thumb != null)
-        {
-            thumb.Visual.DragOver += HandleThumbDragFrb;
-        }
-        Visual.RollOver += HandleThisRollOverFrb;
-        if (Track != null)
-        {
-            Track.Push += HandleTrackPushFrb;
-            Track.RollOver += HandleTrackHoverFrb;
-            Track.DragOver += HandleTrackDraggingFrb;
-        }
-#else
-        if (thumb != null)
-        {
-            thumb.Visual.Dragging += HandleDragOver;
-        }
-        Visual.RollOver += HandleThisRollOver;
-        if(Track != null)
-        {
-            Track.Push += HandleTrackPush;
-            Track.HoverOver += HandleTrackHover;
-            Track.Dragging += HandleTrackDragging;
-        }
-#endif
-
-
-
-        // The attachments may not yet be set up, so set the explicitTrack's RaiseChildrenEventsOutsideOfBounds
-        //var thumbParent = thumb.Visual.Parent as GraphicalUiElement;
-        //if(thumbParent != null)
-        //{
-        //    thumbParent.RaiseChildrenEventsOutsideOfBounds = true;
-        //}
+        ReactToVisualChangedBeforeRangeDefaults();
 
         Minimum = 0;
         Maximum = 100;
-        SetComputedSmallChange(10);
         Value = 0;
-
-    }
-
-    // WARNING: This intentionally uses `virtual` (hiding FrameworkElement.RefreshInternalVisualReferences)
-    // rather than `override`. Changing to `override` causes AssignExplicitTrack to run for ScrollBar
-    // (it currently never does — ScrollBar.Track uses a fallback path instead). That behavioral change
-    // cascades into the ScrollBar visuals (TrackInstance.HasEvents must be true) and could break
-    // user-authored Gum visuals. Fixing this properly requires auditing the Track semantics across
-    // ScrollBar vs Slider and all visual versions. See also: ScrollBar.RefreshInternalVisualReferences.
-    protected new virtual void RefreshInternalVisualReferences()
-    {
-        // assign explicit track before adding events
-        AssignExplicitTrack();
-    }
-
-    private void AssignExplicitTrack()
-    {
-        var trackLocal = this.Visual.GetGraphicalUiElementByName("TrackInstance");
-
-#if FULL_DIAGNOSTICS
-        if (trackLocal == null)
-        {
-            throw new InvalidOperationException(
-                $"Could not find a child named TrackInstance when creating a {this.GetType()}");
-        }
-        else if (trackLocal is not InteractiveGue)
-        {
-            throw new InvalidOperationException(
-                $"Found a TrackInstance in {this.GetType()}, but it is not an InteractiveGue");
-        }
-#endif
-
-        explicitTrack = trackLocal as InteractiveGue;
-        if (trackLocal is InteractiveGue trackAsInteractive)
-        {
-            trackAsInteractive.RaiseChildrenEventsOutsideOfBounds = true;
-        }
-    }
-
-#if FRB
-    // these wrappers exist at class level rather than lambdas so they can be unsubscribed
-    void HandleThumbDragFrb(IWindow _) => HandleDragOver(this, EventArgs.Empty);
-    void HandleThisRollOverFrb(IWindow _) => HandleThisRollOver(this, EventArgs.Empty);
-    void HandleTrackPushFrb(IWindow _) => HandleTrackPush(this, EventArgs.Empty);
-    void HandleTrackHoverFrb(IWindow _) => HandleTrackHover(this, EventArgs.Empty);
-    void HandleTrackDraggingFrb(IWindow _) => HandleTrackDragging(this, EventArgs.Empty);
-#endif
-
-    /// <inheritdoc/>
-    protected override void ReactToVisualRemoved()
-    {
-        base.ReactToVisualRemoved();
-
-        if (thumb != null)
-        {
-            thumb.Push -= HandleThumbPush;
-#if FRB
-            thumb.Visual.DragOver -= HandleThumbDragFrb;
-#else
-            thumb.Visual.Dragging -= HandleDragOver;
-#endif
-        }
-#if FRB
-        Visual.RollOver -= HandleThisRollOverFrb;
-#else
-        Visual.RollOver -= HandleThisRollOver;
-#endif
-        if (Track != null)
-        {
-#if FRB
-            Track.Push -= HandleTrackPushFrb;
-            Track.RollOver -= HandleTrackHoverFrb;
-            Track.DragOver -= HandleTrackDraggingFrb;
-#else
-            Track.Push -= HandleTrackPush;
-            Track.HoverOver -= HandleTrackHover;
-            Track.Dragging -= HandleTrackDragging;
-#endif
-        }
-    }
-
-
-    #endregion
-
-    #region Track Events
-
-    private void HandleTrackPush(object? sender, EventArgs e)
-    {
-        TrackPushedTime = MainCursor.LastPrimaryPushTime;
-
-        TrackPushedSignRelativeToValue = GetCurrentSignRelativeToValue();
     }
 
     /// <summary>
-    /// Handles the user pushing and holding the mouse button
-    /// on the track. If IsMoveToPointEnabled is true, this 
-    /// moves the position immediately. Otherwise, it only does
-    /// so using the track's repeat rate values.
+    /// Runs in <see cref="ReactToVisualChanged"/> before Minimum, Maximum and Value get their defaults,
+    /// so a subclass can find the parts of the new Visual that those assignments update.
     /// </summary>
-    /// <remarks>
-    /// If IsMoveToPointEnabled is set to true, then 
-    /// Value is also updated immediately in HandleTrackDragging;
-    /// </remarks>
-    /// <param name="sender">The sender of the event.</param>
-    /// <param name="e">Args for the event.</param>
-    private void HandleTrackHover(object? sender, EventArgs e)
-    {
-        var cursor = MainCursor;
-        if (cursor.WindowPushed == Track && cursor.VisualOver != thumb?.Visual)
-        {
-            // Should we be respecting MoveToPoint?
+    private protected virtual void ReactToVisualChangedBeforeRangeDefaults() { }
 
-            if(IsMoveToPointEnabled)
-            {
-                // do this immediately!
-                // Update June 21, 2025:
-                // This is handled in HandleTrackDragging
-                //ApplyTrackDownRepeatRate();
-            }
-            else
-            {
-                var shouldRepeat = InteractiveGue.CurrentGameTime - TrackPushedTime > InitialRepeatRate.TotalSeconds &&
-                    InteractiveGue.CurrentGameTime - LastRepeatRate > SubsequentRepeatRate.TotalSeconds;
-
-                if (shouldRepeat)
-                {
-                    ApplyTrackDownRepeatRate();
-                    // act as if the thumb was pushed:
-                    LastRepeatRate = InteractiveGue.CurrentGameTime;
-                }
-            }
-        }
-    }
-
-    private void HandleTrackDragging(object? sender, EventArgs e)
-    {
-        if (IsMoveToPointEnabled)
-        {
-            // do this immediately!
-            // Update June 21, 2025:
-            // This is handled in HandleTrackDragging
-            ApplyTrackDownRepeatRate();
-        }
-    }
-
-    private void ApplyTrackDownRepeatRate()
-    {
-        var valueBefore = Value;
-        double newValue;
-        int currentSignRelativeToThumb = GetCurrentSignRelativeToValue();
-
-
-        // Only reached while the track is pushed, so Track is set.
-        if (IsMoveToPointEnabled && Track is { } track)
-        {
-            var left = track.GetAbsoluteX();
-            var right = track.GetAbsoluteX() + track.AbsoluteWidth;
-
-            var screenX = MainCursor.XRespectingGumZoomAndBounds();
-
-            var ratio = (screenX - left) / (right - left);
-
-            ratio = System.Math.Max(0, ratio);
-            ratio = System.Math.Min(1, ratio);
-
-            var value = Minimum + (Maximum - Minimum) * ratio;
-
-            ApplyValueConsideringSnapping(value);            
-        }
-        else
-        {
-            // This prevents the Thumb from hopping back and forth around the cursor's position
-            if(currentSignRelativeToThumb == TrackPushedSignRelativeToValue)
-            {
-                if (currentSignRelativeToThumb == -1)
-                {
-                    newValue = Value - LargeChange;
-                    ApplyValueConsideringSnapping(newValue);
-                }
-                else if (currentSignRelativeToThumb == 1)
-                {
-                    newValue = Value + LargeChange;
-
-                    ApplyValueConsideringSnapping(newValue);
-                }
-            }
-        }
-
-        if (valueBefore != Value)
-        {
-            RaiseValueChangedByUi();
-        }
-    }
-
-    protected int GetCurrentSignRelativeToValue()
-    {
-
-        //var currentSignRelativeToThumb = cursorX < thumb.AbsoluteLeft
-        //    ? -1
-        //    : cursorX > thumb.AbsoluteLeft + thumb.ActualWidth ? 1 : 0;
-        //return currentSignRelativeToThumb;
-
-        var track = Track;
-        if (track == null)
-        {
-            return 0;
-        }
-
-        var currentPercentageOver = (Value - Minimum) / (Maximum - Minimum);
-        float clickedPercentageOver;
-
-        if(Orientation == Orientation.Horizontal)
-        {
-            var trackWidth = track.AbsoluteWidth;
-            var cursorX = MainCursor.XRespectingGumZoomAndBounds();
-            clickedPercentageOver = (cursorX - track.AbsoluteLeft) / trackWidth;
-        }
-        else
-        {
-            var trackHeight = track.AbsoluteHeight;
-            var cursorY = MainCursor.YRespectingGumZoomAndBounds();
-            clickedPercentageOver = (cursorY - track.AbsoluteTop) / trackHeight;
-        }
-
-        if(clickedPercentageOver < currentPercentageOver)
-        {
-            return -1;
-        }
-        else if (clickedPercentageOver > currentPercentageOver)
-        {
-            return 1;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-
-    #endregion
-
-    #region Thumb Events
-
-    protected abstract void HandleThumbPush(object? sender, EventArgs e);
-
-    private void HandleDragOver(object? sender, EventArgs args)
-    {
-        var cursor = MainCursor;
-
-        if (thumb != null && cursor.WindowPushed == thumb.Visual && IsEnabled)
-        {
-            UpdateThumbPositionToCursorDrag(cursor);
-        }
-    }
-
-    // This is handling ThisRollOver, but it only does anything if the user pushed on the thumb,
-    // so moving it to the ThumbEvents region
-    private void HandleThisRollOver(object? sender, EventArgs args)
-    {
-        var cursor = MainCursor;
-        if (thumb != null && cursor.WindowPushed == thumb.Visual && IsEnabled)
-        {
-            UpdateThumbPositionToCursorDrag(cursor);
-        }
-    }
     #endregion
 
     #region Value Methods
-    protected virtual double ApplyValueConsideringSnapping(double newValue)
-    {
-        Value = newValue;
-        return newValue;
-    }
+
+    /// <summary>
+    /// Runs in the Value setter after <see cref="ValueChanged"/> is raised and before the value is
+    /// pushed to the view model.
+    /// </summary>
+    private protected virtual void OnValueChangeRaised() { }
 
     protected virtual void OnValueChanged(double oldValue, double newValue) { }
-
-    protected void RaiseValueChangeCompleted() => ValueChangeCompleted?.Invoke(this, EventArgs.Empty);
-
-    protected void RaiseValueChangedByUi() => ValueChangedByUi?.Invoke(this, EventArgs.Empty);
-
-    #endregion
 
     protected virtual void OnMaximumChanged(double oldMaximum, double newMaximum)
     {
@@ -698,6 +183,7 @@ public abstract class RangeBase :
             Value = Maximum;
         }
     }
+
     protected virtual void OnMinimumChanged(double oldMinimum, double newMinimum)
     {
         if (Value < Minimum && Minimum <= Maximum)
@@ -706,9 +192,5 @@ public abstract class RangeBase :
         }
     }
 
-#if FRB
-    protected abstract void UpdateThumbPositionToCursorDrag(Cursor cursor);
-#else
-    protected abstract void UpdateThumbPositionToCursorDrag(ICursor cursor);
-#endif
+    #endregion
 }

@@ -17,7 +17,7 @@ namespace Gum.Themes.Meadow;
 
 /// <summary>
 /// Meadow scroll-bar thumb. A coral pill (matches <c>.pp-sb-thm</c>) that deepens
-/// to coral-dark on hover / press. Wrapped by RangeBase in a <see cref="Button"/>;
+/// to coral-dark on hover / press. Wrapped by ThumbRangeBase in a <see cref="Button"/>;
 /// the Meadow Button template never applies because V3 ScrollBar instantiates the
 /// thumb directly — this visual stands in.
 /// </summary>

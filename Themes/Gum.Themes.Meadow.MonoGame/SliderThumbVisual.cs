@@ -19,7 +19,7 @@ namespace Gum.Themes.Meadow;
 /// Meadow slider thumb. A borderless 22 px white circle with a soft warm-brown
 /// drop shadow (matches <c>.pp-sldr-thumb</c>), gaining a sky-blue focus ring
 /// when focused. Implemented as an <see cref="InteractiveGue"/> with a
-/// <c>ButtonCategoryState</c> so RangeBase wraps it in a <see cref="Button"/>
+/// <c>ButtonCategoryState</c> so ThumbRangeBase wraps it in a <see cref="Button"/>
 /// like the V3 default thumb.
 /// </summary>
 public class SliderThumbVisual : InteractiveGue

@@ -183,7 +183,7 @@ public class ScrollViewer :
         }
     }
 
-    /// <inheritdoc cref="Gum.Forms.Controls.Primitives.RangeBase.SmallChange"/>
+    /// <inheritdoc cref="Gum.Forms.Controls.Primitives.ThumbRangeBase.SmallChange"/>
     /// <remarks>
     /// This property sets the SmallChange value for both vertical and horizontal scroll bars.
     /// </remarks>
@@ -211,9 +211,9 @@ public class ScrollViewer :
     }
 
     // The scroll bars compute these from their layout; the ScrollViewer reports them as its own.
-    private Action<Primitives.RangeBase, string>? _computedChangeHandler;
+    private Action<Primitives.ThumbRangeBase, string>? _computedChangeHandler;
 
-    private void HandleScrollBarComputedChange(Primitives.RangeBase bar, string propertyName)
+    private void HandleScrollBarComputedChange(Primitives.ThumbRangeBase bar, string propertyName)
     {
         // SmallChange and LargeChange read the vertical bar, or the horizontal one when there is none.
         if (ReferenceEquals(bar, verticalScrollBar ?? horizontalScrollBar))

@@ -18,7 +18,7 @@ namespace Gum.Themes.Bubblegum;
 /// <summary>
 /// Bubblegum scroll-bar thumb. A rounded-rect body in <c>--acc</c> pink (matches
 /// <c>.bb-sb-thm</c>) that brightens on hover and darkens on press. Wrapped by
-/// RangeBase in a <see cref="Button"/>; the Bubblegum Button template never gets
+/// ThumbRangeBase in a <see cref="Button"/>; the Bubblegum Button template never gets
 /// to apply because V3 ScrollBar instantiates the thumb directly — this visual
 /// stands in.
 /// </summary>

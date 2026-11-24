@@ -14,7 +14,7 @@ namespace Gum.Themes.Template;
 
 /// <summary>
 /// Template slider thumb. An <see cref="InteractiveGue"/> with a circular body and a
-/// focus ring, sized so RangeBase can wrap it in a <see cref="Button"/> and drive its
+/// focus ring, sized so ThumbRangeBase can wrap it in a <see cref="Button"/> and drive its
 /// states via the "ButtonCategory" state set.
 ///
 /// A slider/scrollbar thumb is built directly on <see cref="InteractiveGue"/> rather
