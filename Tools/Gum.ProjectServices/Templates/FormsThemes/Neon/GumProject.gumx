@@ -73,6 +73,7 @@
   <ComponentReference Name="Neon/MenuItem" />
   <ComponentReference Name="Neon/Panel" />
   <ComponentReference Name="Neon/PasswordBox" />
+  <ComponentReference Name="Neon/ProgressBar" />
   <ComponentReference Name="Neon/RadioButton" />
   <ComponentReference Name="Neon/ScrollBar" />
   <ComponentReference Name="Neon/ScrollBarThumb" />
@@ -113,6 +114,7 @@
   <BehaviorReference Name="OnScreenKeyboardBehavior" SourcePath="../../FormsBehaviors/OnScreenKeyboardBehavior.behx" />
   <BehaviorReference Name="PanelBehavior" SourcePath="../../FormsBehaviors/PanelBehavior.behx" />
   <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="Neon/PasswordBox" />
+  <BehaviorReference Name="ProgressBarBehavior" SourcePath="../../FormsBehaviors/ProgressBarBehavior.behx" DefaultImplementationOverride="Neon/ProgressBar" />
   <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="Neon/RadioButton" />
   <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="Neon/ScrollBar" />
   <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="Neon/ScrollViewer" />

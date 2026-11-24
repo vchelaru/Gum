@@ -2553,6 +2553,7 @@ public class CodeGenerator
         { StandardFormsBehaviorNames.MenuItemSubmenuPopupBehaviorName, "global::Gum.Forms.Controls.ScrollViewer" },
         { StandardFormsBehaviorNames.PanelBehaviorName, "global::Gum.Forms.Controls.Panel" },
         { StandardFormsBehaviorNames.PasswordBoxBehaviorName, "global::Gum.Forms.Controls.PasswordBox" },
+        { StandardFormsBehaviorNames.ProgressBarBehaviorName, "global::Gum.Forms.Controls.ProgressBar" },
         { StandardFormsBehaviorNames.RadioButtonBehaviorName, "global::Gum.Forms.Controls.RadioButton" },
         { StandardFormsBehaviorNames.ScrollBarBehaviorName, "global::Gum.Forms.Controls.ScrollBar" },
         { StandardFormsBehaviorNames.ScrollViewerBehaviorName, "global::Gum.Forms.Controls.ScrollViewer" },

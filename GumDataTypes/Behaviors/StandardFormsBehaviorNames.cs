@@ -23,6 +23,7 @@ public static class StandardFormsBehaviorNames
     public const string MenuItemSubmenuPopupBehaviorName = "MenuItemSubmenuPopupBehavior";
     public const string PanelBehaviorName = "PanelBehavior";
     public const string PasswordBoxBehaviorName = "PasswordBoxBehavior";
+    public const string ProgressBarBehaviorName = "ProgressBarBehavior";
     public const string RadioButtonBehaviorName = "RadioButtonBehavior";
     public const string ScrollBarBehaviorName = "ScrollBarBehavior";
     public const string ScrollViewerBehaviorName = "ScrollViewerBehavior";
@@ -55,6 +56,7 @@ public static class StandardFormsBehaviorNames
         MenuItemSubmenuPopupBehaviorName,
         PanelBehaviorName,
         PasswordBoxBehaviorName,
+        ProgressBarBehaviorName,
         RadioButtonBehaviorName,
         ScrollBarBehaviorName,
         ScrollViewerBehaviorName,

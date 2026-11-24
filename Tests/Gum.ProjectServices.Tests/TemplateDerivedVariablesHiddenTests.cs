@@ -158,6 +158,7 @@ public class TemplateDerivedVariablesHiddenTests
         ["Menu"] = AllStructureVariables,
         ["MenuItem"] = AllStructureVariables,
         ["PasswordBox"] = AllStructureVariables,
+        ["ProgressBar"] = AllStructureVariables,
         ["RadioButton"] = AllStructureVariables,
         ["ScrollBar"] = AllStructureVariables,
         ["ScrollBarButton"] = AllStructureVariables,

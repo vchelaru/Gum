@@ -76,6 +76,7 @@
   <ComponentReference Name="Retro95/MenuItemSubmenuPopup" />
   <ComponentReference Name="Retro95/Panel" />
   <ComponentReference Name="Retro95/PasswordBox" />
+  <ComponentReference Name="Retro95/ProgressBar" />
   <ComponentReference Name="Retro95/RadioButton" />
   <ComponentReference Name="Retro95/ScrollBar" />
   <ComponentReference Name="Retro95/ScrollBarButton" />
@@ -118,6 +119,7 @@
   <BehaviorReference Name="OnScreenKeyboardBehavior" SourcePath="../../FormsBehaviors/OnScreenKeyboardBehavior.behx" />
   <BehaviorReference Name="PanelBehavior" SourcePath="../../FormsBehaviors/PanelBehavior.behx" />
   <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="Retro95/PasswordBox" />
+  <BehaviorReference Name="ProgressBarBehavior" SourcePath="../../FormsBehaviors/ProgressBarBehavior.behx" DefaultImplementationOverride="Retro95/ProgressBar" />
   <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="Retro95/RadioButton" />
   <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="Retro95/ScrollBar" />
   <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="Retro95/ScrollViewer" />

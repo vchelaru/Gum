@@ -18,6 +18,7 @@ Behaviors/PanelBehavior.behx
 Behaviors/PasswordBoxBehavior.behx
 Behaviors/PlayerJoinViewBehavior.behx
 Behaviors/PlayerJoinViewItemBehavior.behx
+Behaviors/ProgressBarBehavior.behx
 Behaviors/RadioButtonBehavior.behx
 Behaviors/ScrollBarBehavior.behx
 Behaviors/ScrollViewerBehavior.behx
@@ -57,6 +58,7 @@ Components/Controls/Menu.gucx
 Components/Controls/MenuItem.gucx
 Components/Controls/Panel.gucx
 Components/Controls/PasswordBox.gucx
+Components/Controls/ProgressBar.gucx
 Components/Controls/RadioButton.gucx
 Components/Controls/ScrollBar.gucx
 Components/Controls/ScrollBarButton.gucx

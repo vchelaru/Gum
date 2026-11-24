@@ -73,6 +73,7 @@
   <ComponentReference Name="ForestGlade/MenuItem" />
   <ComponentReference Name="ForestGlade/Panel" />
   <ComponentReference Name="ForestGlade/PasswordBox" />
+  <ComponentReference Name="ForestGlade/ProgressBar" />
   <ComponentReference Name="ForestGlade/RadioButton" />
   <ComponentReference Name="ForestGlade/ScrollBar" />
   <ComponentReference Name="ForestGlade/ScrollBarThumb" />
@@ -114,6 +115,7 @@
   <BehaviorReference Name="OnScreenKeyboardBehavior" SourcePath="../../FormsBehaviors/OnScreenKeyboardBehavior.behx" />
   <BehaviorReference Name="PanelBehavior" SourcePath="../../FormsBehaviors/PanelBehavior.behx" />
   <BehaviorReference Name="PasswordBoxBehavior" SourcePath="../../FormsBehaviors/PasswordBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/PasswordBox" />
+  <BehaviorReference Name="ProgressBarBehavior" SourcePath="../../FormsBehaviors/ProgressBarBehavior.behx" DefaultImplementationOverride="ForestGlade/ProgressBar" />
   <BehaviorReference Name="RadioButtonBehavior" SourcePath="../../FormsBehaviors/RadioButtonBehavior.behx" DefaultImplementationOverride="ForestGlade/RadioButton" />
   <BehaviorReference Name="ScrollBarBehavior" SourcePath="../../FormsBehaviors/ScrollBarBehavior.behx" DefaultImplementationOverride="ForestGlade/ScrollBar" />
   <BehaviorReference Name="ScrollViewerBehavior" SourcePath="../../FormsBehaviors/ScrollViewerBehavior.behx" DefaultImplementationOverride="ForestGlade/ScrollViewer" />

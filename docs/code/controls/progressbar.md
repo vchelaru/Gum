@@ -42,3 +42,11 @@ progressBar.Value = 75;
 ## Custom Visuals
 
 A custom visual needs a child named `IndicatorInstance`. The ProgressBar sets its `Width` as a percentage of its parent, so place it inside the element that acts as the track, usually named `TrackInstance`.
+
+## ProgressBar in the Gum Tool
+
+The Add Forms dialog adds a ProgressBar component in every theme. The component has `ProgressBarBehavior`, so it loads as a ProgressBar in a game, and code generation makes it a `ProgressBar`. Its `TrackInstance` clips its children and holds a background, and its `IndicatorInstance` is docked left with its `Width` in `PercentageOfParent`. Set `Minimum`, `Maximum`, and `Value` on an instance in the Behavior category of the Variables tab.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}

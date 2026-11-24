@@ -44,6 +44,7 @@ The `DefaultFromFileXxxRuntime` classes exist solely to bridge the file-loading 
 | `TextBoxBehaviorName` | `DefaultFromFileTextBoxRuntime` |
 | `LabelBehaviorName` | `DefaultFromFileLabelRuntime` / `DefaultFromFileLabelTextRuntime` |
 | `ItemsControlBehaviorName` | `DefaultFromFileItemsControlRuntime` |
+| `ProgressBarBehaviorName` | `DefaultFromFileProgressBarRuntime` |
 | `RadioButtonBehaviorName` | `DefaultFromFileRadioButtonRuntime` |
 | `SliderBehaviorName` | `DefaultFromFileSliderRuntime` |
 | `ScrollBarBehaviorName` | `DefaultFromFileScrollBarRuntime` |
