@@ -7,17 +7,50 @@
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">16</Value>
     </Variable>
+    <Variable Type="int" Name="IndicatorInstance.Blue2" SetsValue="true">
+      <Value xsi:type="xsd:int">117</Value>
+    </Variable>
     <Variable Type="float" Name="IndicatorInstance.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">3</Value>
+      <Value xsi:type="xsd:float">8</Value>
     </Variable>
     <Variable Type="int" Name="IndicatorInstance.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">65</Value>
+      <Value xsi:type="xsd:int">59</Value>
     </Variable>
     <Variable Type="int" Name="IndicatorInstance.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">246</Value>
+      <Value xsi:type="xsd:int">178</Value>
     </Variable>
     <Variable Type="int" Name="IndicatorInstance.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">71</Value>
+      <Value xsi:type="xsd:int">8</Value>
+    </Variable>
+    <Variable Type="GradientType" Name="IndicatorInstance.GradientType" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="IndicatorInstance.GradientX1" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="GeneralUnitType" Name="IndicatorInstance.GradientX1Units" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="IndicatorInstance.GradientX2" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="GeneralUnitType" Name="IndicatorInstance.GradientX2Units" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="IndicatorInstance.GradientY1" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="GeneralUnitType" Name="IndicatorInstance.GradientY1Units" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="IndicatorInstance.GradientY2" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="GeneralUnitType" Name="IndicatorInstance.GradientY2Units" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="IndicatorInstance.Green2" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="IndicatorInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -31,8 +64,14 @@
     <Variable Type="string" Name="IndicatorInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TrackInstance</Value>
     </Variable>
+    <Variable Type="int" Name="IndicatorInstance.Red2" SetsValue="true">
+      <Value xsi:type="xsd:int">232</Value>
+    </Variable>
     <Variable Type="float" Name="IndicatorInstance.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="IndicatorInstance.UseGradient" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="float" Name="IndicatorInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -60,7 +99,7 @@
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="float" Name="TrackBackground.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">3</Value>
+      <Value xsi:type="xsd:float">8</Value>
     </Variable>
     <Variable Type="int" Name="TrackBackground.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">25</Value>
@@ -153,7 +192,10 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillColor = Components/ForestGlade/Styles.LeafBright.FillColor</string>
+        <string>FillColor = Components/ForestGlade/Styles.CanopyLit.FillColor</string>
+        <string>Red2 = Components/ForestGlade/Styles.SunPale.FillRed</string>
+        <string>Green2 = Components/ForestGlade/Styles.SunPale.FillGreen</string>
+        <string>Blue2 = Components/ForestGlade/Styles.SunPale.FillBlue</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">

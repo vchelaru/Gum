@@ -8,7 +8,7 @@
       <Value xsi:type="xsd:float">16</Value>
     </Variable>
     <Variable Type="float" Name="IndicatorInstance.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">4</Value>
+      <Value xsi:type="xsd:float">8</Value>
     </Variable>
     <Variable Type="int" Name="IndicatorInstance.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">157</Value>
@@ -60,7 +60,7 @@
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="float" Name="TrackBackground.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">4</Value>
+      <Value xsi:type="xsd:float">8</Value>
     </Variable>
     <Variable Type="int" Name="TrackBackground.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">237</Value>

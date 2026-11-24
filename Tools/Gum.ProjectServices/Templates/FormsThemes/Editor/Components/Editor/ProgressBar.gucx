@@ -72,13 +72,13 @@
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="int" Name="TrackBackground.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">80</Value>
+      <Value xsi:type="xsd:int">74</Value>
     </Variable>
     <Variable Type="bool" Name="TrackBackground.ExposeChildrenEvents" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="int" Name="TrackBackground.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">70</Value>
+      <Value xsi:type="xsd:int">74</Value>
     </Variable>
     <Variable Type="float" Name="TrackBackground.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -90,7 +90,7 @@
       <Value xsi:type="xsd:string">TrackInstance</Value>
     </Variable>
     <Variable Type="int" Name="TrackBackground.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">70</Value>
+      <Value xsi:type="xsd:int">74</Value>
     </Variable>
     <Variable IsFile="true" Type="string" Name="TrackBackground.SourceFile" SetsValue="true">
       <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
@@ -187,7 +187,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Color = Components/Editor/Styles.DarkGray.FillColor</string>
+        <string>Color = Components/Editor/Styles.InputBackground.FillColor</string>
       </Value>
     </VariableList>
   </State>

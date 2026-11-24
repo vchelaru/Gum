@@ -8,16 +8,16 @@
       <Value xsi:type="xsd:float">16</Value>
     </Variable>
     <Variable Type="float" Name="IndicatorInstance.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">7</Value>
+      <Value xsi:type="xsd:float">8</Value>
     </Variable>
     <Variable Type="int" Name="IndicatorInstance.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">230</Value>
+      <Value xsi:type="xsd:int">120</Value>
     </Variable>
     <Variable Type="int" Name="IndicatorInstance.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">173</Value>
+      <Value xsi:type="xsd:int">154</Value>
     </Variable>
     <Variable Type="int" Name="IndicatorInstance.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">70</Value>
+      <Value xsi:type="xsd:int">237</Value>
     </Variable>
     <Variable Type="float" Name="IndicatorInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -60,16 +60,16 @@
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="float" Name="TrackBackground.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">7</Value>
+      <Value xsi:type="xsd:float">8</Value>
     </Variable>
     <Variable Type="int" Name="TrackBackground.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">230</Value>
+      <Value xsi:type="xsd:int">160</Value>
     </Variable>
     <Variable Type="int" Name="TrackBackground.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">245</Value>
+      <Value xsi:type="xsd:int">200</Value>
     </Variable>
     <Variable Type="int" Name="TrackBackground.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">252</Value>
+      <Value xsi:type="xsd:int">239</Value>
     </Variable>
     <Variable Type="float" Name="TrackBackground.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -153,7 +153,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillColor = Components/Meadow/Styles.Blue.FillColor</string>
+        <string>FillColor = Components/Meadow/Styles.Coral.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -163,7 +163,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillColor = Components/Meadow/Styles.Cream2.FillColor</string>
+        <string>FillColor = Components/Meadow/Styles.PeachDark.FillColor</string>
       </Value>
     </VariableList>
   </State>
