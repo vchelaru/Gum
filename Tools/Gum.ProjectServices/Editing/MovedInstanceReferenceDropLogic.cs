@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
@@ -14,6 +15,15 @@ public record MovedReferenceLineDrop(ElementSave Container, StateSave State, Var
 
 /// <summary>A variable or variable list to remove from a state.</summary>
 public record MovedReferenceItemDrop<T>(ElementSave Container, StateSave State, T Item);
+
+/// <summary>
+/// One <c>VariableReferences</c> line that reads or writes an exposed moved variable, pointed at the name the
+/// replacement exposes it as.
+/// </summary>
+public record MovedReferenceLineRewrite(ElementSave Container, StateSave State, VariableListSave List, int Index, string Line);
+
+/// <summary>A variable set through an exposed moved variable, renamed to the replacement's exposed variable.</summary>
+public record MovedReferenceVariableRename(ElementSave Container, StateSave State, VariableSave Variable, string NewName);
 
 /// <summary>
 /// What <see cref="IMovedInstanceReferenceDropLogic.Find"/> found to drop, collected before anything changes so
@@ -35,6 +45,12 @@ public class MovedInstanceReferenceDrops
 
     /// <summary>The variable lists to remove.</summary>
     public List<MovedReferenceItemDrop<VariableListSave>> Lists { get; } = new List<MovedReferenceItemDrop<VariableListSave>>();
+
+    /// <summary>The <c>VariableReferences</c> lines to point at the replacement's exposed variables.</summary>
+    public List<MovedReferenceLineRewrite> Rewrites { get; } = new List<MovedReferenceLineRewrite>();
+
+    /// <summary>The variables to rename to the replacement's exposed variables.</summary>
+    public List<MovedReferenceVariableRename> Renames { get; } = new List<MovedReferenceVariableRename>();
 
     /// <summary>The moved instances whose sub-animations the source element's animations play.</summary>
     public HashSet<string> InstancesWithSubAnimations { get; } = new HashSet<string>(StringComparer.Ordinal);
@@ -58,6 +74,22 @@ public class MovedInstanceReferenceDrops
         Lines.Add(new MovedReferenceLineDrop(container, state, list, index));
         Reports.Add(new MovedInstanceReference(name, $"{container.Name} ({state.Name}): {list.Name} line \"{line}\"",
             MovedInstanceReferenceDropLogic.GetKeptValue(state, list, line)));
+    }
+
+    internal void AddRewrite(ElementSave container, StateSave state, VariableListSave list, int index, string line)
+    {
+        if (!_seen.Contains(list) && _seenLines.Add((list, index)))
+        {
+            Rewrites.Add(new MovedReferenceLineRewrite(container, state, list, index, line));
+        }
+    }
+
+    internal void AddRename(ElementSave container, StateSave state, VariableSave variable, string newName)
+    {
+        if (_seen.Add(variable))
+        {
+            Renames.Add(new MovedReferenceVariableRename(container, state, variable, newName));
+        }
     }
 
     internal void AddVariable(string name, ElementSave container, StateSave state, VariableSave variable, string description)
@@ -99,7 +131,8 @@ public interface IMovedInstanceReferenceDropLogic
         IReadOnlyCollection<InstanceSave> movedInstances, ElementAnimationsSave? animations);
 
     /// <summary>
-    /// Removes the lines, variables and lists in <paramref name="drops"/>. A list left with no lines is removed.
+    /// Repoints the lines and renames the variables that go through an exposed moved variable, then removes the
+    /// lines, variables and lists in <paramref name="drops"/>. A list left with no lines is removed.
     /// </summary>
     void Drop(MovedInstanceReferenceDrops drops);
 }
@@ -129,13 +162,15 @@ public class MovedInstanceReferenceDropLogic : IMovedInstanceReferenceDropLogic
             promotedInstance.Name
         };
         StateSave defaultState = sourceElement.GetDefaultStateOrThrow();
-        // The replacement carries these under the names the source exposes, in every state.
-        HashSet<string> carriedNames = new HashSet<string>(ComponentExtractionLogic.GetExposedVariableNamesOnReplacement(
-            defaultState, promotedInstance.Name, movedInstances.Select(item => item.Name)).Keys, StringComparer.Ordinal);
+        // The replacement carries these under the names the source exposes, so what reads or sets them is repointed.
+        ExposedNameMap exposedNames = new ExposedNameMap(sourceElement,
+            ComponentExtractionLogic.GetExposedVariableNamesOnReplacement(defaultState, promotedInstance.Name,
+                movedInstances.Select(item => item.Name)),
+            movedInstances.Select(item => item.Name));
 
         foreach (InstanceSave moved in movedInstances)
         {
-            FindReferencesTo(moved.Name, sourceElement, promotedInstance.Name, insideNames, carriedNames, defaultState,
+            FindReferencesTo(moved.Name, sourceElement, promotedInstance.Name, insideNames, exposedNames, defaultState,
                 animations, drops);
         }
 
@@ -146,6 +181,17 @@ public class MovedInstanceReferenceDropLogic : IMovedInstanceReferenceDropLogic
     /// <inheritdoc/>
     public void Drop(MovedInstanceReferenceDrops drops)
     {
+        // Before the line drops, which shift indexes.
+        foreach (MovedReferenceLineRewrite rewrite in drops.Rewrites)
+        {
+            rewrite.List.ValueAsIList[rewrite.Index] = rewrite.Line;
+        }
+        foreach (MovedReferenceVariableRename rename in drops.Renames)
+        {
+            rename.State.Variables.RemoveAll(item => item.Name == rename.NewName && item != rename.Variable);
+            rename.Variable.Name = rename.NewName;
+        }
+
         foreach (IGrouping<VariableListSave, MovedReferenceLineDrop> linesInList in drops.Lines.GroupBy(item => item.List))
         {
             MovedReferenceLineDrop first = linesInList.First();
@@ -171,7 +217,7 @@ public class MovedInstanceReferenceDropLogic : IMovedInstanceReferenceDropLogic
     }
 
     private void FindReferencesTo(string name, ElementSave sourceElement, string promotedName, HashSet<string> insideNames,
-        HashSet<string> carriedNames, StateSave defaultState, ElementAnimationsSave? animations, MovedInstanceReferenceDrops drops)
+        ExposedNameMap exposedNames, StateSave defaultState, ElementAnimationsSave? animations, MovedInstanceReferenceDrops drops)
     {
         InstanceSave moved = sourceElement.GetInstance(name)!;
         InstanceReferences references = _referenceFinder.GetReferencesToInstance(sourceElement, moved, name);
@@ -187,7 +233,16 @@ public class MovedInstanceReferenceDropLogic : IMovedInstanceReferenceDropLogic
             // else are dropped whole below. The promoted instance stays, so its other lists stay too.
             bool isCarriedOrDroppedWhole = isOwnedInsideSubtree &&
                 (owner != promotedName || (change.Container == sourceElement && state == defaultState));
-            if (!isCarriedOrDroppedWhole)
+            if (isCarriedOrDroppedWhole)
+            {
+                continue;
+            }
+            string line = change.VariableReferenceList.ValueAsIList[change.LineIndex] as string ?? "";
+            if (exposedNames.Repoint(line) is { } repointed)
+            {
+                drops.AddRewrite(change.Container, state, change.VariableReferenceList, change.LineIndex, repointed);
+            }
+            else
             {
                 drops.AddLine(name, change.Container, state, change.VariableReferenceList, change.LineIndex);
             }
@@ -206,7 +261,7 @@ public class MovedInstanceReferenceDropLogic : IMovedInstanceReferenceDropLogic
             {
                 if (variable.SourceObject == name)
                 {
-                    if (!isDefault && !carriedNames.Contains(variable.Name))
+                    if (!isDefault && !exposedNames.Contains(variable.Name))
                     {
                         drops.AddVariable(name, sourceElement, state, variable,
                             $"{sourceElement.Name} ({state.Name}): {variable.Name} = {variable.Value}");
@@ -233,14 +288,22 @@ public class MovedInstanceReferenceDropLogic : IMovedInstanceReferenceDropLogic
             }
         }
 
-        // A derived element's overrides of the moved instance lose the instance they set.
+        // A derived element's overrides of the moved instance lose the instance they set, unless the replacement
+        // exposes the variable they set.
         foreach (ElementSave derived in derivedElements)
         {
             foreach (StateSave state in derived.AllStates)
             {
                 foreach (VariableSave variable in state.Variables.Where(item => item.SourceObject == name))
                 {
-                    drops.AddVariable(name, derived, state, variable, $"{derived.Name} ({state.Name}): {variable.Name} = {variable.Value}");
+                    if (exposedNames.GetNewName(variable.Name) is { } newName)
+                    {
+                        drops.AddRename(derived, state, variable, newName);
+                    }
+                    else
+                    {
+                        drops.AddVariable(name, derived, state, variable, $"{derived.Name} ({state.Name}): {variable.Name} = {variable.Value}");
+                    }
                 }
                 foreach (VariableListSave variableList in state.VariableLists.Where(item => item.SourceObject == name))
                 {
@@ -290,6 +353,49 @@ public class MovedInstanceReferenceDropLogic : IMovedInstanceReferenceDropLogic
                         $"{sourceElement.Name} ({defaultState.Name}): {list.Name} line \"{line}\"", GetKeptValue(defaultState, list, line));
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// The exposed variables of the moved subtree and their names on the replacement, from
+    /// <see cref="ComponentExtractionLogic.GetExposedVariableNamesOnReplacement"/>, applied to what names them.
+    /// </summary>
+    private class ExposedNameMap
+    {
+        private readonly IReadOnlyDictionary<string, string> _newNames;
+        private readonly List<(Regex Pattern, string NewName)> _repoints;
+        private readonly List<Regex> _movedReads;
+
+        public ExposedNameMap(ElementSave sourceElement, IReadOnlyDictionary<string, string> newNames,
+            IEnumerable<string> movedNames)
+        {
+            _newNames = newNames;
+            // Another element names the source's instances through the element, as in Components/Card.Title.Text.
+            string qualifier = Regex.Escape(ElementReference.GetQualifiedName(sourceElement, sourceElement.Name));
+            string prefix = $@"(?<![\w./])({qualifier}\.)?";
+            _repoints = newNames
+                .Where(pair => pair.Key != pair.Value)
+                .Select(pair => (new Regex(prefix + Regex.Escape(pair.Key) + @"(?!\w)"), pair.Value))
+                .ToList();
+            _movedReads = movedNames.Select(moved => new Regex(prefix + Regex.Escape(moved) + @"\.")).ToList();
+        }
+
+        public bool Contains(string variableName) => _newNames.ContainsKey(variableName);
+
+        public string? GetNewName(string variableName) => _newNames.TryGetValue(variableName, out string? newName) ? newName : null;
+
+        /// <summary>
+        /// <paramref name="line"/> with each exposed moved variable it names pointed at the replacement, or null when
+        /// it names none, or still names a moved instance afterwards and so cannot apply.
+        /// </summary>
+        public string? Repoint(string line)
+        {
+            string repointed = line;
+            foreach ((Regex pattern, string newName) in _repoints)
+            {
+                repointed = pattern.Replace(repointed, match => match.Groups[1].Value + newName);
+            }
+            return repointed == line || _movedReads.Any(pattern => pattern.IsMatch(repointed)) ? null : repointed;
         }
     }
 

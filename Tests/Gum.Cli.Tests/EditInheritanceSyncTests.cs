@@ -162,4 +162,33 @@ public class EditInheritanceSyncTests : BaseTestClass
         SavedInstances(projectPath, "DerivedPanel").ShouldBe(new[] { ("Box", "BoxPart", true) });
         CliTestHelper.Run("check", projectPath).ExitCode.ShouldBe(0);
     }
+
+    [Fact]
+    public void ExtractToComponent_Replace_RepointsReferencesAndDerivedValuesOfAnExposedVariable()
+    {
+        string projectPath = CreateEmptyProject();
+
+        CliTestHelper result = Edit(projectPath, """
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "Panel" },
+              { "op": "addInstance", "element": "Panel", "name": "Box", "type": "Container" },
+              { "op": "addInstance", "element": "Panel", "name": "Inside", "type": "Text", "parent": "Box" },
+              { "op": "addInstance", "element": "Panel", "name": "Caption", "type": "Text" },
+              { "op": "exposeVariable", "element": "Panel", "instance": "Inside", "variable": "Text", "name": "InsideText" },
+              { "op": "setVariableReferences", "element": "Panel", "instance": "Caption", "lines": [ "Text = Inside.Text" ] },
+              { "op": "addComponent", "name": "DerivedPanel", "baseType": "Panel" },
+              { "op": "setVariable", "element": "DerivedPanel", "name": "Inside.Text", "value": "Derived" },
+              { "op": "extractToComponent", "element": "Panel", "instance": "Box", "name": "BoxPart", "replace": true }
+            ] }
+            """);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        GumProjectSave project = new ProjectLoader().Load(projectPath).Project.ShouldNotBeNull();
+        ElementSave panel = project.Components.Single(item => item.Name == "Panel");
+        panel.DefaultState.VariableLists.Single(item => item.Name == "Caption.VariableReferences").ValueAsIList
+            .ShouldBe(new object[] { "Text = Box.InsideText" });
+        ElementSave derived = project.Components.Single(item => item.Name == "DerivedPanel");
+        derived.DefaultState.GetValue("Box.InsideText").ShouldBe("Derived");
+        derived.DefaultState.GetVariableSave("Inside.Text").ShouldBeNull();
+    }
 }
