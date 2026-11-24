@@ -196,6 +196,37 @@ public class MovedInstanceReferenceDropperTests : BaseTestClass
     }
 
     [Fact]
+    public void Drop_ThroughAnExposedVariable_RepointsLinesAndMovesDerivedOverrides_AndUndoRestoresThem()
+    {
+        _button.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "Label.Text", Type = "string", Value = "Hi", SetsValue = true, ExposedAsName = "LabelText"
+        });
+        _button.DefaultState.VariableLists.Add(References("Caption.VariableReferences", "Text = Label.Text"));
+        ComponentSave bigButton = AddComponent("BigButton", "Button");
+        bigButton.DefaultState.SetValue("Label.Text", "Big", "string");
+        ScreenSave menu = AddScreen("Menu");
+        AddInstance(menu, "OkButton", "Button");
+        AddInstance(menu, "Title", "Text");
+        menu.DefaultState.VariableLists.Add(References("Title.VariableReferences", "Text = Components/Button.Label.Text"));
+
+        MovedInstanceReference[] result = DropInsideUndoLock();
+
+        result.ShouldBeEmpty();
+        Lines(_button.DefaultState, "Caption.VariableReferences").ShouldBe(new[] { "Text = Box.LabelText" });
+        Lines(menu.DefaultState, "Title.VariableReferences").ShouldBe(new[] { "Text = Components/Button.Box.LabelText" });
+        bigButton.DefaultState.GetValue("Box.LabelText").ShouldBe("Big");
+        bigButton.DefaultState.GetVariableSave("Label.Text").ShouldBeNull();
+
+        _undoManager.PerformUndo();
+
+        Lines(_button.DefaultState, "Caption.VariableReferences").ShouldBe(new[] { "Text = Label.Text" });
+        Lines(menu.DefaultState, "Title.VariableReferences").ShouldBe(new[] { "Text = Components/Button.Label.Text" });
+        bigButton.DefaultState.GetValue("Label.Text").ShouldBe("Big");
+        bigButton.DefaultState.GetVariableSave("Box.LabelText").ShouldBeNull();
+    }
+
+    [Fact]
     public void Drop_SubAnimationsOfAMovedInstance_RemovesTheirKeyframes()
     {
         ElementAnimationsSave animations = new ElementAnimationsSave();

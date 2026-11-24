@@ -56,15 +56,35 @@ public class MovedInstanceReferenceDropper : IMovedInstanceReferenceDropper
             new List<(CrossElementVariableChange, VariableListSave)>();
         HashSet<ElementSave> otherElements = new HashSet<ElementSave>();
 
-        foreach (MovedReferenceLineDrop first in drops.Lines.GroupBy(item => item.List).Select(group => group.First()))
+        IEnumerable<(ElementSave Container, StateSave State, VariableListSave List)> changedLists = drops.Lines
+            .Select(item => (item.Container, item.State, item.List))
+            .Concat(drops.Rewrites.Select(item => (item.Container, item.State, item.List)));
+        foreach ((ElementSave container, StateSave state, VariableListSave list) in changedLists.GroupBy(item => item.List)
+            .Select(group => group.First()))
         {
-            if (first.Container != sourceElement)
+            if (container != sourceElement)
             {
-                CrossElementVariableChange change = CrossElementVariableChange.CaptureBefore(first.Container, first.State, first.List);
+                CrossElementVariableChange change = CrossElementVariableChange.CaptureBefore(container, state, list);
                 changes.Add(change);
-                listsLosingLines.Add((change, first.List));
-                otherElements.Add(first.Container);
+                listsLosingLines.Add((change, list));
+                otherElements.Add(container);
             }
+        }
+        List<(CrossElementVariableChange Change, VariableSave Variable)> renamed =
+            new List<(CrossElementVariableChange, VariableSave)>();
+        foreach (MovedReferenceVariableRename rename in drops.Renames.Where(item => item.Container != sourceElement))
+        {
+            // A rename is the old variable removed and the new one added.
+            changes.Add(CrossElementVariableChange.CaptureBefore(rename.Container, rename.State, rename.Variable));
+            foreach (VariableSave replaced in rename.State.Variables.Where(item => item.Name == rename.NewName))
+            {
+                changes.Add(CrossElementVariableChange.CaptureBefore(rename.Container, rename.State, replaced));
+            }
+            CrossElementVariableChange added = CrossElementVariableChange.CaptureBefore(rename.Container, rename.State, rename.Variable);
+            added.Before = null;
+            changes.Add(added);
+            renamed.Add((added, rename.Variable));
+            otherElements.Add(rename.Container);
         }
         foreach (MovedReferenceItemDrop<VariableSave> drop in drops.Variables.Where(item => item.Container != sourceElement))
         {
@@ -86,6 +106,10 @@ public class MovedInstanceReferenceDropper : IMovedInstanceReferenceDropper
             {
                 change.CaptureAfter(list);
             }
+        }
+        foreach ((CrossElementVariableChange change, VariableSave variable) in renamed)
+        {
+            change.CaptureAfter(variable);
         }
 
         foreach (string name in drops.InstancesWithSubAnimations)

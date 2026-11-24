@@ -291,4 +291,43 @@ public class ComponentExtractionExposedVariableTests : BaseTestClass
         component.Events.ShouldContain(item => item.Name == "Title.Click" && item.ExposedAsName == "TitleClick");
         _card.Events.ShouldContain(item => item.Name == "Header.TitleClick" && item.ExposedAsName == "TitleClick");
     }
+
+    [Fact]
+    public void CreateComponent_WithReplace_KeepsThePromotedInstancesOwnEvent_AndDropsAnUnexposedMovedEvent()
+    {
+        _card.Events.Add(new EventSave { Name = "Header.Click", ExposedAsName = "HeaderClick" });
+        _card.Events.Add(new EventSave { Name = "Badge.Click" });
+
+        ComponentSave component = Extract(replace: true);
+
+        component.Events.ShouldHaveSingleItem().Name.ShouldBe("Badge.Click");
+        _card.Events.ShouldHaveSingleItem().ShouldSatisfyAllConditions(
+            item => item.Name.ShouldBe("Header.Click"),
+            item => item.ExposedAsName.ShouldBe("HeaderClick"));
+    }
+
+    [Fact]
+    public void CreateComponent_WithoutReplace_CopiesTheMovedEvent_AndLeavesTheSourceEvent()
+    {
+        _card.Events.Add(new EventSave { Name = "Title.Click", ExposedAsName = "TitleClick" });
+
+        ComponentSave component = Extract(replace: false);
+
+        component.Events.ShouldHaveSingleItem().ExposedAsName.ShouldBe("TitleClick");
+        _card.Events.ShouldHaveSingleItem().Name.ShouldBe("Title.Click");
+    }
+
+    [Fact]
+    public void CreateComponent_WithReplace_DropsAReferenceThatAlsoReadsAnUnexposedMovedVariable()
+    {
+        Expose(_cardDefault, "Title.Text", "string", "Hi", "TitleText");
+        VariableListSave<string> reading = new VariableListSave<string> { Name = "Footer.VariableReferences", Type = "string" };
+        reading.ValueAsIList.Add("Text = Title.Text + Badge.Width");
+        reading.ValueAsIList.Add("Y = Header.Y");
+        _cardDefault.VariableLists.Add(reading);
+
+        Extract(replace: true);
+
+        _cardDefault.VariableLists.ShouldHaveSingleItem().ValueAsIList.ShouldBe(new object[] { "Y = Header.Y" });
+    }
 }
