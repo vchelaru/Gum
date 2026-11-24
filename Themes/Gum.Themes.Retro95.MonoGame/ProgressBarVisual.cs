@@ -62,15 +62,15 @@ public class ProgressBarVisual : BaseProgressBarVisual
         }
     }
 
-    /// <summary>The color of the well behind the indicator. Replaces the base property, whose NineSlice is not drawn.</summary>
-    public new Color TrackColor
+    /// <summary>The color of the well behind the indicator. Overrides the base property, whose NineSlice is not drawn.</summary>
+    public override Color TrackColor
     {
         get => _bevel.Fill.FillColor;
         set => _bevel.SetFill(value);
     }
 
-    /// <summary>The color of the indicator. Replaces the base property, whose NineSlice is not drawn.</summary>
-    public new Color IndicatorColor
+    /// <summary>The color of the indicator. Overrides the base property, whose NineSlice is not drawn.</summary>
+    public override Color IndicatorColor
     {
         get => _indicator.FillColor;
         set => _indicator.FillColor = value;
