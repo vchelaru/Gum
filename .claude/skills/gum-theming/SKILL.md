@@ -89,7 +89,9 @@ A control with a Pushed state (Button) shouldn't switch border color families be
 
 ## Value-driven visuals
 
-Visuals that need to react to a continuous Forms-control value (a slider fill bar tracking `Slider.Value`, a progress indicator, etc.):
+A `ProgressBar` needs none of this: it resizes whatever child is named `"IndicatorInstance"`. To restyle it, detach the V3 NineSlice and add your shape under that name, then override the virtual `TrackColor`/`IndicatorColor` so they color your shapes.
+
+Visuals that need to react to a continuous Forms-control value (a slider fill bar tracking `Slider.Value`, etc.):
 
 - `RangeBase.Value` raises `ValueChanged` but does NOT call `OnPropertyChanged`, so `INotifyPropertyChanged` is not a viable hook.
 - The Forms control is assigned to the visual via `FormsControlAsObject`. **Override the setter** (`InteractiveGue.FormsControlAsObject` is `virtual`) to subscribe on assignment and unsubscribe on reassignment. This is the only hook that works for both construction paths: `tryCreateFormsObject:true` (visual creates the Forms control in its ctor) and `tryCreateFormsObject:false` (FrameworkElement creates the visual via the template and then assigns the externally-created Forms control).

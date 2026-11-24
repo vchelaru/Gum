@@ -85,7 +85,7 @@ public static class EditorTheme
 
     internal static void RegisterVisuals()
     {
-        void TryAdd(System.Type formsType, System.Func<object, bool, GraphicalUiElement> factory)
+        void TryAdd(System.Type formsType, System.Func<object?, bool, GraphicalUiElement> factory)
         {
             FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(factory);
         }
@@ -107,6 +107,7 @@ public static class EditorTheme
         TryAdd(typeof(ScrollBar), (_, c) => new ScrollBarVisual(tryCreateFormsObject: c));
         TryAdd(typeof(ScrollViewer), (_, c) => new ScrollViewerVisual(tryCreateFormsObject: c));
         TryAdd(typeof(Slider), (_, c) => new SliderVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ProgressBar), (_, c) => new ProgressBarVisual(tryCreateFormsObject: c));
 
         // Every MenuItem's submenu popup (#6741): the stock V3 one, sized to its rows. Set on each Apply so
         // switching from another theme replaces that theme's popup.

@@ -211,6 +211,9 @@ public static class ForestGladeTheme
         FrameworkElement.DefaultFormsTemplates[typeof(Slider)] =
             new VisualTemplate((_, c) => new SliderVisual(tryCreateFormsObject: c));
 
+        FrameworkElement.DefaultFormsTemplates[typeof(ProgressBar)] =
+            new VisualTemplate((_, c) => new ProgressBarVisual(tryCreateFormsObject: c));
+
         FrameworkElement.DefaultFormsTemplates[typeof(ScrollBar)] =
             new VisualTemplate((_, c) => new ScrollBarVisual(tryCreateFormsObject: c));
 

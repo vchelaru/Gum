@@ -30,12 +30,15 @@ public class ProgressBarVisual : InteractiveGue
     /// <summary>The bar drawn behind the indicator, filling the track.</summary>
     public NineSliceRuntime TrackBackground { get; private set; }
 
-    /// <summary>The bar showing progress, sized by the ProgressBar as a percentage of the track.</summary>
+    /// <summary>
+    /// The bar showing progress, sized by the ProgressBar as a percentage of the track. A theme may replace the
+    /// child named "IndicatorInstance" with another shape, in which case this NineSlice is not drawn.
+    /// </summary>
     public NineSliceRuntime IndicatorInstance { get; private set; }
 
     Color _trackColor;
     /// <summary>The color of the track. Setting this value immediately updates the visual.</summary>
-    public Color TrackColor
+    public virtual Color TrackColor
     {
         get => _trackColor;
         set
@@ -47,7 +50,7 @@ public class ProgressBarVisual : InteractiveGue
 
     Color _indicatorColor;
     /// <summary>The color of the indicator. Setting this value immediately updates the visual.</summary>
-    public Color IndicatorColor
+    public virtual Color IndicatorColor
     {
         get => _indicatorColor;
         set
@@ -91,8 +94,11 @@ public class ProgressBarVisual : InteractiveGue
         IndicatorInstance.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
         TrackInstance.AddChild(IndicatorInstance);
 
-        TrackColor = Styling.ActiveStyle.Colors.InputBackground;
-        IndicatorColor = Styling.ActiveStyle.Colors.Primary;
+        // Assigned without the virtual setters, which a subclass overrides before its own shapes exist.
+        _trackColor = Styling.ActiveStyle.Colors.InputBackground;
+        TrackBackground.Color = _trackColor;
+        _indicatorColor = Styling.ActiveStyle.Colors.Primary;
+        IndicatorInstance.Color = _indicatorColor;
 
         if (tryCreateFormsObject)
         {

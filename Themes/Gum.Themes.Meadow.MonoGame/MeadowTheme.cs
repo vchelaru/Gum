@@ -219,6 +219,9 @@ public static class MeadowTheme
         FrameworkElement.DefaultFormsTemplates[typeof(Slider)] =
             new VisualTemplate((_, c) => new SliderVisual(tryCreateFormsObject: c));
 
+        FrameworkElement.DefaultFormsTemplates[typeof(ProgressBar)] =
+            new VisualTemplate((_, c) => new ProgressBarVisual(tryCreateFormsObject: c));
+
         FrameworkElement.DefaultFormsTemplates[typeof(ListBox)] =
             new VisualTemplate((_, c) => new ListBoxVisual(tryCreateFormsObject: c));
 
