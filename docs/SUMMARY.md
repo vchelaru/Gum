@@ -275,6 +275,7 @@
   * [Menu](code/controls/menu.md)
   * [MenuItem](code/controls/menuitem.md)
   * [PasswordBox](code/controls/passwordbox.md)
+  * [ProgressBar](code/controls/progressbar.md)
   * [RadioButton](code/controls/radiobutton.md)
   * [ScrollBar](code/controls/scrollbar.md)
   * [ScrollViewer](code/controls/scrollviewer/README.md)
