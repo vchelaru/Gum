@@ -235,6 +235,9 @@ public static class TemplateTheme
             new VisualTemplate((_, c) => new SliderVisual(tryCreateFormsObject: c));
         // To use the Rich variant instead: FrameworkElement.DefaultFormsTemplates[typeof(Slider)] = new VisualTemplate((_, c) => new Variants.SliderVisual(tryCreateFormsObject: c));
 
+        FrameworkElement.DefaultFormsTemplates[typeof(ProgressBar)] =
+            new VisualTemplate((_, c) => new ProgressBarVisual(tryCreateFormsObject: c));
+
         FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] =
             new VisualTemplate((_, c) => new CheckBoxVisual(tryCreateFormsObject: c));
         // To use the Rich variant instead: FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] = new VisualTemplate((_, c) => new Variants.CheckBoxVisual(tryCreateFormsObject: c));

@@ -299,7 +299,7 @@ public class AllControlsScreen : ShowcaseScreen
 
     void PlaceSlider(int col, int row)
     {
-        AddHeader("Slider", col, row);
+        AddHeader("Slider and ProgressBar", col, row);
 
         var stack = new StackPanel();
         stack.Width = CellW;
@@ -324,9 +324,16 @@ public class AllControlsScreen : ShowcaseScreen
         disabledSlider.Value = 70;
         disabledSlider.IsEnabled = false;
 
+        // The ProgressBar follows the first slider.
+        var progressBar = new ProgressBar();
+        progressBar.Width = CellW;
+        progressBar.Value = slider.Value;
+        slider.ValueChanged += (_, _) => progressBar.Value = slider.Value;
+
         stack.AddChild(slider);
         stack.AddChild(valueLabel);
         stack.AddChild(disabledSlider);
+        stack.AddChild(progressBar);
         Position(stack, col, row);
     }
 

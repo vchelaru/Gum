@@ -192,6 +192,9 @@ public static class HazardTheme
         FrameworkElement.DefaultFormsTemplates[typeof(Slider)] =
             new VisualTemplate((_, c) => new SliderVisual(tryCreateFormsObject: c));
 
+        FrameworkElement.DefaultFormsTemplates[typeof(ProgressBar)] =
+            new VisualTemplate((_, c) => new ProgressBarVisual(tryCreateFormsObject: c));
+
         FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] =
             new VisualTemplate((_, c) => new CheckBoxVisual(tryCreateFormsObject: c));
 
