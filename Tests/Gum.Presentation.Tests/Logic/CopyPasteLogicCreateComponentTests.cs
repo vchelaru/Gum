@@ -79,4 +79,54 @@ public class CopyPasteLogicCreateComponentTests : BaseTestClass
         mocker.GetMock<ISelectedState>().VerifySet(x => x.SelectedInstance = replacement);
         output.ShouldContain("X = ChildText.X");
     }
+
+    [Fact]
+    public void CreateComponentFromInstance_WithReplace_OneUndoRestoresTheSubtreeAndItsExposures()
+    {
+        AutoMocker mocker = new AutoMocker();
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+        ComponentSave card = new ComponentSave { Name = "Card", BaseType = "Container" };
+        StateSave cardDefault = new StateSave { Name = "Default", ParentContainer = card };
+        card.States.Add(cardDefault);
+        project.Components.Add(card);
+        project.ComponentReferences.Add(new ElementReference { Name = "Card", ElementType = ElementType.Component });
+        InstanceSave header = new InstanceSave { Name = "Header", BaseType = "Container", ParentContainer = card };
+        card.Instances.Add(header);
+        card.Instances.Add(new InstanceSave { Name = "Title", BaseType = "Text", ParentContainer = card });
+        cardDefault.SetValue("Title.Parent", "Header", "string");
+        cardDefault.SetValue("Header.X", 10f, "float");
+        cardDefault.Variables.Add(new VariableSave
+        {
+            Name = "Title.Text", Type = "string", Value = "Hi", SetsValue = true, ExposedAsName = "TitleText"
+        });
+
+        mocker.GetMock<IReferenceFinderProjectProvider>().Setup(x => x.GumProjectSave).Returns(project);
+        mocker.Use<IReferenceFinder>(mocker.CreateInstance<ReferenceFinder>());
+        mocker.Use<IMovedInstanceReferenceDropLogic>(mocker.CreateInstance<MovedInstanceReferenceDropLogic>());
+        UndoManager undoManager = mocker.CreateInstance<UndoManager>();
+        mocker.Use<IUndoManager>(undoManager);
+        mocker.Use<IMovedInstanceReferenceDropper>(mocker.CreateInstance<MovedInstanceReferenceDropper>());
+        mocker.Use<IComponentExtractionLogic>(new ComponentExtractionLogic(new ElementCreationLogic()));
+        InstanceRemovalLogic removal = new InstanceRemovalLogic(mocker.Get<IReferenceFinder>(), new VariableOverrideRemover());
+        mocker.GetMock<IDeleteLogic>()
+            .Setup(x => x.RemoveInstance(It.IsAny<InstanceSave>(), It.IsAny<ElementSave>()))
+            .Callback((InstanceSave instance, ElementSave element) => removal.RemoveInstance(instance, element));
+        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+        selectedState.Setup(x => x.SelectedElement).Returns(card);
+        selectedState.Setup(x => x.SelectedStateContainer).Returns(card);
+        selectedState.Setup(x => x.SelectedComponent).Returns(card);
+        selectedState.Setup(x => x.SelectedStateSave).Returns(cardDefault);
+        undoManager.RecordState();
+        CopyPasteLogic logic = mocker.CreateInstance<CopyPasteLogic>();
+
+        logic.CreateComponentFromInstance(header, "HeaderComponent", replaceWithInstance: true);
+        cardDefault.GetVariableSave("Header.TitleText").ShouldNotBeNull();
+        undoManager.PerformUndo();
+
+        card.Instances.Select(item => item.Name + ":" + item.BaseType).ShouldBe(new[] { "Header:Container", "Title:Text" });
+        cardDefault.GetVariableSave("Title.Text").ShouldNotBeNull().ExposedAsName.ShouldBe("TitleText");
+        cardDefault.GetValue("Title.Parent").ShouldBe("Header");
+        cardDefault.GetVariableSave("Header.TitleText").ShouldBeNull();
+    }
 }
