@@ -171,7 +171,7 @@ public class MovedInstanceReferenceDropperTests : BaseTestClass
     }
 
     [Fact]
-    public void Drop_ExposedVariable_DropsWhatInstancesSetOnIt_AndUndoRestoresIt()
+    public void Drop_ExposedVariable_KeepsWhatInstancesSetOnIt()
     {
         _button.DefaultState.Variables.Add(new VariableSave
         {
@@ -189,17 +189,10 @@ public class MovedInstanceReferenceDropperTests : BaseTestClass
 
         MovedInstanceReference[] result = DropInsideUndoLock();
 
-        result.Select(item => item.Description).ShouldBe(new[]
-        {
-            "Button: exposed variable LabelText (Label.Text)",
-            "Menu (Default): OkButton.LabelText = Ok",
-        }, ignoreOrder: true);
-        menu.DefaultState.GetValue("OkButton.LabelText").ShouldBeNull();
-        fancyButton.DefaultState.GetValue("Icon.Text").ShouldBe("*");
-
-        _undoManager.PerformUndo();
-
+        // The replacement exposes LabelText from the new component, so OkButton.LabelText still applies.
+        result.ShouldBeEmpty();
         menu.DefaultState.GetValue("OkButton.LabelText").ShouldBe("Ok");
+        fancyButton.DefaultState.GetValue("Icon.Text").ShouldBe("*");
     }
 
     [Fact]

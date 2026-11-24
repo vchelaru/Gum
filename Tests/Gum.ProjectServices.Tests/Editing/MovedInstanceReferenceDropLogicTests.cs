@@ -38,14 +38,12 @@ public class MovedInstanceReferenceDropLogicTests : BaseTestClass
         drops.Reports.Select(item => item.Description).ShouldBe(new[]
         {
             "Hud (Default): Caption.VariableReferences line \"X = Label.X\"",
-            "Hud (Big): Label.Text = Big",
-            "Hud: exposed variable LabelText (Label.Text)",
-            "Game (Default): HudInstance.LabelText = Yo",
         }, ignoreOrder: true);
         hudDefault.VariableLists.ShouldBeEmpty();
         hudDefault.GetValue("Caption.X").ShouldBe(5f);
-        big.Variables.ShouldBeEmpty();
-        game.GetDefaultStateOrThrow().Variables.ShouldBeEmpty();
+        // Label.Text is exposed, so the replacement carries it as Panel.LabelText; nothing set through it is dropped.
+        big.GetValue("Label.Text").ShouldBe("Big");
+        game.GetDefaultStateOrThrow().GetValue("HudInstance.LabelText").ShouldBe("Yo");
         hudDefault.GetValue("Label.Text").ShouldBe("Hi");
     }
 }

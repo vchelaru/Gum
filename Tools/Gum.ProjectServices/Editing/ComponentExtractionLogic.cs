@@ -52,6 +52,15 @@ public interface IComponentExtractionLogic
     ComponentExtraction CreateComponent(InstanceSave instance, string componentName);
 
     /// <summary>
+    /// Why <paramref name="instance"/> cannot become a component, or null. The new component exposes what the
+    /// source element exposes from the instances under <paramref name="instance"/>, so each exposed name must be
+    /// free in a component of the instance's type, by the check Expose Variable uses.
+    /// </summary>
+    /// <param name="getWhyVariableNameInvalid">The Expose Variable name check: why a new variable name is invalid
+    /// in an element, or null when it is valid.</param>
+    string? GetWhyCannotCreateComponent(InstanceSave instance, Func<string, ElementSave, string?> getWhyVariableNameInvalid);
+
+    /// <summary>
     /// Removes the promoted instance and the instances under it from the source element and puts one instance of
     /// the new component, with the same name, in the promoted instance's place in the instance order. The
     /// replacement keeps the promoted instance's position, what other states set on it, and the values outside
@@ -81,6 +90,38 @@ public class ComponentExtractionLogic : IComponentExtractionLogic
     public ComponentExtractionLogic(IElementCreationLogic elementCreation)
     {
         _elementCreation = elementCreation;
+    }
+
+    /// <inheritdoc/>
+    public string? GetWhyCannotCreateComponent(InstanceSave instance, Func<string, ElementSave, string?> getWhyVariableNameInvalid)
+    {
+        StateSave? sourceDefault = instance.ParentContainer?.DefaultState;
+        if (sourceDefault == null)
+        {
+            return null;
+        }
+        HashSet<string> movedNames = new HashSet<string>(instance.ParentContainer!.GetInstancesAndChildrenOf(new[] { instance })
+            .Where(item => item.Name != instance.Name)
+            .Select(item => item.Name), StringComparer.Ordinal);
+        List<VariableSave> exposed = sourceDefault.Variables
+            .Where(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject is { } owner && movedNames.Contains(owner))
+            .ToList();
+        if (exposed.Count == 0)
+        {
+            return null;
+        }
+
+        // An empty component of the instance's type has every name the new component inherits.
+        ComponentSave scratch = new ComponentSave();
+        _elementCreation.PrepareNewComponent(scratch, instance.Name + "Component", instance.BaseType);
+        foreach (VariableSave variable in exposed)
+        {
+            if (getWhyVariableNameInvalid(variable.ExposedAsName!, scratch) is { } why)
+            {
+                return $"{variable.Name} is exposed as {variable.ExposedAsName}, which the new component cannot expose: {why}";
+            }
+        }
+        return null;
     }
 
     /// <inheritdoc/>
@@ -120,8 +161,8 @@ public class ComponentExtractionLogic : IComponentExtractionLogic
                 continue;
             }
 
+            // The exposure moves with the variable, so the new component exposes it under the same name.
             VariableSave clone = variable.Clone();
-            clone.ExposedAsName = null;
 
             if (clone.GetRootName() == "Parent" && clone.Value is string parentValue)
             {
@@ -164,6 +205,7 @@ public class ComponentExtractionLogic : IComponentExtractionLogic
             {
                 continue;
             }
+            // The component's own variable has no instance to be exposed from; the replacement keeps that exposure.
             VariableSave clone = variable.Clone();
             clone.Name = rootName;
             clone.ExposedAsName = null;
@@ -207,6 +249,7 @@ public class ComponentExtractionLogic : IComponentExtractionLogic
         // Removing the instance strips everything that names it, but the replacement keeps its name.
         List<(StateSave State, VariableSave Variable)> keptVariables =
             GetVariablesKeptByReplacement(instance, sourceElement, sourceDefault, descendants);
+        keptVariables.AddRange(GetExposedVariablesCarriedByReplacement(instance, sourceElement, sourceDefault, descendants));
         List<(StateSave State, VariableListSave List)> keptLists = sourceElement.AllStates
             .Where(state => state != sourceDefault)
             .SelectMany(state => state.VariableLists
@@ -240,6 +283,65 @@ public class ComponentExtractionLogic : IComponentExtractionLogic
         }
 
         return replacement;
+    }
+
+    /// <summary>
+    /// Maps each variable of the subtree that <paramref name="sourceDefault"/> exposes to its name on the replacement
+    /// instance: a moved Title.Text exposed as TitleText becomes Header.TitleText, because the new component exposes
+    /// it under the same name. The promoted instance's own exposed variables keep their names.
+    /// </summary>
+    public static Dictionary<string, string> GetExposedVariableNamesOnReplacement(StateSave sourceDefault,
+        string promotedName, IEnumerable<string> movedNames)
+    {
+        HashSet<string> moved = new HashSet<string>(movedNames, StringComparer.Ordinal);
+        Dictionary<string, string> names = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (VariableSave variable in sourceDefault.Variables)
+        {
+            if (string.IsNullOrEmpty(variable.ExposedAsName) || variable.SourceObject is not { } owner)
+            {
+                continue;
+            }
+            if (owner == promotedName)
+            {
+                names[variable.Name] = variable.Name;
+            }
+            else if (moved.Contains(owner))
+            {
+                names[variable.Name] = $"{promotedName}.{variable.ExposedAsName}";
+            }
+        }
+        return names;
+    }
+
+    /// <summary>
+    /// The variables that keep the source element's exposures of the subtree working through the replacement, in
+    /// every state, so what other elements set or read through an exposed name still applies. Clears the exposure
+    /// on the variables about to be removed so the removal does not clear those outside values.
+    /// </summary>
+    private static List<(StateSave State, VariableSave Variable)> GetExposedVariablesCarriedByReplacement(
+        InstanceSave instance, ElementSave sourceElement, StateSave sourceDefault, IReadOnlyList<InstanceSave> descendants)
+    {
+        Dictionary<string, string> newNames = GetExposedVariableNamesOnReplacement(sourceDefault, instance.Name,
+            descendants.Select(item => item.Name));
+        List<(StateSave State, VariableSave Variable)> carried = new List<(StateSave State, VariableSave Variable)>();
+        foreach (StateSave state in sourceElement.AllStates)
+        {
+            foreach (VariableSave variable in state.Variables)
+            {
+                if (!newNames.TryGetValue(variable.Name, out string? newName))
+                {
+                    continue;
+                }
+                VariableSave clone = variable.Clone();
+                clone.Name = newName;
+                if (state == sourceDefault)
+                {
+                    variable.ExposedAsName = null;
+                }
+                carried.Add((state, clone));
+            }
+        }
+        return carried;
     }
 
     /// <summary>

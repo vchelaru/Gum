@@ -2,7 +2,10 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Dialogs;
 using Gum.Logic;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Plugins;
+using Gum.ProjectServices.Editing;
 using Moq;
 using Shouldly;
 
@@ -34,7 +37,8 @@ public class CreateComponentDialogViewModelTests : BaseTestClass
             .Setup(x => x.IsElementNameValid(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<ElementSave?>(), out whyNotValid))
             .Returns(true);
 
-        _sut = new CreateComponentDialogViewModel(_nameVerifier.Object, _copyPasteLogic.Object, _guiCommands.Object);
+        _sut = new CreateComponentDialogViewModel(_nameVerifier.Object, _copyPasteLogic.Object, _guiCommands.Object,
+            new ComponentExtractionLogic(new ElementCreationLogic()));
     }
 
     [Fact]
@@ -93,5 +97,38 @@ public class CreateComponentDialogViewModelTests : BaseTestClass
         _sut.Instance = instance;
 
         _sut.Value.ShouldBe("MyButtonComponent");
+    }
+
+    [Fact]
+    public void Validate_RefusesAnInstanceWhoseTypeAlreadyExposesAnExposedName()
+    {
+        GumProjectSave project = new GumProjectSave { FullFileName = "C:/project/Test.gumx" };
+        ObjectFinder.Self.GumProjectSave = project;
+        ComponentSave panel = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        StateSave panelDefault = new StateSave { Name = "Default", ParentContainer = panel };
+        panel.States.Add(panelDefault);
+        panel.Instances.Add(new InstanceSave { Name = "Inner", BaseType = "Text", ParentContainer = panel });
+        panelDefault.Variables.Add(new VariableSave { Name = "Inner.Text", Type = "string", Value = "In", SetsValue = true, ExposedAsName = "TitleText" });
+        ComponentSave card = new ComponentSave { Name = "Card", BaseType = "Container" };
+        StateSave cardDefault = new StateSave { Name = "Default", ParentContainer = card };
+        card.States.Add(cardDefault);
+        InstanceSave header = new InstanceSave { Name = "Header", BaseType = "Panel", ParentContainer = card };
+        card.Instances.Add(header);
+        card.Instances.Add(new InstanceSave { Name = "Title", BaseType = "Text", ParentContainer = card });
+        cardDefault.SetValue("Title.Parent", "Header", "string");
+        cardDefault.Variables.Add(new VariableSave { Name = "Title.Text", Type = "string", Value = "Hi", SetsValue = true, ExposedAsName = "TitleText" });
+        project.Components.Add(panel);
+        project.Components.Add(card);
+        CreateComponentDialogViewModel sut = new CreateComponentDialogViewModel(new NameVerifier(new Mock<IPluginManager>().Object),
+            _copyPasteLogic.Object, _guiCommands.Object, new ComponentExtractionLogic(new ElementCreationLogic()));
+
+        sut.Instance = header;
+        sut.OnAffirmative();
+
+        sut.Error.ShouldNotBeNull();
+        sut.Error.ShouldContain("Title.Text");
+        sut.Error.ShouldContain("TitleText");
+        _copyPasteLogic.Verify(x => x.CreateComponentFromInstance(It.IsAny<InstanceSave>(), It.IsAny<string>(), It.IsAny<bool>()),
+            Times.Never);
     }
 }
