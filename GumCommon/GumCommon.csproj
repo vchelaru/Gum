@@ -382,6 +382,7 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\MenuItem.cs" Link="Forms\Controls\MenuItem.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Panel.cs" Link="Forms\Controls\Panel.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\PasswordBox.cs" Link="Forms\Controls\PasswordBox.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\ProgressBar.cs" Link="Forms\Controls\ProgressBar.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Primitives\ButtonBase.cs" Link="Forms\Controls\Primitives\ButtonBase.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Primitives\RangeBase.cs" Link="Forms\Controls\Primitives\RangeBase.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Primitives\ThumbRangeBase.cs" Link="Forms\Controls\Primitives\ThumbRangeBase.cs" />
