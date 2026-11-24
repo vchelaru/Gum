@@ -18,6 +18,12 @@ You are affected if you set a deliberately different absolute height on the sele
 
 See [Properties Set by Forms Controls](../../code/styling/properties-set-by-forms-controls.md) for everything the control writes to its Visual.
 
+### Thumb Members Moved From RangeBase to ThumbRangeBase
+
+`RangeBase` now holds only `Minimum`, `Maximum`, `Value`, `ValueChanged` and `Orientation`. The thumb and track members (`SmallChange`, `LargeChange`, `IsMoveToPointEnabled`, `ValueChangeCompleted`, `ValueChangedByUi`, `Track` and the thumb drag methods) are on the new `ThumbRangeBase` class, which `Slider` and `ScrollBar` derive from.
+
+You are affected if a variable of type `RangeBase` reads one of those members, or if you subclass `RangeBase` directly. Change the type to `ThumbRangeBase`. Code that uses `Slider` or `ScrollBar` does not change.
+
 ## Raylib
 
 ### Gum Draws With Normal Blending
