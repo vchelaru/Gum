@@ -20,6 +20,17 @@ public class ProgressBarVisualTests : BaseTestClass
     }
 
     [Fact]
+    public void TrackInstance_ShouldClipChildren()
+    {
+        // The indeterminate indicator moves past the track's edges; a NineSlice track could not clip it.
+        ProgressBarVisual visual = new();
+
+        visual.TrackInstance.ClipsChildren.ShouldBeTrue();
+        visual.TrackBackground.Parent.ShouldBe(visual.TrackInstance);
+        visual.TrackBackground.Color.ShouldBe(Styling.ActiveStyle.Colors.InputBackground);
+    }
+
+    [Fact]
     public void Constructor_ShouldSetIndicatorWidthByPercentage()
     {
         ProgressBarVisual visual = new();

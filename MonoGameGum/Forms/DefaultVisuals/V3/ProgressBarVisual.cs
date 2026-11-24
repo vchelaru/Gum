@@ -21,7 +21,7 @@ using Color = Microsoft.Xna.Framework.Color;
 namespace Gum.Forms.DefaultVisuals.V3;
 
 /// <summary>
-/// Default V3 visual for a ProgressBar control. Contains a track and an indicator inside it whose
+/// Default V3 visual for a ProgressBar control. Contains a track with a background bar and an indicator whose
 /// width the ProgressBar sets as a percentage of the track. The Indeterminate state loops the
 /// indicator across the track.
 /// </summary>
@@ -33,8 +33,14 @@ public class ProgressBarVisual : InteractiveGue
     /// <summary>The seconds the indicator takes to cross the track while indeterminate.</summary>
     public const float IndeterminateSeconds = 1.5f;
 
-    /// <summary>The background bar the indicator fills. It clips the indicator.</summary>
-    public NineSliceRuntime TrackInstance { get; private set; }
+    /// <summary>
+    /// The area the indicator fills. It clips its children, since a NineSlice cannot, so the
+    /// indeterminate indicator can slide in and out past its edges.
+    /// </summary>
+    public ContainerRuntime TrackInstance { get; private set; }
+
+    /// <summary>The bar drawn behind the indicator, filling the track.</summary>
+    public NineSliceRuntime TrackBackground { get; private set; }
 
     /// <summary>The bar showing progress, sized by the ProgressBar as a percentage of the track.</summary>
     public NineSliceRuntime IndicatorInstance { get; private set; }
@@ -97,17 +103,24 @@ public class ProgressBarVisual : InteractiveGue
         States = new ProgressBarCategoryStates();
         var uiSpriteSheetTexture = Styling.ActiveStyle.SpriteSheet;
 
-        TrackInstance = new NineSliceRuntime();
+        TrackInstance = new ContainerRuntime();
         TrackInstance.Name = "TrackInstance";
         TrackInstance.Width = 0;
         TrackInstance.WidthUnits = DimensionUnitType.RelativeToParent;
         TrackInstance.Height = 0;
         TrackInstance.HeightUnits = DimensionUnitType.RelativeToParent;
-        TrackInstance.Texture = uiSpriteSheetTexture;
-        TrackInstance.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
-        // The indeterminate indicator slides in from the left edge and out past the right one.
         TrackInstance.ClipsChildren = true;
         AddChild(TrackInstance);
+
+        TrackBackground = new NineSliceRuntime();
+        TrackBackground.Name = "TrackBackground";
+        TrackBackground.Width = 0;
+        TrackBackground.WidthUnits = DimensionUnitType.RelativeToParent;
+        TrackBackground.Height = 0;
+        TrackBackground.HeightUnits = DimensionUnitType.RelativeToParent;
+        TrackBackground.Texture = uiSpriteSheetTexture;
+        TrackBackground.ApplyState(Styling.ActiveStyle.NineSlice.Solid);
+        TrackInstance.AddChild(TrackBackground);
 
         IndicatorInstance = new NineSliceRuntime();
         IndicatorInstance.Name = "IndicatorInstance";
@@ -189,7 +202,7 @@ public class ProgressBarVisual : InteractiveGue
 
     private void SetColors()
     {
-        TrackInstance.Color = _trackColor;
+        TrackBackground.Color = _trackColor;
         IndicatorInstance.Color = _indicatorColor;
     }
 
