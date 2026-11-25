@@ -36,6 +36,8 @@ internal sealed class BrutalGlfwInput : IBrutalInput
 
     public int FramebufferHeight => _window.FramebufferSize.Y;
 
+    public float DisplayScale => _window.ContentScale.X;
+
     public bool IsMouseButtonDown(MouseButton button)
     {
         GlfwMouseButton glfwButton = button switch

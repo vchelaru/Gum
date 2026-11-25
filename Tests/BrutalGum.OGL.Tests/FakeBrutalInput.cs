@@ -8,7 +8,7 @@ using System.Collections.Generic;
 namespace BrutalGum.Tests;
 
 /// <summary>A scriptable host, read through the public IBrutalInput seam production code uses. Only the gamepad helper speaks GLFW's layout.</summary>
-internal sealed class FakeBrutalInput : IBrutalInput
+internal class FakeBrutalInput : IBrutalInput
 {
     public double CursorX { get; set; }
     public double CursorY { get; set; }

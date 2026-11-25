@@ -45,6 +45,15 @@ public interface IBrutalInput
     /// <inheritdoc cref="FramebufferWidth"/>
     int FramebufferHeight { get; }
 
+    /// <summary>
+    /// The operating system's scale for the window's display, such as 2 on a Retina Mac and 1.5 on Windows at 150%.
+    /// <c>GumService.FollowDisplayScale</c> zooms Gum by it. The default is the framebuffer width over the window
+    /// width: right on macOS, and 1 where the operating system doesn't enlarge the framebuffer or while the window
+    /// has no size. A host that knows the operating system's scale returns it instead, such as GLFW's content scale
+    /// or SDL's <c>SDL_GetWindowDisplayScale</c>. Return a value above zero.
+    /// </summary>
+    float DisplayScale => (float)BrutalScale.WindowToFramebuffer(1, WindowWidth, FramebufferWidth);
+
     /// <summary>Whether <paramref name="button"/> is held right now.</summary>
     bool IsMouseButtonDown(MouseButton button);
 

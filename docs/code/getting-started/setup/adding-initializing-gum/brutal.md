@@ -95,7 +95,7 @@ Vulkan runs on MoltenVK. Install the Vulkan loader and MoltenVK:
 brew install molten-vk vulkan-loader
 ```
 
-Skia draws with Metal on macOS, so the instance must export the Metal device and queue, and the device must enable `VK_EXT_metal_objects`. [Full Program](brutal.md#full-program) does not include this; the [Vulkan sample](../../../../../Samples/BrutalGum/BrutalGumSample/) shows it. Retina displays need nothing extra, since Gum scales the cursor to the framebuffer.
+Skia draws with Metal on macOS, so the instance must export the Metal device and queue, and the device must enable `VK_EXT_metal_objects`. [Full Program](brutal.md#full-program) does not include this; the [Vulkan sample](../../../../../Samples/BrutalGum/BrutalGumSample/) shows it. To keep the UI's size on a Retina display, see [High-Density Displays](brutal.md#high-density-displays).
 
 ## Adding Source (Optional)
 
@@ -196,6 +196,21 @@ GumUI.Draw();
 {% endtabs %}
 
 Gum's canvas is the window's framebuffer. When the window is resized, `Draw` follows the new size and lays out your controls for it. Mouse positions are scaled from window coordinates to framebuffer pixels, so high-DPI displays line up. Gum draws over whatever your game already drew to the framebuffer (OpenGL), so clear or draw your background before calling `Draw`.
+
+### High-Density Displays
+
+On a high-density display, such as a Retina Mac or Windows at 150%, Gum's UI looks smaller than on a standard display because the canvas is in framebuffer pixels. Set `FollowDisplayScale` to keep the UI the same size on every display:
+
+```csharp
+// Initialize
+GumUI.FollowDisplayScale = true;
+```
+
+Gum then divides the canvas size by the display's scale and zooms by the same amount, using [Expand To Window](../../../layout/resizing-the-game-window.md#expand-to-window). It follows the scale when the window moves to another display, and it replaces any resize helper you set before. If you [supply your own input](brutal.md#supplying-input-from-your-own-window), return the display's scale from `DisplayScale`, such as SDL's `SDL_GetWindowDisplayScale`. Otherwise Gum reads the scale from the framebuffer size, which works on macOS but not on Windows.
+
+{% hint style="info" %}
+`FollowDisplayScale` is available in December 2026, or now if building Gum from source.
+{% endhint %}
 
 ### Using Your Own Renderer (Vulkan)
 

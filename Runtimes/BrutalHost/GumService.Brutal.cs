@@ -31,13 +31,43 @@ namespace Gum;
 /// }
 /// </code>
 /// Gum's canvas is the window's framebuffer. Make the window resizable and Gum follows its size; cursor
-/// positions are scaled from window coordinates to framebuffer pixels, so a high-DPI display works.
+/// positions are scaled from window coordinates to framebuffer pixels. On a high-DPI display, set
+/// <see cref="FollowDisplayScale"/> so the UI keeps its size.
 /// </summary>
 public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
 {
     private IBrutalInput? _input;
     private IBrutalGpuBackend? _backend;
     private SkiaTargetHolder<IBrutalTarget>? _targetHolder;
+    private bool _followDisplayScale;
+    // The scale FollowDisplayScale last applied, so Draw re-applies it only when the input's scale changes.
+    private float _appliedDisplayScale;
+
+    /// <summary>
+    /// Whether Gum zooms its UI by <see cref="IBrutalInput.DisplayScale"/>, so the UI keeps its size on a high-DPI
+    /// display (a Retina Mac, Windows at 150%). While true, Gum applies
+    /// <see cref="GumServiceSkiaBase.EnableExpandToWindow"/> at that scale, replacing any fit policy set before, and
+    /// applies it again in <see cref="Draw"/> when the scale changes. Can be set before or after Initialize. Setting it
+    /// false stops following and keeps the zoom applied last. False by default.
+    /// </summary>
+    public bool FollowDisplayScale
+    {
+        get => _followDisplayScale;
+        set
+        {
+            _followDisplayScale = value;
+            if (value && IsInitialized && _input != null)
+            {
+                ApplyDisplayScale(_input);
+            }
+        }
+    }
+
+    private void ApplyDisplayScale(IBrutalInput input)
+    {
+        _appliedDisplayScale = input.DisplayScale;
+        EnableExpandToWindow(_appliedDisplayScale);
+    }
 
     private partial Cursor CreateHostCursor()
     {
@@ -93,6 +123,11 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         }
 
         _targetHolder.EnsureSize(width, height);
+        if (_followDisplayScale && _input.DisplayScale != _appliedDisplayScale)
+        {
+            ApplyDisplayScale(_input);
+        }
+
         _backend.BeginFrame();
         SKCanvas? canvas = _targetHolder.BeginFrame();
         IBrutalTarget? target = _targetHolder.Target;
@@ -135,6 +170,11 @@ public partial class GumService : GumServiceSkiaInteractiveBase, IGumService
         InitializeWithDevices(
             _targetHolder.Canvas, Math.Max(1, _targetHolder.Width), Math.Max(1, _targetHolder.Height), gumProjectFile,
             () => AttachInput(input), visualsVersion);
+
+        if (_followDisplayScale)
+        {
+            ApplyDisplayScale(input);
+        }
     }
 
     /// <summary>
