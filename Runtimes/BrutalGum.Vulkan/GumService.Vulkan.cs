@@ -12,6 +12,8 @@ namespace Gum;
 
 public partial class GumService
 {
+    private bool _presentToWindow = true;
+
     private VulkanBackend? VulkanBackend => QueueLockedBackend.Unwrap(_backend) as VulkanBackend;
 
     /// <summary>
@@ -101,23 +103,28 @@ public partial class GumService
         Func<IDisposable>? acquireQueueLock = null) =>
         Initialize(input, CreateBackend(instance, physicalDevice, device, queue, queueFamily, surface, acquireQueueLock), gumProjectFile, visualsVersion);
 
-    private static IBrutalGpuBackend CreateBackend(
+    private IBrutalGpuBackend CreateBackend(
         Instance instance, PhysicalDevice physicalDevice, Device device, Queue queue, int queueFamily,
-        VkSurfaceKHR surface, Func<IDisposable>? acquireQueueLock) =>
-        QueueLockedBackend.Wrap(
-            new VulkanBackend(instance, physicalDevice, device, queue, queueFamily, surface, acquireQueueLock),
-            acquireQueueLock);
+        VkSurfaceKHR surface, Func<IDisposable>? acquireQueueLock)
+    {
+        VulkanBackend backend = new(instance, physicalDevice, device, queue, queueFamily, surface, acquireQueueLock)
+        {
+            PresentToWindow = _presentToWindow,
+        };
+        return QueueLockedBackend.Wrap(backend, acquireQueueLock);
+    }
 
     /// <summary>
     /// True (the default) to have <see cref="Draw"/> present Gum's image to the window. Set false when your
-    /// own renderer puts it on screen: Draw then only renders into <see cref="RenderTargetImage"/>. Set it right
+    /// own renderer puts it on screen: Draw then only renders into <see cref="RenderTargetImage"/>. Set it before or
     /// after Initialize, before the first Draw.
     /// </summary>
     public bool PresentToWindow
     {
-        get => VulkanBackend?.PresentToWindow ?? true;
+        get => _presentToWindow;
         set
         {
+            _presentToWindow = value;
             if (VulkanBackend is VulkanBackend backend)
             {
                 backend.PresentToWindow = value;

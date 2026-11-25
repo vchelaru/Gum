@@ -218,7 +218,7 @@ If you [supply your own input](brutal.md#supplying-input-from-your-own-window), 
 
 ### Using Your Own Renderer (Vulkan)
 
-If your game already has its own Vulkan renderer, turn presenting off and sample Gum's image yourself. Do this right after `Initialize`, before the first `Draw`. The surface passed to `Initialize` is then not used and may be `default`:
+If your game already has its own Vulkan renderer, turn presenting off and sample Gum's image yourself. Do this before or after `Initialize`, before the first `Draw`. The surface passed to `Initialize` is then not used and may be `default`:
 
 ```csharp
 GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, default);
