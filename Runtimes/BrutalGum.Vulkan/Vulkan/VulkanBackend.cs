@@ -73,6 +73,9 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
     /// <summary>When false, <see cref="Present"/> leaves the image for the game's own renderer.</summary>
     public bool PresentToWindow { get; set; } = true;
 
+    /// <summary>How many images Gum draws into in turn while it does not present; see <see cref="GumService.RenderTargetImageCount"/>.</summary>
+    public int RenderTargetImageCount { get; set; } = 1;
+
     /// <summary>The swapchain image last presented, its format and size, or null; for a test that reads the window's pixels back.</summary>
     public (VkImage Image, VkFormat Format, int Width, int Height)? LastPresented =>
         _presenter?.LastPresentedImage is VkImage image
@@ -93,7 +96,7 @@ internal sealed class VulkanBackend : IBrutalGpuBackend
 
     public IBrutalTarget CreateTarget(int width, int height) =>
         new PresentOrTextureTarget(
-            () => PresentToWindow, TakeFrame,
+            () => PresentToWindow, () => RenderTargetImageCount, TakeFrame,
             this,
             () => new VulkanTextureTarget(_context, width, height),
             WaitForGpuLocked, width, height);

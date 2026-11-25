@@ -126,15 +126,36 @@ public partial class GumService
     }
 
     /// <summary>
+    /// With <see cref="PresentToWindow"/> false, how many images Gum draws into in turn, from 1 (the default) to 8;
+    /// other values throw <see cref="ArgumentOutOfRangeException"/>. Set it after Initialize, to your frames in flight
+    /// plus one, when your renderer can still be reading Gum's last image as <see cref="Draw"/> runs again. On macOS that
+    /// is the case with MoltenVK's asynchronous queue submits: Skia commits its Metal work at once, while MoltenVK commits
+    /// yours later from its own thread. Read <see cref="RenderTargetImage"/> after every Draw.
+    /// </summary>
+    public int RenderTargetImageCount
+    {
+        get => VulkanBackend?.RenderTargetImageCount ?? 1;
+        set
+        {
+            PresentOrTextureTarget.CheckImageCount(value);
+            if (VulkanBackend is VulkanBackend backend)
+            {
+                backend.RenderTargetImageCount = value;
+            }
+        }
+    }
+
+    /// <summary>
     /// Gum's frame, for a game with its own renderer (<see cref="PresentToWindow"/> false). Read it again after every
-    /// <see cref="Draw"/>: the image is replaced when the framebuffer size changes. Contract: after Draw returns
+    /// <see cref="Draw"/>: the image is replaced when the framebuffer size changes, and every Draw when
+    /// <see cref="RenderTargetImageCount"/> is above 1. Contract: after Draw returns
     /// the image is in SHADER_READ_ONLY_OPTIMAL on the queue passed to Initialize (Skia's Begin and End record the
     /// transitions and submit on that queue). Sample it from a later submission on that same queue; from another
     /// queue, add your own synchronization. Do not write to it, and do not keep views of it across a resize. The
     /// bytes are sRGB in a UNORM format (<see cref="RenderTargetFormat"/>): a pass that writes to an sRGB target
     /// must not decode them again. Null before Initialize.
     /// </summary>
-    public VkImage? RenderTargetImage => ((QueueLockedBackend.Unwrap(_targetHolder?.Target) as PresentOrTextureTarget)?.Texture as VulkanTextureTarget)?.Image;
+    public VkImage? RenderTargetImage => RenderTargetTexture?.Image;
 
     // Read by reflection from the sample's --capture mode, which proves a frame reached the window by reading
     // the swapchain image back: { handle, VkFormat, width, height }, or null before the first present.
@@ -144,6 +165,9 @@ public partial class GumService
             : null;
 
     /// <summary>The format of <see cref="RenderTargetImage"/>.</summary>
-    public VkFormat? RenderTargetFormat => ((QueueLockedBackend.Unwrap(_targetHolder?.Target) as PresentOrTextureTarget)?.Texture as VulkanTextureTarget)?.Format;
+    public VkFormat? RenderTargetFormat => RenderTargetTexture?.Format;
+
+    private VulkanTextureTarget? RenderTargetTexture =>
+        (QueueLockedBackend.Unwrap(_targetHolder?.Target) as PresentOrTextureTarget)?.Texture as VulkanTextureTarget;
 }
 #endif
