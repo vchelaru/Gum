@@ -75,6 +75,28 @@ public class PresentOrTextureTargetTests
     }
 
     [Fact]
+    public void Begin_CompositingAgainAfterPresenting_StartsFromTheFirstTexture()
+    {
+        TargetDriver driver = new() { ImageCount = 8 };
+        for (int i = 0; i < 8; i++)
+        {
+            driver.FramePass();
+        }
+        driver.Target.Texture.ShouldBeSameAs(driver.Textures[7]);
+
+        driver.PresentToWindow = true;
+        driver.FramePass();
+        driver.ImageCount = 2;
+        driver.PresentToWindow = false;
+        driver.FramePass();
+        driver.FramePass();
+
+        driver.Events.Count.ShouldBe(1);
+        driver.Textures.Count.ShouldBe(10);
+        driver.Target.Texture.ShouldBeSameAs(driver.Textures[9]);
+    }
+
+    [Fact]
     public void Begin_FewerImages_FreesTheExtraTexturesAfterTheGpuWait()
     {
         TargetDriver driver = new() { ImageCount = 3 };
@@ -172,18 +194,20 @@ public class PresentOrTextureTargetTests
     }
 
     [Theory]
-    [InlineData(0)]
-    [InlineData(PresentOrTextureTarget.MaxImageCount + 1)]
-    public void CheckImageCount_OutOfRange_Throws(int count)
+    [InlineData(0, true)]
+    [InlineData(1, false)]
+    [InlineData(PresentOrTextureTarget.MaxImageCount, false)]
+    [InlineData(PresentOrTextureTarget.MaxImageCount + 1, true)]
+    public void CheckImageCount_ThrowsOnlyOutsideOneToTheMax(int count, bool throws)
     {
-        Should.Throw<ArgumentOutOfRangeException>(() => PresentOrTextureTarget.CheckImageCount(count));
-    }
-
-    [Theory]
-    [InlineData(1)]
-    [InlineData(PresentOrTextureTarget.MaxImageCount)]
-    public void CheckImageCount_InRange_DoesNotThrow(int count)
-    {
-        Should.NotThrow(() => PresentOrTextureTarget.CheckImageCount(count));
+        if (throws)
+        {
+            ArgumentOutOfRangeException exception = Should.Throw<ArgumentOutOfRangeException>(() => PresentOrTextureTarget.CheckImageCount(count));
+            exception.ParamName.ShouldBe("value");
+        }
+        else
+        {
+            Should.NotThrow(() => PresentOrTextureTarget.CheckImageCount(count));
+        }
     }
 }

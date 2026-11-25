@@ -97,7 +97,7 @@ brew install molten-vk vulkan-loader
 
 Skia draws with Metal on macOS, so the instance must export the Metal device and queue, and the device must enable `VK_EXT_metal_objects`. [Full Program](brutal.md#full-program) does not include this; the [Vulkan sample](../../../../../Samples/BrutalGum/BrutalGumSample/) shows it. Retina displays need nothing extra, since Gum scales the cursor to the framebuffer.
 
-If you [use your own renderer](brutal.md#using-your-own-renderer-vulkan) and enable MoltenVK's asynchronous queue submits, set `RenderTargetImageCount` to your frames in flight plus one. Skia commits its Metal work at once, while MoltenVK commits your submissions later from its own thread, so with one image your renderer can read it while Gum draws the next frame.
+If you [use your own renderer](brutal.md#using-your-own-renderer-vulkan) with MoltenVK's asynchronous queue submits, set `RenderTargetImageCount` as that section shows.
 
 ## Adding Source (Optional)
 
@@ -201,7 +201,11 @@ Gum's canvas is the window's framebuffer. When the window is resized, `Draw` fol
 
 ### Using Your Own Renderer (Vulkan)
 
-If your game already has its own Vulkan renderer, turn presenting off and sample Gum's image yourself. Do this right after `Initialize`, before the first `Draw`. The surface passed to `Initialize` is then not used and may be `default`:
+{% hint style="info" %}
+`RenderTargetImageCount`, and setting `PresentToWindow` before `Initialize`, are available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+If your game already has its own Vulkan renderer, turn presenting off and sample Gum's image yourself. Do this before or after `Initialize`, before the first `Draw`. The surface passed to `Initialize` is then not used and may be `default`:
 
 ```csharp
 GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, default);
@@ -215,11 +219,12 @@ VkFormat format = GumUI.RenderTargetFormat!.Value;
 Things to know:
 
 * After `Draw` returns, the image is in `SHADER_READ_ONLY_OPTIMAL` on the queue you passed to `Initialize`. Sample it from a later submission on that queue. From another queue, add your own synchronization.
-* Read `RenderTargetImage` again after every `Draw`. The image is replaced when the window size changes, and the old one is freed after the GPU finishes the last frame.
-* If your renderer can still be reading Gum's image when `Draw` runs again, set `GumUI.RenderTargetImageCount` to your frames in flight plus one. Gum then draws into that many images in turn, so `RenderTargetImage` changes every `Draw`.
+* Read `RenderTargetImage` again after every `Draw`. Gum frees its images when the window size changes, when `RenderTargetImageCount` gets smaller and when `PresentToWindow` is set back to true, each after the GPU finishes the last frame. Don't keep views of a freed image: Vulkan can reuse its handle.
 * The image is plain UNORM and holds sRGB bytes. If your pass writes to an sRGB target without decoding the sampled value first, colors are encoded twice and look washed out.
 
 OpenGL has no equivalent switch. `Draw` writes the whole default framebuffer, so anything of yours must be drawn after it.
+
+On macOS with MoltenVK's asynchronous queue submits, one image isn't enough: your renderer can read it while Gum draws the next frame. Set `GumUI.RenderTargetImageCount` to your frames in flight plus one. Gum then draws into that many images in turn, so `RenderTargetImage` changes every `Draw`.
 
 ### Sharing the Queue With Other Threads (Vulkan)
 

@@ -12,6 +12,9 @@ namespace Gum;
 
 public partial class GumService
 {
+    private bool _presentToWindow = true;
+    private int _renderTargetImageCount = 1;
+
     private VulkanBackend? VulkanBackend => QueueLockedBackend.Unwrap(_backend) as VulkanBackend;
 
     /// <summary>
@@ -101,23 +104,29 @@ public partial class GumService
         Func<IDisposable>? acquireQueueLock = null) =>
         Initialize(input, CreateBackend(instance, physicalDevice, device, queue, queueFamily, surface, acquireQueueLock), gumProjectFile, visualsVersion);
 
-    private static IBrutalGpuBackend CreateBackend(
+    private IBrutalGpuBackend CreateBackend(
         Instance instance, PhysicalDevice physicalDevice, Device device, Queue queue, int queueFamily,
-        VkSurfaceKHR surface, Func<IDisposable>? acquireQueueLock) =>
-        QueueLockedBackend.Wrap(
-            new VulkanBackend(instance, physicalDevice, device, queue, queueFamily, surface, acquireQueueLock),
-            acquireQueueLock);
+        VkSurfaceKHR surface, Func<IDisposable>? acquireQueueLock)
+    {
+        VulkanBackend backend = new(instance, physicalDevice, device, queue, queueFamily, surface, acquireQueueLock)
+        {
+            PresentToWindow = _presentToWindow,
+            RenderTargetImageCount = _renderTargetImageCount,
+        };
+        return QueueLockedBackend.Wrap(backend, acquireQueueLock);
+    }
 
     /// <summary>
     /// True (the default) to have <see cref="Draw"/> present Gum's image to the window. Set false when your
-    /// own renderer puts it on screen: Draw then only renders into <see cref="RenderTargetImage"/>. Set it right
+    /// own renderer puts it on screen: Draw then only renders into <see cref="RenderTargetImage"/>. Set it before or
     /// after Initialize, before the first Draw.
     /// </summary>
     public bool PresentToWindow
     {
-        get => VulkanBackend?.PresentToWindow ?? true;
+        get => _presentToWindow;
         set
         {
+            _presentToWindow = value;
             if (VulkanBackend is VulkanBackend backend)
             {
                 backend.PresentToWindow = value;
@@ -127,17 +136,17 @@ public partial class GumService
 
     /// <summary>
     /// With <see cref="PresentToWindow"/> false, how many images Gum draws into in turn, from 1 (the default) to 8;
-    /// other values throw <see cref="ArgumentOutOfRangeException"/>. Set it after Initialize, to your frames in flight
-    /// plus one, when your renderer can still be reading Gum's last image as <see cref="Draw"/> runs again. On macOS that
-    /// is the case with MoltenVK's asynchronous queue submits: Skia commits its Metal work at once, while MoltenVK commits
-    /// yours later from its own thread. Read <see cref="RenderTargetImage"/> after every Draw.
+    /// other values throw <see cref="ArgumentOutOfRangeException"/>. On macOS with MoltenVK's asynchronous queue
+    /// submits, set it to your frames in flight plus one, or your renderer can read Gum's image while Gum draws the next
+    /// frame.
     /// </summary>
     public int RenderTargetImageCount
     {
-        get => VulkanBackend?.RenderTargetImageCount ?? 1;
+        get => _renderTargetImageCount;
         set
         {
             PresentOrTextureTarget.CheckImageCount(value);
+            _renderTargetImageCount = value;
             if (VulkanBackend is VulkanBackend backend)
             {
                 backend.RenderTargetImageCount = value;
@@ -151,7 +160,9 @@ public partial class GumService
     /// <see cref="RenderTargetImageCount"/> is above 1. Contract: after Draw returns
     /// the image is in SHADER_READ_ONLY_OPTIMAL on the queue passed to Initialize (Skia's Begin and End record the
     /// transitions and submit on that queue). Sample it from a later submission on that same queue; from another
-    /// queue, add your own synchronization. Do not write to it, and do not keep views of it across a resize. The
+    /// queue, add your own synchronization. Do not write to it, and do not keep views of it once it is freed: a resize,
+    /// a smaller <see cref="RenderTargetImageCount"/> and <see cref="PresentToWindow"/> set back to true free images,
+    /// and a freed image's handle can be reused. The
     /// bytes are sRGB in a UNORM format (<see cref="RenderTargetFormat"/>): a pass that writes to an sRGB target
     /// must not decode them again. Null before Initialize.
     /// </summary>

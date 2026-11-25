@@ -67,12 +67,12 @@ internal sealed class PresentOrTextureTarget : IBrutalTarget
     /// <summary>The most textures Gum draws into in turn.</summary>
     public const int MaxImageCount = 8;
 
-    /// <summary>Throws when <paramref name="count"/> is not a texture count Gum supports.</summary>
-    public static void CheckImageCount(int count)
+    /// <summary>Throws, as a property setter would, when <paramref name="value"/> is not a texture count Gum supports.</summary>
+    public static void CheckImageCount(int value)
     {
-        if (count < 1 || count > MaxImageCount)
+        if (value < 1 || value > MaxImageCount)
         {
-            throw new ArgumentOutOfRangeException(nameof(count), count, $"RenderTargetImageCount must be from 1 to {MaxImageCount}.");
+            throw new ArgumentOutOfRangeException(nameof(value), value, $"RenderTargetImageCount must be from 1 to {MaxImageCount}.");
         }
     }
 
