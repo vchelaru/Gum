@@ -1,8 +1,6 @@
 using Gum;
 using Gum.Wireframe;
 using Shouldly;
-using SkiaHostTests;
-using SkiaSharp;
 
 namespace BrutalGum.Tests;
 
@@ -12,31 +10,12 @@ namespace BrutalGum.Tests;
 /// </summary>
 public class GumServiceDrawTests : BaseTestClass
 {
-    private static void WithBackend(FakeBrutalInput input, Action<FakeBrutalGpuBackend> body)
-    {
-        FakeBrutalGpuBackend backend = new FakeBrutalGpuBackend();
-        GumService.Default.Uninitialize();
-        try
-        {
-            GumService.Default.Initialize(input, backend);
-            body(backend);
-        }
-        finally
-        {
-            GumService.Default.Uninitialize();
-            SKSurface surface = SKSurface.Create(new SKImageInfo(SkiaHostTestFramework.CanvasWidth, SkiaHostTestFramework.CanvasHeight));
-            GumService.Default.Initialize(surface.Canvas, TestAssemblyInitialize.Input, SkiaHostTestFramework.CanvasWidth, SkiaHostTestFramework.CanvasHeight);
-            SkiaHostTestBase.CaptureRenderableBaseline();
-            Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Clear();
-        }
-    }
-
     [Fact]
     public void Initialize_CreatesTheTargetAtTheFramebufferSize()
     {
         FakeBrutalInput input = new() { FramebufferWidth = 640, FramebufferHeight = 480 };
 
-        WithBackend(input, backend =>
+        TestAssemblyInitialize.WithBackend(input, backend =>
         {
             backend.Targets.Count.ShouldBe(1);
             backend.Targets[0].Width.ShouldBe(640);
@@ -50,7 +29,7 @@ public class GumServiceDrawTests : BaseTestClass
     {
         FakeBrutalInput input = new() { FramebufferWidth = 320, FramebufferHeight = 200 };
 
-        WithBackend(input, backend =>
+        TestAssemblyInitialize.WithBackend(input, backend =>
         {
             int beginsBefore = backend.Targets[0].BeginCount;
 
@@ -69,7 +48,7 @@ public class GumServiceDrawTests : BaseTestClass
         // capture pass a new target gets (at Initialize and on resize) must not be preceded by it.
         FakeBrutalInput input = new() { FramebufferWidth = 320, FramebufferHeight = 200 };
 
-        WithBackend(input, backend =>
+        TestAssemblyInitialize.WithBackend(input, backend =>
         {
             backend.FrameEvents.ShouldBe(new[] { "Begin" });
 
@@ -85,7 +64,7 @@ public class GumServiceDrawTests : BaseTestClass
     {
         FakeBrutalInput input = new() { FramebufferWidth = 320, FramebufferHeight = 200 };
 
-        WithBackend(input, backend =>
+        TestAssemblyInitialize.WithBackend(input, backend =>
         {
             GumService.Default.Draw();
             input.FramebufferWidth = 640;
@@ -110,7 +89,7 @@ public class GumServiceDrawTests : BaseTestClass
     {
         FakeBrutalInput input = new() { FramebufferWidth = 320, FramebufferHeight = 200 };
 
-        WithBackend(input, backend =>
+        TestAssemblyInitialize.WithBackend(input, backend =>
         {
             GumService.Default.Draw();
             GumService.Default.Draw();
@@ -126,7 +105,7 @@ public class GumServiceDrawTests : BaseTestClass
     {
         FakeBrutalInput input = new() { FramebufferWidth = 320, FramebufferHeight = 200 };
 
-        WithBackend(input, backend =>
+        TestAssemblyInitialize.WithBackend(input, backend =>
         {
             input.FramebufferWidth = 0;
             input.FramebufferHeight = 0;
@@ -143,7 +122,7 @@ public class GumServiceDrawTests : BaseTestClass
     {
         FakeBrutalInput input = new() { FramebufferWidth = 64, FramebufferHeight = 64 };
 
-        WithBackend(input, backend =>
+        TestAssemblyInitialize.WithBackend(input, backend =>
         {
             GumService.Default.Draw();
 
@@ -156,7 +135,7 @@ public class GumServiceDrawTests : BaseTestClass
     {
         FakeBrutalInput input = new() { FramebufferWidth = 64, FramebufferHeight = 64 };
 
-        WithBackend(input, backend =>
+        TestAssemblyInitialize.WithBackend(input, backend =>
         {
             GumService.Default.Uninitialize();
 

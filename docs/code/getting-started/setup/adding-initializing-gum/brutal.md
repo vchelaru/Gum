@@ -95,7 +95,7 @@ Vulkan runs on MoltenVK. Install the Vulkan loader and MoltenVK:
 brew install molten-vk vulkan-loader
 ```
 
-Skia draws with Metal on macOS, so the instance must export the Metal device and queue, and the device must enable `VK_EXT_metal_objects`. [Full Program](brutal.md#full-program) does not include this; the [Vulkan sample](../../../../../Samples/BrutalGum/BrutalGumSample/) shows it. Retina displays need nothing extra, since Gum scales the cursor to the framebuffer.
+Skia draws with Metal on macOS, so the instance must export the Metal device and queue, and the device must enable `VK_EXT_metal_objects`. [Full Program](brutal.md#full-program) does not include this; the [Vulkan sample](../../../../../Samples/BrutalGum/BrutalGumSample/) shows it. To keep the UI's size on a Retina display, see [High-DPI Displays](brutal.md#high-dpi-displays).
 
 ## Adding Source (Optional)
 
@@ -196,6 +196,25 @@ GumUI.Draw();
 {% endtabs %}
 
 Gum's canvas is the window's framebuffer. When the window is resized, `Draw` follows the new size and lays out your controls for it. Mouse positions are scaled from window coordinates to framebuffer pixels, so high-DPI displays line up. Gum draws over whatever your game already drew to the framebuffer (OpenGL), so clear or draw your background before calling `Draw`.
+
+### High-DPI Displays
+
+Because the canvas is the framebuffer, Gum's UI looks smaller on a Retina Mac or on Windows at 150%. To keep it the same size, pass the window's `ContentScale` to [Expand To Window](../../../layout/resizing-the-game-window.md#high-dpi-displays), and again when the window moves to a display with another scale:
+
+```csharp
+// Class scope
+float displayScale;
+
+// Update
+if (window.ContentScale.X != displayScale)
+{
+    displayScale = window.ContentScale.X;
+    GumUI.EnableExpandToWindow(defaultZoom: displayScale);
+}
+GumUI.Update(gameTime);
+```
+
+If you [supply your own input](brutal.md#supplying-input-from-your-own-window), read the scale from your window instead, such as SDL's `SDL_GetWindowDisplayScale`.
 
 ### Using Your Own Renderer (Vulkan)
 

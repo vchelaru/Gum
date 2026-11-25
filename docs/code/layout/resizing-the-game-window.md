@@ -24,7 +24,7 @@ GumUI.EnableZoomToWindow();
 GumUI.EnableExpandToWindow();
 ```
 
-Both methods are available on MonoGame, KNI, FNA, and raylib. Calling either method replaces any previously enabled policy, so flipping at runtime, for example from a settings menu, is a single method call.
+Calling either method replaces any previously enabled policy, so flipping at runtime, for example from a settings menu, is a single method call.
 
 ### `defaultZoom`
 
@@ -67,9 +67,27 @@ Both parameters can be combined:
 GumUI.EnableZoomToWindow(WindowZoomMode.WidthDominant, defaultZoom: 1.5f);
 ```
 
+### High-DPI Displays
+
+Gum measures its canvas in the pixels your game renders. On a high-DPI display, such as a Retina Mac or Windows at 150%, a game that renders at the display's full resolution shows Gum's UI smaller than on a standard display. Passing the display's scale as `defaultZoom` to `EnableExpandToWindow` keeps the UI the same size on every display. Your windowing library reports the scale, and it can change when the window moves to another display, so check it every frame before `Update`:
+
+```csharp
+// Class scope
+float displayScale;
+
+// Update
+float currentScale = 1.5f; // the window's display scale, from your windowing library
+if (currentScale != displayScale)
+{
+    displayScale = currentScale;
+    GumUI.EnableExpandToWindow(defaultZoom: displayScale);
+}
+GumUI.Update(gameTime);
+```
+
 ### What Happens Without the Helpers
 
-If you don't call either method, resizing the window does not adjust Gum — the canvas stays at its initial size and authored UI keeps its original layout. The objects in the following animation are properly docked to the corners and center as indicated by the displayed text:
+If you don't call either method, Gum does not zoom when the window resizes. On MonoGame, KNI, FNA and raylib the canvas also stays at its initial size and authored UI keeps its original layout. The objects in the following animation are properly docked to the corners and center as indicated by the displayed text:
 
 <figure><img src="../../.gitbook/assets/20_06 44 11.gif" alt=""><figcaption></figcaption></figure>
 
