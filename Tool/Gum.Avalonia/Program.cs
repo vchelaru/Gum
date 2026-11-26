@@ -67,9 +67,10 @@ public static class Program
             Path.Combine(GetAppDataDirectory(), CrashLogsFolderName),
             ToolVersion.Describe(typeof(Program).Assembly),
             message => ShowErrorMessage(services, options, message));
-        // Both set once the host is built; until then nothing is sent.
+        // Both set once the host is built; until then nothing is sent. The project folder is looked up
+        // only when a report is scrubbed, so a launch without crash reporting resolves nothing extra.
         ICrashReportingConsent? consent = null;
-        IProjectState? projectState = null;
+        IServiceProvider? hostServices = null;
         ICrashReporter reporter = SentryCrashReporter.Wrap(crashReporter, SentryCrashReporter.Dsn,
             () => SentryCrashReportSender.Start(SentryCrashReportSender.CreateOptions(
                 SentryCrashReporter.Dsn,
@@ -77,7 +78,7 @@ public static class Program
                 Path.Combine(GetAppDataDirectory(), SentryCacheFolderName),
                 new CrashReportScrubber(
                     new PathScrubber(Environment.UserName, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)),
-                    () => projectState?.ProjectDirectory))),
+                    () => hostServices?.GetService<IProjectState>()?.ProjectDirectory))),
             () => consent?.IsSendingAllowed == true);
         UnhandledExceptionHooks.InstallProcessHooks(reporter);
 
@@ -95,7 +96,7 @@ public static class Program
         StartupTiming.Mark("Host built");
         Locator.Register(host.Services);
         consent = host.Services.GetService<ICrashReportingConsent>();
-        projectState = host.Services.GetRequiredService<IProjectState>();
+        hostServices = host.Services;
         if (gate != null)
         {
             // The claim follows the project this Gum has open, so a launch for any other project

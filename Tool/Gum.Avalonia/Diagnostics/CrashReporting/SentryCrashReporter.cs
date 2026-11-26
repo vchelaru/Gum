@@ -11,11 +11,11 @@ namespace Gum.Avalonia.Diagnostics.CrashReporting;
 public class SentryCrashReporter : ICrashReporter
 {
     /// <summary>
-    /// The Sentry project's DSN, built into the binary. Fill it in from the Sentry project's
-    /// Settings > Client Keys (DSN). While it is empty, Sentry is never started, the local reporter
-    /// is not wrapped and the consent prompt never shows.
+    /// The Sentry project's DSN (Settings > Client Keys), built into the binary; a DSN is public by
+    /// design. Emptying it turns crash reporting off: Sentry is never started, the local reporter is
+    /// not wrapped and the consent prompt never shows.
     /// </summary>
-    public const string Dsn = "";
+    public const string Dsn = "https://766918fc390377f81ba9f84db571b61c@o4512500395933696.ingest.us.sentry.io/4512500480999424";
 
     private readonly ICrashReporter _inner;
     private readonly ICrashReportSender _sender;
