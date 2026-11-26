@@ -56,8 +56,9 @@ public class SentryCrashReportSenderTests
     [Fact]
     public async Task ThrownException_IsSentWithoutMachineNameAndWithFramesAndMessageScrubbed()
     {
-        // This file's folder stands in for the project, so the thrown exception's own frames point into it.
-        string projectFolder = Path.GetDirectoryName(ThisFilePath())!;
+        // The test project's folder stands in for the project: the thrown exception's frames and the
+        // loaded test assembly and its PDB (the event's debug images) all sit under it.
+        string projectFolder = Path.GetDirectoryName(Path.GetDirectoryName(ThisFilePath()))!;
         RecordingTransport transport = new RecordingTransport();
         CrashReportScrubber scrubber = new CrashReportScrubber(
             new PathScrubber(Environment.UserName, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)),
@@ -76,10 +77,17 @@ public class SentryCrashReportSenderTests
         transport.PropertyNames.ShouldNotContain("server_name");
         transport.SentStrings.ShouldContain("Could not find " + Path.Combine("<project>", "a.png"));
         transport.SentStrings.ShouldContain("Opened " + Path.Combine("<project>", "b.gumx") + " for " + PathScrubber.Placeholder);
-        transport.SentStrings.ShouldContain(Path.Combine("<project>", "SentryCrashReportSenderTests.cs"), "a stack frame's path");
-        transport.SentStrings.ShouldNotContain(value => value.Contains(projectFolder, StringComparison.OrdinalIgnoreCase));
-        transport.SentStrings.ShouldNotContain(value => value.Contains(Environment.MachineName, StringComparison.OrdinalIgnoreCase));
-        transport.SentStrings.ShouldNotContain(value => value.Contains(Environment.UserName, StringComparison.OrdinalIgnoreCase));
+        transport.SentStrings.ShouldContain(Path.Combine("<project>", "CrashReporting", "SentryCrashReportSenderTests.cs"), "a stack frame's path");
+        ShouldNotSend(transport, projectFolder);
+        ShouldNotSend(transport, Environment.MachineName);
+        ShouldNotSend(transport, Environment.UserName);
+    }
+
+    // Names every sent string that holds the text, so a failure says what leaked.
+    private static void ShouldNotSend(RecordingTransport transport, string text)
+    {
+        List<string> leaks = transport.SentStrings.Where(value => value.Contains(text, StringComparison.OrdinalIgnoreCase)).ToList();
+        leaks.ShouldBeEmpty("sent strings holding '" + text + "': " + string.Join(" | ", leaks));
     }
 
     [Theory]

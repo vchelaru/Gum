@@ -66,6 +66,14 @@ public class SentryCrashReportSender : ICrashReportSender
             }
         }
 
+        // Each loaded assembly's path and its PDB's build path, which sit under the user's folder for
+        // a Gum unzipped there or a project's own plugins.
+        foreach (DebugImage image in sentryEvent.DebugImages ?? (System.Collections.Generic.IEnumerable<DebugImage>)Array.Empty<DebugImage>())
+        {
+            image.CodeFile = scrubber.Scrub(image.CodeFile);
+            image.DebugFile = scrubber.Scrub(image.DebugFile);
+        }
+
         return sentryEvent;
     }
 
