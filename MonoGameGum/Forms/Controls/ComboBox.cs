@@ -927,11 +927,18 @@ public class ComboBox :
 #if !FRB
         // A drop-down taller than the root it opens in is shrunk to that root's height and scrolls;
         // ShowPopupListBox then moves it to the root's top, as it does any popup that does not fit (#6769).
-        float availableHeight = ListBox.GetPopupTargetRoot(this.Visual).AbsoluteHeight;
+        GraphicalUiElement targetRoot = ListBox.GetPopupTargetRoot(this.Visual);
+        float availableHeight = targetRoot.AbsoluteHeight;
         if (height > availableHeight)
         {
             FillShrunkLevels();
             height = availableHeight;
+        }
+        // A drop-down that does not fit below but fits above opens above, without covering the
+        // ComboBox. One that fits neither way is shifted onto the root by ShowPopupListBox (#8435).
+        else if (y + height > targetRoot.AbsoluteBottom && Visual.AbsoluteTop - height >= targetRoot.AbsoluteTop)
+        {
+            y = Visual.AbsoluteTop - height;
         }
 #endif
 

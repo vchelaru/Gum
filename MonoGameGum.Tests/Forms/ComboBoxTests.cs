@@ -1077,7 +1077,7 @@ public  class ComboBoxTests : BaseTestClass
     }
 
     [Fact]
-    public void Activity_ComboBoxMovesNearBottomEdge_OpenDropDownIsClampedToCanvas()
+    public void Activity_ComboBoxMovesNearBottomEdge_OpenDropDownMovesAboveComboBox()
     {
         ComboBox comboBox = CreateComboBox("Apple", "Banana", "Cherry");
         comboBox.Anchor(Anchor.BottomRight);
@@ -1092,9 +1092,10 @@ public  class ComboBoxTests : BaseTestClass
         FrameworkElement.PopupRoot.UpdateLayout();
         Tick();
 
+        // The drop-down no longer fits below, but it fits above (#8435).
         float bottom = popup.AbsoluteY + popup.AbsoluteHeight;
         float right = popup.AbsoluteX + popup.AbsoluteWidth;
-        bottom.ShouldBe(GraphicalUiElement.CanvasHeight, 0.5f);
+        bottom.ShouldBe(comboBox.Visual.AbsoluteTop, 0.5f);
         right.ShouldBeLessThanOrEqualTo(GraphicalUiElement.CanvasWidth + 0.5f);
     }
 
