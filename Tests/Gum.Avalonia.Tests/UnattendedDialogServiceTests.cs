@@ -26,6 +26,18 @@ public class UnattendedDialogServiceTests
         service.HasShownNotice.ShouldBeFalse("a cancelled question is not an error");
     }
 
+    // Callers may read the view model after a cancel, as with the head's own dialog service.
+    [AvaloniaFact]
+    public void Show_RunsTheInitializer_BeforeCancelling()
+    {
+        UnattendedDialogService service = new UnattendedDialogService(TestAppBuilder.Services, new StringWriter());
+        NewProjectDialogViewModel? initialized = null;
+
+        service.Show<NewProjectDialogViewModel>(vm => initialized = vm, out NewProjectDialogViewModel viewModel);
+
+        initialized.ShouldBeSameAs(viewModel);
+    }
+
     [Fact]
     public void ShowMessage_Question_IsCancelled_WithoutCountingAsANotice()
     {

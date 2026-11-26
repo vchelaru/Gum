@@ -54,6 +54,7 @@ public sealed class UnattendedDialogService : IDialogService
     public bool Show<T>(Action<T>? initializer, out T viewModel) where T : DialogViewModel
     {
         viewModel = _serviceProvider.GetRequiredService<T>();
+        initializer?.Invoke(viewModel);
         return Show(viewModel);
     }
 
