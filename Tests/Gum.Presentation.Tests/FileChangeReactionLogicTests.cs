@@ -1000,4 +1000,147 @@ public class FileChangeReactionLogicTests : BaseTestClass
         FilePath satellite = new FilePath(@"C:\project\Strings.es.resx");
         FileChangeReactionLogic.IsLocalizationFileThatShouldTriggerReload(satellite, baseFile).ShouldBeTrue();
     }
+
+    /// <summary>
+    /// A project with components <paramref name="componentNames"/>, each shown on the canvas by an instance, so a
+    /// reload of any of them rebuilds the canvas.
+    /// </summary>
+    private static FileChangeReactionLogic BuildShownComponentsSut(
+        string[] componentNames,
+        out Mock<IGuiCommands> guiCommandsMock,
+        out Mock<IPluginManager> pluginManagerMock,
+        out Mock<IFileCommands> fileCommandsMock,
+        out Mock<IWireframeObjectManager> wireframeObjectManagerMock,
+        out Mock<IOutputManager> outputMock,
+        out string tempDir,
+        out GumProjectSave project)
+    {
+        outputMock = new Mock<IOutputManager>();
+        FileChangeReactionLogic sut = BuildSut(
+            out guiCommandsMock, out fileCommandsMock, out pluginManagerMock,
+            out Mock<IProjectState> projectStateMock, out _, out wireframeObjectManagerMock,
+            new Mock<IDialogService>().Object, new UnsavedChangesTracker(), outputMock.Object);
+        tempDir = Path.Combine(Path.GetTempPath(), "GumBatchReloadTest_" + Guid.NewGuid().ToString("N"));
+        fileCommandsMock.Setup(f => f.ProjectDirectory).Returns(new FilePath(tempDir + Path.DirectorySeparatorChar));
+        fileCommandsMock.Setup(f => f.LoadProjectAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+        project = new GumProjectSave { FullFileName = Path.Combine(tempDir, "Project.gumx") };
+        List<GraphicalUiElement> shown = new List<GraphicalUiElement>();
+        foreach (string name in componentNames)
+        {
+            project.Components.Add(new ComponentSave { Name = name });
+            shown.Add(new GraphicalUiElement { Tag = new InstanceSave { Name = name + "Instance", BaseType = name } });
+        }
+        wireframeObjectManagerMock.Setup(w => w.AllIpsos).Returns(shown);
+        projectStateMock.Setup(p => p.GumProjectSave).Returns(project);
+        ObjectFinder.Self.GumProjectSave = project;
+        return sut;
+    }
+
+    private static FilePath ComponentFile(string tempDir, string name) =>
+        new FilePath(Path.Combine(tempDir, "Components", name + ".gucx"));
+
+    [Fact]
+    public void ReactToFileChanged_RefreshesTheTreeAndCanvasOnce_WhenOneShownElementReloads()
+    {
+        FileChangeReactionLogic sut = BuildShownComponentsSut(new[] { "A" },
+            out Mock<IGuiCommands> guiCommandsMock, out Mock<IPluginManager> pluginManagerMock, out _,
+            out Mock<IWireframeObjectManager> wireframeMock, out Mock<IOutputManager> outputMock,
+            out string tempDir, out _);
+        try
+        {
+            sut.ReactToFileChanged(ComponentFile(tempDir, "A"));
+
+            guiCommandsMock.Verify(g => g.RefreshElementTreeView(), Times.Once);
+            wireframeMock.Verify(w => w.RefreshAll(true, true), Times.Once);
+            pluginManagerMock.Verify(p => p.ElementReloaded(It.IsAny<ElementSave>()), Times.Once);
+            outputMock.Verify(o => o.AddOutput("Reloaded A: Components/A.gucx changed on disk"), Times.Once);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_RefreshesTheTreeAndCanvasOnce_WhenManyShownElementsReloadInOneBatch()
+    {
+        // #8445: a CLI edit rewrote ~180 files and each reload refreshed the tree and canvas, freezing the tool.
+        string[] names = { "A", "B", "C", "D" };
+        FileChangeReactionLogic sut = BuildShownComponentsSut(names,
+            out Mock<IGuiCommands> guiCommandsMock, out Mock<IPluginManager> pluginManagerMock, out _,
+            out Mock<IWireframeObjectManager> wireframeMock, out _, out string tempDir, out _);
+        try
+        {
+            using (sut.DeferDependentUpdates())
+            {
+                foreach (string name in names)
+                {
+                    sut.ReactToFileChanged(ComponentFile(tempDir, name));
+                }
+            }
+
+            guiCommandsMock.Verify(g => g.RefreshElementTreeView(), Times.Once);
+            wireframeMock.Verify(w => w.RefreshAll(true, true), Times.Once);
+            pluginManagerMock.Verify(p => p.ElementReloaded(It.IsAny<ElementSave>()), Times.Exactly(names.Length));
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_PrintsOneSummaryLine_WhenManyElementsReloadInOneBatch()
+    {
+        string[] names = Enumerable.Range(0, 12).Select(i => "C" + i).ToArray();
+        FileChangeReactionLogic sut = BuildShownComponentsSut(names,
+            out _, out _, out _, out _, out Mock<IOutputManager> outputMock, out string tempDir, out _);
+        try
+        {
+            using (sut.DeferDependentUpdates())
+            {
+                foreach (string name in names)
+                {
+                    sut.ReactToFileChanged(ComponentFile(tempDir, name));
+                }
+            }
+
+            outputMock.Verify(o => o.AddOutput(
+                "Reloaded 12 files changed on disk: Components/C0.gucx, Components/C1.gucx, Components/C2.gucx and 9 more"),
+                Times.Once);
+            outputMock.Verify(o => o.AddOutput(It.IsAny<string>()), Times.Once);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ReloadsOnlyTheProject_WhenTheBatchHoldsTheProjectFile()
+    {
+        // The project reload replaces every element, so reloading them one by one as well is wasted work.
+        FileChangeReactionLogic sut = BuildShownComponentsSut(new[] { "A", "B" },
+            out Mock<IGuiCommands> guiCommandsMock, out Mock<IPluginManager> pluginManagerMock,
+            out Mock<IFileCommands> fileCommandsMock, out Mock<IWireframeObjectManager> wireframeMock, out _,
+            out string tempDir, out GumProjectSave project);
+        try
+        {
+            using (sut.DeferDependentUpdates())
+            {
+                sut.ReactToFileChanged(new FilePath(project.FullFileName!));
+                sut.ReactToFileChanged(ComponentFile(tempDir, "A"));
+                sut.ReactToFileChanged(ComponentFile(tempDir, "B"));
+            }
+
+            fileCommandsMock.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Once);
+            pluginManagerMock.Verify(p => p.ElementReloaded(It.IsAny<ElementSave>()), Times.Never);
+            guiCommandsMock.Verify(g => g.RefreshElementTreeView(), Times.Never);
+            wireframeMock.Verify(w => w.RefreshAll(It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
 }

@@ -63,6 +63,27 @@ namespace Gum.Managers
         private List<FilePath>? _referencedFileChecksWhileDeferring;
         private HashSet<FilePath>? _shaderFiles;
 
+        /// <summary>
+        /// The project file changed while a scope was open and the project is reloading, which replaces every element
+        /// and behavior, so the element and behavior files later in the same batch are not reloaded one by one.
+        /// </summary>
+        private bool _projectReloadedWhileDeferring;
+
+        /// <summary>
+        /// Elements or behaviors were reloaded while a scope was open, so closing it initializes the project and
+        /// refreshes the tree once instead of once per file (#8445).
+        /// </summary>
+        private bool _projectRefreshPending;
+
+        /// <summary>Names of the elements whose ElementReloaded event waits for the scope to close; null outside a scope.</summary>
+        private List<string>? _elementReloadedEventsWhileDeferring;
+
+        /// <summary>What each reaction in the scope did, printed when it closes; null outside a scope.</summary>
+        private List<(string WhatHappened, FilePath File)>? _outputWhileDeferring;
+
+        /// <summary>A batch with more reactions than this prints one summary line for its plain reloads.</summary>
+        private const int MaxReloadLinesPerBatch = 10;
+
         public FileChangeReactionLogic(
             ISelectedState selectedState,
             IWireframeCommands wireframeCommands,
@@ -110,6 +131,8 @@ namespace Gum.Managers
             _reloadedWhileDeferring ??= new Dictionary<string, ElementSave>();
             _referencedFileChecksWhileDeferring ??= new List<FilePath>();
             _behaviorsReloadedWhileDeferring ??= new Dictionary<string, BehaviorSave>();
+            _elementReloadedEventsWhileDeferring ??= new List<string>();
+            _outputWhileDeferring ??= new List<(string, FilePath)>();
             return new DeferredDependentUpdates(this);
         }
 
@@ -125,10 +148,44 @@ namespace Gum.Managers
                 Dictionary<string, BehaviorSave>? reloadedBehaviors = _owner._behaviorsReloadedWhileDeferring;
                 List<FilePath>? filesToCheck = _owner._referencedFileChecksWhileDeferring;
                 bool shouldRefresh = _owner._contentReloadPending;
+                bool projectRefreshPending = _owner._projectRefreshPending;
+                List<string>? elementReloadedEvents = _owner._elementReloadedEventsWhileDeferring;
+                List<(string WhatHappened, FilePath File)>? output = _owner._outputWhileDeferring;
                 _owner._reloadedWhileDeferring = null;
                 _owner._behaviorsReloadedWhileDeferring = null;
                 _owner._referencedFileChecksWhileDeferring = null;
                 _owner._contentReloadPending = false;
+                _owner._projectRefreshPending = false;
+                _owner._projectReloadedWhileDeferring = false;
+                _owner._elementReloadedEventsWhileDeferring = null;
+                _owner._outputWhileDeferring = null;
+                try
+                {
+                    if (output != null)
+                    {
+                        _owner.PrintBatchOutput(output);
+                    }
+                    if (projectRefreshPending)
+                    {
+                        // Before anything below reads the reloaded elements: they are not initialized yet.
+                        _owner.InitializeProject();
+                        _owner._guiCommands.RefreshElementTreeView();
+                    }
+                    if (elementReloadedEvents != null)
+                    {
+                        foreach (string name in elementReloadedEvents)
+                        {
+                            if (ObjectFinder.Self.GetElementSave(name) is { } element)
+                            {
+                                _owner._pluginManager.ElementReloaded(element);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _owner._outputManager.AddError("Could not refresh the elements reloaded from disk: " + ex.Message);
+                }
                 try
                 {
                     if (filesToCheck != null && _owner.AnyIsReferencedFileAndForgetWhatTheyList(filesToCheck))
@@ -220,10 +277,61 @@ namespace Gum.Managers
                 // A plugin owns these (animations, font ranges, code settings) and reports nothing back.
                 whatHappened = "Passed to plugins";
             }
-            if (whatHappened != null)
+            if (whatHappened == null)
+            {
+                return;
+            }
+            if (_outputWhileDeferring != null)
+            {
+                _outputWhileDeferring.Add((whatHappened, file));
+            }
+            else
             {
                 PrintChangedOnDisk(whatHappened, file);
             }
+        }
+
+        /// <summary>
+        /// Prints what a scope's reactions did: a line each for a small batch, and for a large one (a CLI edit or a
+        /// git checkout) one summary line for its plain reloads plus a line each for the rest (kept unsaved
+        /// changes, the project, plugins).
+        /// </summary>
+        private void PrintBatchOutput(List<(string WhatHappened, FilePath File)> output)
+        {
+            const int maxNamed = 3;
+            if (output.Count <= MaxReloadLinesPerBatch)
+            {
+                foreach ((string whatHappened, FilePath file) in output)
+                {
+                    PrintChangedOnDisk(whatHappened, file);
+                }
+                return;
+            }
+            List<FilePath> reloaded = new List<FilePath>();
+            foreach ((string whatHappened, FilePath file) in output)
+            {
+                if (whatHappened.StartsWith(ReloadedPrefix, StringComparison.Ordinal) && whatHappened != Reloaded(ProjectPromptName))
+                {
+                    reloaded.Add(file);
+                }
+                else
+                {
+                    PrintChangedOnDisk(whatHappened, file);
+                }
+            }
+            if (reloaded.Count > 0)
+            {
+                string named = string.Join(", ", reloaded.Take(maxNamed).Select(RelativeToProject));
+                string more = reloaded.Count > maxNamed ? $" and {reloaded.Count - maxNamed} more" : "";
+                _outputManager.AddOutput($"Reloaded {reloaded.Count} files changed on disk: {named}{more}");
+            }
+        }
+
+        private void InitializeProject()
+        {
+            GumProjectSave gumProject = _projectState.GetLoadedProject();
+            gumProject.Initialize();
+            _standardElementsManagerGumTool.FixCustomTypeConverters(gumProject);
         }
 
         private void PrintChangedOnDisk(string whatHappened, FilePath file) =>
@@ -247,7 +355,9 @@ namespace Gum.Managers
                 ? file.RelativeTo(projectDirectory).Replace("\\", "/")
                 : file.FullPath;
 
-        private static string Reloaded(string name) => "Reloaded " + name;
+        private const string ReloadedPrefix = "Reloaded ";
+
+        private static string Reloaded(string name) => ReloadedPrefix + name;
 
         private static string KeptUnsavedChangesTo(string name) => "Kept unsaved changes to " + name;
 
@@ -255,6 +365,13 @@ namespace Gum.Managers
         private string? ReactToFileChangedInCore(FilePath file)
         {
             var extension = file.Extension;
+
+            if (_projectReloadedWhileDeferring &&
+                (IsElementExtension(extension) || extension == BehaviorReference.Extension || extension == BehaviorReference.JsonExtension))
+            {
+                // The project reload earlier in this batch reads this file along with every other one.
+                return null;
+            }
 
             if(IsElementExtension(extension))
             {
@@ -589,6 +706,10 @@ namespace Gum.Managers
             // file's reload doesn't block the rest of the queue. The load itself now runs off the
             // calling thread (#4871), so this needs its own error reporting - a faulted task here
             // wouldn't otherwise surface anywhere.
+            if (_reloadedWhileDeferring != null)
+            {
+                _projectReloadedWhileDeferring = true;
+            }
             _ = ReloadProjectAndReselectAsync(file, elementName);
             return Reloaded(ProjectPromptName);
         }
@@ -888,9 +1009,18 @@ namespace Gum.Managers
                 // File changes are only watched while a project is open.
                 var gumProject = _projectState.GetLoadedProject();
                 gumProject.ReloadElement(element);
-                gumProject.Initialize();
-                _standardElementsManagerGumTool.FixCustomTypeConverters(gumProject);
 
+                // In a batch, the project initializes and the tree refreshes once when the scope closes. The
+                // selected element is the exception: re-selecting it needs both now.
+                bool deferRefresh = _reloadedWhileDeferring != null && !refreshingSelected;
+                if (deferRefresh)
+                {
+                    _projectRefreshPending = true;
+                }
+                else
+                {
+                    InitializeProject();
+                }
 
                 // The reload replaces every InstanceSave, so remember the selection by name.
                 List<string> selectedInstanceNames = refreshingSelected
@@ -901,7 +1031,10 @@ namespace Gum.Managers
                 {
                     _selectedState.SelectedElement = null;
                 }
-                _guiCommands.RefreshElementTreeView();
+                if (!deferRefresh)
+                {
+                    _guiCommands.RefreshElementTreeView();
+                }
 
                 element = ObjectFinder.Self.GetElementSave(relativeToFolderForType);
 
@@ -913,7 +1046,14 @@ namespace Gum.Managers
                 // The reloaded file can hold an element under another name.
                 if (element != null)
                 {
-                    _pluginManager.ElementReloaded(element);
+                    if (deferRefresh)
+                    {
+                        _elementReloadedEventsWhileDeferring?.Add(element.Name);
+                    }
+                    else
+                    {
+                        _pluginManager.ElementReloaded(element);
+                    }
 
                     if (_reloadedWhileDeferring != null)
                     {
@@ -953,8 +1093,16 @@ namespace Gum.Managers
 
             if(shouldReloadWireframe)
             {
-                // todo - this isn't working if I rename a variable...
-                RefreshCanvasAndVariables();
+                if (_reloadedWhileDeferring != null)
+                {
+                    // One rebuild for the whole batch when the scope closes.
+                    _contentReloadPending = true;
+                }
+                else
+                {
+                    // todo - this isn't working if I rename a variable...
+                    RefreshCanvasAndVariables();
+                }
                 whatHappened ??= "Rebuilt the canvas";
             }
             return whatHappened;
@@ -1074,14 +1222,20 @@ namespace Gum.Managers
                 // The copy the reload replaces, to find the variables its removed lines materialized.
                 BehaviorSave previousBehavior = behavior;
                 gumProject.ReloadBehavior(behavior);
-                gumProject.Initialize();
-                _standardElementsManagerGumTool.FixCustomTypeConverters(gumProject);
 
-                if (refreshingSelected)
+                if (_behaviorsReloadedWhileDeferring != null && !refreshingSelected)
                 {
-                    _selectedState.SelectedBehavior = null;
+                    _projectRefreshPending = true;
                 }
-                _guiCommands.RefreshElementTreeView();
+                else
+                {
+                    InitializeProject();
+                    if (refreshingSelected)
+                    {
+                        _selectedState.SelectedBehavior = null;
+                    }
+                    _guiCommands.RefreshElementTreeView();
+                }
 
                 if (refreshingSelected)
                 {

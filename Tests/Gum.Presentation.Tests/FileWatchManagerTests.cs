@@ -52,7 +52,9 @@ public class FileWatchManagerTests : BaseTestClass
         ICrashReporter? crashReporter = null,
         IFileSystemWatcherFactory? watcherFactory = null,
         IProjectRestrictions? projectRestrictions = null,
-        IOutputManager? outputManager = null)
+        IOutputManager? outputManager = null,
+        IFileCommands? fileCommands = null,
+        IProjectState? projectState = null)
     {
         guiCommandsMock = new Mock<IGuiCommands>();
         pluginManagerMock = new Mock<IPluginManager>();
@@ -68,10 +70,10 @@ public class FileWatchManagerTests : BaseTestClass
             new Mock<ISelectedState>().Object,
             new Mock<IWireframeCommands>().Object,
             guiCommandsMock.Object,
-            new Mock<IFileCommands>().Object,
+            fileCommands ?? new Mock<IFileCommands>().Object,
             outputManager ?? new Mock<IOutputManager>().Object,
             new Mock<IWireframeObjectManager>().Object,
-            new Mock<IProjectState>().Object,
+            projectState ?? new Mock<IProjectState>().Object,
             new Mock<IStandardElementsManagerGumTool>().Object,
             pluginManagerMock.Object,
             new Mock<Gum.Services.Dialogs.IDialogService>().Object,
@@ -521,5 +523,49 @@ public class FileWatchManagerTests : BaseTestClass
 
         crashReporter.Verify(c => c.ReportRecoverable(
             It.Is<Exception>(e => e.Message == "dispatcher shut down"), It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public void Flush_ReloadsOnlyTheProject_WhenItsFileChangedWithTheElementFiles()
+    {
+        // #8445: the project file landed mid-queue, so elements before it reloaded one by one and then again.
+        FilePath watchedDirectory = new FilePath(_tempDirectory + "/");
+        string[] names = { "A", "B", "C", "D", "E", "F" };
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Components"));
+        GumProjectSave project = new GumProjectSave { FullFileName = Path.Combine(_tempDirectory, "Project.gumx") };
+        File.WriteAllText(project.FullFileName, "<GumProjectSave />");
+        foreach (string name in names)
+        {
+            project.Components.Add(new ComponentSave { Name = name });
+            File.WriteAllText(Path.Combine(_tempDirectory, "Components", name + ".gucx"), "<ComponentSave />");
+        }
+        Mock<IFileCommands> fileCommandsMock = new Mock<IFileCommands>();
+        fileCommandsMock.Setup(f => f.ProjectDirectory).Returns(watchedDirectory);
+        fileCommandsMock.Setup(f => f.LoadProjectAsync(It.IsAny<string>())).Returns(System.Threading.Tasks.Task.CompletedTask);
+        Mock<IProjectState> projectStateMock = new Mock<IProjectState>();
+        projectStateMock.Setup(p => p.GumProjectSave).Returns(project);
+        FileWatchManager sut = BuildSut(out _, out Mock<IPluginManager> pluginManagerMock, out _, watchedDirectory,
+            fileCommands: fileCommandsMock.Object, projectState: projectStateMock.Object);
+        ObjectFinder.Self.GumProjectSave = project;
+        try
+        {
+            sut.EnableWithDirectories(new HashSet<FilePath> { watchedDirectory });
+            foreach (string name in names)
+            {
+                sut.HandleFileSystemChange(null, new FileSystemEventArgs(
+                    WatcherChangeTypes.Changed, Path.Combine(_tempDirectory, "Components"), name + ".gucx"));
+            }
+            sut.HandleFileSystemChange(null, new FileSystemEventArgs(WatcherChangeTypes.Changed, _tempDirectory, "Project.gumx"));
+            PollUntil(() => sut.TimeToNextFlush.TotalSeconds <= 0).ShouldBeTrue();
+
+            sut.Flush();
+
+            fileCommandsMock.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Once);
+            pluginManagerMock.Verify(p => p.ElementReloaded(It.IsAny<ElementSave>()), Times.Never);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
     }
 }
