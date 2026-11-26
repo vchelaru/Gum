@@ -74,6 +74,12 @@ public static class Program
                 {
                     serviceCollection.AddSingleton<IOpenRequestInbox>(inbox);
                 }
+                if (options.ExitAfterSeconds != null)
+                {
+                    // A modal nobody answers would hold up the run until --exit-after (#8451).
+                    serviceCollection.AddSingleton(provider => new UnattendedDialogService(provider, Console.Error));
+                    serviceCollection.AddSingleton<IDialogService>(provider => provider.GetRequiredService<UnattendedDialogService>());
+                }
             })
             .Build();
         StartupTiming.Mark("Host built");

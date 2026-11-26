@@ -18,7 +18,8 @@ public class UnattendedRunTests
         public StringWriter Output { get; } = new();
         public StringWriter Error { get; } = new();
 
-        public Task<int?> Run(bool zoomToFit = false, bool screenshot = true, Func<string?>? describeCanvas = null, Func<Task>? settle = null) =>
+        public Task<int?> Run(bool zoomToFit = false, bool screenshot = true, Func<string?>? describeCanvas = null, Func<Task>? settle = null,
+            Func<bool>? hasShownNotice = null) =>
             UnattendedRun.RunAsync(
                 Startup.Task,
                 Deadline.Task,
@@ -35,7 +36,8 @@ public class UnattendedRunTests
                 Output,
                 Error,
                 describeCanvas,
-                settle);
+                settle,
+                hasShownNotice);
 
         public void PresentFrame() => FrameRequests[^1].SetResult();
     }
@@ -75,6 +77,22 @@ public class UnattendedRunTests
 
         (await run.WaitAsync(TimeSpan.FromSeconds(10))).ShouldBe(0);
         probe.Events.ShouldBe(new[] { "frame requested", "settle", "capture" });
+    }
+
+    // A dismissed OK-only message may be an error report, so the run must not look like a success (#8451).
+    [Fact]
+    public async Task NoticeShownDuringTheRun_CapturesThenFails()
+    {
+        Probe probe = new Probe();
+
+        Task<int?> run = probe.Run(hasShownNotice: () => true);
+        probe.Startup.SetResult(UnattendedStartupOutcome.Ready);
+        await WaitUntil(() => probe.FrameRequests.Count == 1);
+        probe.PresentFrame();
+
+        (await run.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken)).ShouldBe(1);
+        probe.Events.ShouldBe(new[] { "frame requested", "capture" });
+        probe.Error.ToString().ShouldContain("showed a message");
     }
 
     [Fact]
