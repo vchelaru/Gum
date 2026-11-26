@@ -112,15 +112,16 @@ public class ComboBoxSizedToChildrenDropDownTests : BaseTestClass
     }
 
     [Fact]
-    public void Open_ShouldMoveDropDownInsideCanvas_WhenItDoesNotFitBelow()
+    public void Open_ShouldOpenAbove_WhenItDoesNotFitBelow()
     {
         ResizeCanvas(800, 300);
         ComboBox comboBox = CreateComboBox(y: 250, rows: 5);
 
         comboBox.IsDropDownOpen = true;
 
+        // The drop-down is measured at its rows' height before the above/below choice (#8435).
         GraphicalUiElement popup = comboBox.ListBox.Visual;
-        popup.AbsoluteBottom.ShouldBe(300, 0.01f);
+        popup.AbsoluteBottom.ShouldBe(comboBox.Visual.AbsoluteTop, 0.01f);
         ShouldFitRows(comboBox);
     }
 

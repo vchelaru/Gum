@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
+using Gum.GueDeriving;
 using Gum.Input;
 using Gum.Wireframe;
 using Moq;
@@ -16,7 +17,8 @@ namespace MonoGameGum.Tests.Forms;
 /// <summary>
 /// A ComboBox drop-down taller than the canvas is moved to the top and shrunk to the canvas height, so
 /// its rows scroll; it goes back to its own height once it fits again, also when the canvas is resized
-/// while it is open (#6769, the ComboBox side of #6758).
+/// while it is open (#6769, the ComboBox side of #6758). A drop-down that does not fit below but fits
+/// above opens above the ComboBox (#8435).
 /// </summary>
 public class ComboBoxTallDropDownTests : BaseTestClass
 {
@@ -195,6 +197,24 @@ public class ComboBoxTallDropDownTests : BaseTestClass
     }
 
     [Fact]
+    public void Open_ShouldShowScrollBar_WhenRowsFitTheDropDownButNotTheCanvas()
+    {
+        ResizeCanvas(800, 600);
+        ComboBox comboBox = CreateComboBox(y: 20, dropDownHeight: 300, rows: 5);
+        ScrollBarVisual scrollBar = ((ListBoxVisual)comboBox.ListBox.Visual).VerticalScrollBarInstance!;
+        comboBox.IsDropDownOpen = true;
+        // At its own height the drop-down shows every row, so it does not scroll.
+        scrollBar.AbsoluteVisible.ShouldBeFalse();
+        comboBox.IsDropDownOpen = false;
+
+        ResizeCanvas(800, 60);
+        comboBox.IsDropDownOpen = true;
+
+        comboBox.ListBox.Visual.AbsoluteHeight.ShouldBe(60, 0.01f);
+        scrollBar.AbsoluteVisible.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Open_ShouldShrinkLazyDropDownToCanvas_WhenTallerThanCanvas()
     {
         ResizeCanvas(800, 200);
@@ -259,6 +279,98 @@ public class ComboBoxTallDropDownTests : BaseTestClass
 
     private static float FirstRowOffset(ListBox listBox) =>
         listBox.ListBoxItems[0].Visual.GetAbsoluteTop() - ((GraphicalUiElement)listBox.InnerPanel.Parent!).GetAbsoluteTop();
+
+    [Theory]
+    [InlineData(400f)]
+    // The drop-down's top lands exactly on the canvas top.
+    [InlineData(300f)]
+    public void Open_ShouldOpenAbove_WhenDropDownFitsAboveButNotBelow(float comboBoxY)
+    {
+        ResizeCanvas(800, 600);
+        ComboBox comboBox = CreateComboBox(y: comboBoxY, dropDownHeight: 300, rows: 30);
+
+        comboBox.IsDropDownOpen = true;
+
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+        popup.AbsoluteBottom.ShouldBe(comboBox.Visual.AbsoluteTop, 0.01f);
+        popup.AbsoluteHeight.ShouldBe(300, 0.01f);
+        popup.AbsoluteWidth.ShouldBe(comboBox.Visual.AbsoluteWidth, 0.01f);
+    }
+
+    [Fact]
+    public void Open_ShouldOverlapComboBox_WhenDropDownIsOnePixelTooTallForAbove()
+    {
+        ResizeCanvas(800, 600);
+        ComboBox comboBox = CreateComboBox(y: 299, dropDownHeight: 300, rows: 30);
+
+        comboBox.IsDropDownOpen = true;
+
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+        popup.AbsoluteBottom.ShouldBe(600, 0.01f);
+        popup.AbsoluteHeight.ShouldBe(300, 0.01f);
+    }
+
+    [Fact]
+    public void Open_ShouldOpenAbove_WhenDropDownFitsBelowOnTheCanvasButNotInThePopupRoot()
+    {
+        ResizeCanvas(800, 800);
+        ContainerRuntime popupRoot = new();
+        popupRoot.Width = 800;
+        popupRoot.Height = 400;
+        popupRoot.AddToManagers(SystemManagers.Default);
+        ContainerRuntime modalRoot = new();
+        modalRoot.AddToManagers(SystemManagers.Default);
+        GraphicalUiElement.ResolvePopupRoots = _ => (popupRoot, modalRoot);
+        try
+        {
+            ComboBox comboBox = CreateComboBox(y: 250, dropDownHeight: 200, rows: 30);
+
+            comboBox.IsDropDownOpen = true;
+
+            GraphicalUiElement popup = comboBox.ListBox.Visual;
+            popup.Parent.ShouldBeSameAs(popupRoot);
+            popup.AbsoluteBottom.ShouldBe(comboBox.Visual.AbsoluteTop, 0.01f);
+            popup.AbsoluteHeight.ShouldBe(200, 0.01f);
+        }
+        finally
+        {
+            GraphicalUiElement.ResolvePopupRoots = null;
+            popupRoot.Children.Clear();
+            popupRoot.RemoveFromManagers();
+            modalRoot.Children.Clear();
+            modalRoot.RemoveFromManagers();
+        }
+    }
+
+    [Fact]
+    public void CanvasShrinksWhileOpen_ShouldMoveDropDownAbove_WhenItFitsAbove()
+    {
+        ResizeCanvas(800, 800);
+        ComboBox comboBox = CreateComboBox(y: 400, dropDownHeight: 300, rows: 30);
+        comboBox.IsDropDownOpen = true;
+
+        ResizeCanvas(800, 600);
+        Tick();
+
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+        popup.AbsoluteBottom.ShouldBe(comboBox.Visual.AbsoluteTop, 0.01f);
+        popup.AbsoluteHeight.ShouldBe(300, 0.01f);
+    }
+
+    [Fact]
+    public void CanvasGrowsWhileOpen_ShouldMoveDropDownBelow_WhenItFitsBelowAgain()
+    {
+        ResizeCanvas(800, 600);
+        ComboBox comboBox = CreateComboBox(y: 400, dropDownHeight: 300, rows: 30);
+        comboBox.IsDropDownOpen = true;
+
+        ResizeCanvas(800, 800);
+        Tick();
+
+        GraphicalUiElement popup = comboBox.ListBox.Visual;
+        popup.AbsoluteTop.ShouldBe(comboBox.Visual.AbsoluteBottom, 0.01f);
+        popup.AbsoluteHeight.ShouldBe(300, 0.01f);
+    }
 
     [Fact]
     public void Reopen_ShouldUseThemeHeight_AfterBeingShrunk()
