@@ -1,19 +1,28 @@
 using System;
 using Sentry;
+using Sentry.Extensibility;
 using Sentry.Protocol;
 
 namespace Gum.Avalonia.Diagnostics.CrashReporting;
 
-/// <summary>Sends crash reports through the Sentry SDK, which <see cref="Start"/> initializes.</summary>
+/// <summary>Sends crash reports through a Sentry hub; <see cref="Start"/> initializes the SDK's.</summary>
 public class SentryCrashReportSender : ICrashReportSender
 {
     private static readonly TimeSpan FatalFlushTimeout = TimeSpan.FromSeconds(2);
+
+    private readonly IHub _hub;
+
+    /// <summary>Creates a sender over <paramref name="hub"/>.</summary>
+    public SentryCrashReportSender(IHub hub)
+    {
+        _hub = hub;
+    }
 
     /// <summary>Initializes the Sentry SDK and returns a sender over it.</summary>
     public static SentryCrashReportSender Start(SentryOptions options)
     {
         SentrySdk.Init(options);
-        return new SentryCrashReportSender();
+        return new SentryCrashReportSender(HubAdapter.Instance);
     }
 
     /// <summary>
@@ -52,7 +61,7 @@ public class SentryCrashReportSender : ICrashReportSender
             exception.Value = scrubber.Scrub(exception.Value);
             foreach (SentryStackFrame frame in exception.Stacktrace?.Frames ?? (System.Collections.Generic.IList<SentryStackFrame>)Array.Empty<SentryStackFrame>())
             {
-                frame.FileName = scrubber.Scrub(frame.FileName);
+                // FileName holds only the file's name; the full path is in AbsolutePath.
                 frame.AbsolutePath = scrubber.Scrub(frame.AbsolutePath);
             }
         }
@@ -63,14 +72,15 @@ public class SentryCrashReportSender : ICrashReportSender
     /// <inheritdoc/>
     public void Send(Exception exception, string source, bool isFatal)
     {
-        SentrySdk.CaptureException(exception, scope =>
+        _hub.CaptureEvent(new SentryEvent(exception), scope =>
         {
             scope.SetTag("source", source);
             scope.SetTag("fatal", isFatal ? "true" : "false");
         });
         if (isFatal)
         {
-            SentrySdk.Flush(FatalFlushTimeout);
+            // The process is about to end; the flush puts the report in the offline cache or on the wire first.
+            _hub.FlushAsync(FatalFlushTimeout).GetAwaiter().GetResult();
         }
     }
 }
