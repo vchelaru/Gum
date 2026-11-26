@@ -41,5 +41,8 @@ mesa-2 Tests/Gum.Cli.Tests
 mesa-2 Tests/RaylibGum.Tests 10
 # Real hidden GL 3.3 window (GlCompositingTests); GUM_REQUIRE_GL=1 in test-concurrent.sh makes "no context" a failure here.
 mesa-2 Tests/BrutalGum.OGL.Tests 10
+# Headless Vulkan 1.3 device on Mesa's lavapipe (registered by "Register lavapipe as a Vulkan driver"). GUM_REQUIRE_VULKAN=1
+# makes "no device" a failure here; the loader's errors go to the log.
+mesa-2 Tests/BrutalGum.Vulkan.Tests 5 --logger "console;verbosity=detailed" --environment GUM_REQUIRE_VULKAN=1 --environment VK_LOADER_DEBUG=error
 mesa-2 Tests/Gum.ProjectServices.Raylib.Tests 10
 mesa-2 Tests/Gum.ProjectServices.MonoGame.Tests 10

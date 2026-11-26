@@ -95,6 +95,7 @@ jobs:
               - 'Tests/Gum.Cli.Tests/**'
               - 'Tests/RaylibGum.Tests/**'
               - 'Tests/BrutalGum.OGL.Tests/**'
+              - 'Tests/BrutalGum.Vulkan.Tests/**'
               - 'Tests/SkiaHost.TestsCommon/**'
               - 'Tests/Gum.ProjectServices.*.Tests/**'
               - 'Tests/Gum.Automation/**'
@@ -989,6 +990,22 @@ jobs:
             Tests/Gum.ProjectServices.MonoGame.Tests/bin/Release/net10.0
             Tests/GumShadowDusk.Tests.KniDesktopGL/bin/Release/net8.0
             Tests/SkiaGum.GpuTests/bin/Release/net8.0
+
+      # The same Mesa archive ships lavapipe (vulkan_lvp.dll + lvp_icd.x86_64.json), Mesa's software Vulkan driver, for
+      # BrutalGum.Vulkan.Tests (#8440); the runner image has the Vulkan loader. The runner is elevated, and an elevated
+      # process's loader ignores VK_DRIVER_FILES and VK_ICD_FILENAMES, so the ICD is registered where the loader looks.
+      - name: Register lavapipe as a Vulkan driver (Windows, #8440)
+        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true' && matrix.mesa
+        shell: pwsh
+        run: |
+          $icd = Get-ChildItem -Path (Join-Path $env:RUNNER_TEMP "mesa") -Recurse -Filter lvp_icd.x86_64.json |
+                 Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
+          if (-not $icd) { Write-Error "lvp_icd.x86_64.json not found in the Mesa archive"; exit 1 }
+          if (-not (Test-Path "$env:WINDIR\System32\vulkan-1.dll")) { Write-Error "no Vulkan loader (vulkan-1.dll) on the runner"; exit 1 }
+          $key = "HKLM:\SOFTWARE\Khronos\Vulkan\Drivers"
+          New-Item -Path $key -Force | Out-Null
+          New-ItemProperty -Path $key -Name $icd.FullName -Value 0 -PropertyType DWord -Force | Out-Null
+          Write-Host "Registered lavapipe ICD $($icd.FullName)"
 
       # Windows runs the test projects as concurrent streams (#6282): the headless projects in one, the
       # Mesa llvmpipe ones in two more, each project still its own `dotnet test` with its own trx. The
