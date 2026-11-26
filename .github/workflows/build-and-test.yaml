@@ -95,6 +95,7 @@ jobs:
               - 'Tests/Gum.Cli.Tests/**'
               - 'Tests/RaylibGum.Tests/**'
               - 'Tests/BrutalGum.OGL.Tests/**'
+              - 'Tests/BrutalGum.Vulkan.Tests/**'
               - 'Tests/SkiaHost.TestsCommon/**'
               - 'Tests/Gum.ProjectServices.*.Tests/**'
               - 'Tests/Gum.Automation/**'
@@ -989,6 +990,21 @@ jobs:
             Tests/Gum.ProjectServices.MonoGame.Tests/bin/Release/net10.0
             Tests/GumShadowDusk.Tests.KniDesktopGL/bin/Release/net8.0
             Tests/SkiaGum.GpuTests/bin/Release/net8.0
+
+      # The same Mesa archive ships lavapipe (vulkan_lvp.dll + lvp_icd.x86_64.json), Mesa's software Vulkan driver, for
+      # BrutalGum.Vulkan.Tests (#8440). It needs a Vulkan loader (vulkan-1.dll), which a runner without GPU drivers may
+      # lack; the log line says which, and the test skips without one.
+      - name: Point Vulkan at lavapipe (Windows, #8440)
+        if: runner.os == 'Windows' && steps.plan.outputs.active == 'true' && matrix.mesa
+        shell: pwsh
+        run: |
+          $icd = Get-ChildItem -Path (Join-Path $env:RUNNER_TEMP "mesa") -Recurse -Filter lvp_icd.x86_64.json |
+                 Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
+          if (-not $icd) { Write-Error "lvp_icd.x86_64.json not found in the Mesa archive"; exit 1 }
+          Write-Host "lavapipe ICD: $($icd.FullName)"; Get-Content $icd.FullName
+          Write-Host "System Vulkan loader present: $(Test-Path "$env:WINDIR\System32\vulkan-1.dll")"
+          "VK_DRIVER_FILES=$($icd.FullName)" >> $env:GITHUB_ENV
+          "VK_ICD_FILENAMES=$($icd.FullName)" >> $env:GITHUB_ENV
 
       # Windows runs the test projects as concurrent streams (#6282): the headless projects in one, the
       # Mesa llvmpipe ones in two more, each project still its own `dotnet test` with its own trx. The
