@@ -39,6 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Shared\GpuTestRunner.cs" Link="Shared\GpuTestRunner.cs" />
     <Compile Include="..\MonoGameGum.TestsCommon\AllocationMeasurer.cs" Link="Shared\AllocationMeasurer.cs" />
     <Compile Include="..\MonoGameGum.TestsCommon\RuntimeEventRecorder.cs" Link="Shared\RuntimeEventRecorder.cs" />
   </ItemGroup>

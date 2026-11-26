@@ -1,8 +1,8 @@
 using Brutal.VulkanApi;
 using Brutal.VulkanApi.Abstractions;
+using GumTests.Shared;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace BrutalGum.Tests;
 
@@ -25,23 +25,20 @@ internal sealed unsafe class VulkanTestDevice : IDisposable
 
     private readonly VkDebugUtilsMessengerEXT _messenger;
 
-    private VulkanTestDevice(bool enableValidation)
+    private VulkanTestDevice()
     {
-        HashSet<string> instanceExtensions = new();
-        VulkanHelpers.AddPlatformRequiredExtensions(instanceExtensions); // portability enumeration on macOS
-        HashSet<string> layers = new();
-        if (enableValidation)
+        bool enableValidation;
+        // Only the loader and the instance are guarded: their failure is what "no Vulkan driver" looks like (no
+        // vulkan-1.dll or libvulkan, no ICD, an ICD without 1.3). A failure after that is a real failure.
+        try
         {
-            VulkanHelpers.AddValidationLayers(layers);
-            instanceExtensions.Add("VK_EXT_debug_utils");
+            enableValidation = VulkanHelpers.Validation.IsSupported;
+            Instance = CreateInstance(enableValidation);
         }
-        Instance = Vulkan.CreateInstance(new Instance.CreateInfo
+        catch (Exception e) when (e is VkResultError or DllNotFoundException or EntryPointNotFoundException or TypeInitializationException)
         {
-            AppInfo = new VkApplicationInfo { ApiVersion = (int)VulkanHelpers.Api.VERSION_1_3 },
-            Flags = VulkanHelpers.GetPlatformRequiredInstanceCreateFlags(),
-            EnabledExtensions = instanceExtensions,
-            EnabledLayers = layers,
-        });
+            throw new GpuTestRunner.NoContextException($"no Vulkan loader or driver ({e.GetType().Name}: {e.Message})");
+        }
         if (enableValidation)
         {
             VkDebugUtilsMessengerCreateInfoEXT messengerInfo = VulkanHelpers.BuildDefaultDebugMessengerCreateInfo(new PfnVkDebugUtilsMessengerCallbackEXT(&OnValidationMessage));
@@ -69,8 +66,8 @@ internal sealed unsafe class VulkanTestDevice : IDisposable
         }
         if (chosen is null)
         {
-            Instance.Dispose();
-            throw new InvalidOperationException("no Vulkan physical device has a graphics queue family");
+            DestroyInstance();
+            throw new GpuTestRunner.NoContextException("no Vulkan physical device has a graphics queue family");
         }
         PhysicalDevice = chosen;
         QueueFamily = family;
@@ -91,57 +88,37 @@ internal sealed unsafe class VulkanTestDevice : IDisposable
         Queue = Device.GetQueue(family, 0);
     }
 
+    private static Instance CreateInstance(bool enableValidation)
+    {
+        HashSet<string> instanceExtensions = new();
+        VulkanHelpers.AddPlatformRequiredExtensions(instanceExtensions); // portability enumeration on macOS
+        HashSet<string> layers = new();
+        if (enableValidation)
+        {
+            VulkanHelpers.AddValidationLayers(layers);
+            instanceExtensions.Add("VK_EXT_debug_utils");
+        }
+        return Vulkan.CreateInstance(new Instance.CreateInfo
+        {
+            AppInfo = new VkApplicationInfo { ApiVersion = (int)VulkanHelpers.Api.VERSION_1_3 },
+            Flags = VulkanHelpers.GetPlatformRequiredInstanceCreateFlags(),
+            EnabledExtensions = instanceExtensions,
+            EnabledLayers = layers,
+        });
+    }
+
     /// <summary>
-    /// Creates the device, runs <paramref name="body"/> on a worker thread with a watchdog (a stuck driver fails the test
-    /// instead of hanging the job), then checks the validation layer reported no error.
+    /// Creates the device and runs <paramref name="body"/> through <see cref="GpuTestRunner"/> (worker thread, watchdog,
+    /// skip without a device or fail when GUM_REQUIRE_VULKAN=1), then checks the validation layer reported no error.
     /// </summary>
     public static void Run(Action<VulkanTestDevice> body)
     {
-        Exception? failure = null;
-        string? noDevice = null;
-        Thread worker = new Thread(() =>
+        lock (ValidationErrors) { ValidationErrors.Clear(); }
+        GpuTestRunner.Run("Vulkan", "GUM_REQUIRE_VULKAN", () =>
         {
-            VulkanTestDevice? device = null;
-            try
-            {
-                try
-                {
-                    device = new VulkanTestDevice(VulkanHelpers.Validation.IsSupported);
-                }
-                catch (Exception e)
-                {
-                    noDevice = "no Vulkan 1.3 device: " + e.Message;
-                    return;
-                }
-                lock (ValidationErrors) { ValidationErrors.Clear(); }
-                body(device);
-            }
-            catch (Exception e)
-            {
-                failure = e;
-            }
-            finally
-            {
-                device?.Dispose();
-            }
-        }) { IsBackground = true };
-        worker.Start();
-        if (!worker.Join(TimeSpan.FromSeconds(60)))
-        {
-            throw new TimeoutException("The Vulkan test did not finish within 60 seconds.");
-        }
-        if (noDevice != null)
-        {
-            if (Environment.GetEnvironmentVariable("GUM_REQUIRE_VULKAN") == "1")
-            {
-                throw new InvalidOperationException(noDevice + " (GUM_REQUIRE_VULKAN=1)");
-            }
-            Skip.If(true, noDevice);
-        }
-        if (failure != null)
-        {
-            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
-        }
+            using VulkanTestDevice device = new VulkanTestDevice();
+            body(device);
+        });
         lock (ValidationErrors)
         {
             if (ValidationErrors.Count > 0)
@@ -164,14 +141,19 @@ internal sealed unsafe class VulkanTestDevice : IDisposable
         return default;
     }
 
-    public void Dispose()
+    private void DestroyInstance()
     {
-        Device.WaitIdle();
-        Device.Dispose();
         if (ValidationEnabled)
         {
             Instance.DestroyDebugUtilsMessengerEXT(_messenger, null);
         }
         Instance.Dispose();
+    }
+
+    public void Dispose()
+    {
+        Device.WaitIdle();
+        Device.Dispose();
+        DestroyInstance();
     }
 }

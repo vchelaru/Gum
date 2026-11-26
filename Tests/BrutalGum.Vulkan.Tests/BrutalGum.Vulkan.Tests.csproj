@@ -26,6 +26,7 @@
   <ItemGroup>
     <!-- The host seam fake is shared with the OpenGL head's tests; both hosts read input through IBrutalInput. -->
     <Compile Include="..\BrutalGum.OGL.Tests\FakeBrutalInput.cs" Link="Shared\FakeBrutalInput.cs" />
+    <Compile Include="..\Shared\GpuTestRunner.cs" Link="Shared\GpuTestRunner.cs" />
   </ItemGroup>
 
   <ItemGroup>
