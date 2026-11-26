@@ -265,7 +265,7 @@ public class ComboBoxReopenCharacterizationTests : BaseTestClass
     }
 
     [Fact]
-    public void Open_NearBottomOfScreen_PopupIsKeptInsideTheCanvas()
+    public void Open_NearBottomOfScreen_PopupOpensAboveInsideTheCanvas()
     {
         ComboBox comboBox = CreateComboBox(8);
         comboBox.Y = 560;
@@ -478,16 +478,17 @@ list focused=True itemsFocus=True selected=-1 scroll=0/0
   row 3 'Item 3' rect=(142,179,176,21) selected=False highlighted=False enabled=True
   rows outside the list: 0
 """);
+        // The list does not fit below the ComboBox but fits above, so it opens above it (#8435).
         public static readonly string NearBottom = Normalize("""
 combo open=True text='' selected=-1 rect=(20,560,256,24)
-list visible=True parent=PopupRoot rect=(20,472,256,128) units=PixelsFromSmall/PixelsFromSmall/Absolute/Absolute values=20,472,256,128 z=∞
+list visible=True parent=PopupRoot rect=(20,432,256,128) units=PixelsFromSmall/PixelsFromSmall/Absolute/Absolute values=20,432,256,128 z=∞
 list focused=True itemsFocus=True selected=-1 scroll=0/44
-  row 0 'Item 0' rect=(22,474,228,21) selected=False highlighted=False enabled=True
-  row 1 'Item 1' rect=(22,495,228,21) selected=False highlighted=False enabled=True
-  row 2 'Item 2' rect=(22,516,228,21) selected=False highlighted=False enabled=True
-  row 3 'Item 3' rect=(22,537,228,21) selected=False highlighted=False enabled=True
-  row 4 'Item 4' rect=(22,558,228,21) selected=False highlighted=False enabled=True
-  row 5 'Item 5' rect=(22,579,228,21) selected=False highlighted=False enabled=True
+  row 0 'Item 0' rect=(22,434,228,21) selected=False highlighted=False enabled=True
+  row 1 'Item 1' rect=(22,455,228,21) selected=False highlighted=False enabled=True
+  row 2 'Item 2' rect=(22,476,228,21) selected=False highlighted=False enabled=True
+  row 3 'Item 3' rect=(22,497,228,21) selected=False highlighted=False enabled=True
+  row 4 'Item 4' rect=(22,518,228,21) selected=False highlighted=False enabled=True
+  row 5 'Item 5' rect=(22,539,228,21) selected=False highlighted=False enabled=True
   rows outside the list: 2
 """);
         public static readonly string AfterSelectingRow = Normalize("""
