@@ -19,6 +19,7 @@ A `PrScreenshot` shows the real window, or the real panel inside the real theme 
 - The capture fires on the first drawn canvas frame, so the Variables and States panels can be empty, and the Variables grid is scrolled to the top. No flag waits for the panels. A temporary `Task.Delay` before `capture?.Invoke()` in `UnattendedRun.RunAsync`, plus setting the grid's `ScrollViewer.Offset` from the window's visual tree, gets the frame. Revert both before committing.
 - Open a project at the current `.gumx` version: copy `Tools/Gum.ProjectServices/Templates/Default`, add `Components/X.gucx`, and add `<ComponentReference Name="X" />` to the `.gumx`. Version 1 projects (most of `Samples/` and the CodeGen fixtures) lack newer standard variables such as `ShaderParameters`, so those rows never appear.
 - `GUM_ECHO_OUTPUT=1` writes the Output tab to stderr. "Compiled render-target shader" there means the container has an effect.
+- An `--exit-after` run cancels every dialog without showing it (`Tool/Gum.Avalonia/Diagnostics/UnattendedDialogService.cs`) and writes an `Unattended run: ...` line to stderr for each one. A message with only an OK button may be an error, so the run still captures, then exits 1.
 - Open the PNG and read it before saying anything worked, then send it with `SendUserFile`.
 
 ## Runtime Forms controls and theme components: GumPreview
