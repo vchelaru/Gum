@@ -23,6 +23,7 @@ Two draw types per engine: `SkiaRenderTarget2D` (`Begin()`, `Canvas`, `End()`, f
 
 ## Landmines
 
+- The `../SkiaGameRendering` checkout has an `upstream` remote (`mfigueirido/SkiaMonoGameRendering`), and `gh` run there defaults to it, so issues and PRs land on someone else's repo. Pass `--repo vchelaru/SkiaGameRendering` to every `gh` command for SGR.
 - A new engine host starts by finding its row in SGR's table. If the row is missing, the work is an SGR adapter first, not a Gum fallback.
 - SkiaSharp is one version across SGR and every Skia-family Gum project (`eng/Versions.props` there, `Runtimes/SkiaPackages.props` here). `SkiaGameRendering.Stride.D3D11` pins it exactly. Bump order is in [gum-cross-platform-unification](../gum-cross-platform-unification/SKILL.md).
 - The three Stride SGR packages declare identical type names, so `Runtimes/StrideGum` separates them with extern aliases and one wrapper per package (`Gpu/`). D3D11 and D3D12 exist only in `net10.0-windows7.0`; plain `net10.0` gets Vulkan only.
