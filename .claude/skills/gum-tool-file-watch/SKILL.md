@@ -83,7 +83,7 @@ The ignore list (`FileWatchIgnoreList`) is time-based by default. A save path th
 
 ## ReactToFileChanged Extension Dispatch
 
-Every change that a reaction acts on prints one Output line from `ReactToFileChanged` (`Reloaded MainScreen: Screens/MainScreen.gusx changed on disk`, or `Kept unsaved changes to ...`); a new reaction returns its description instead of printing. Referenced files judged at the end of a flush print one line from the deferral scope. Events the ignore list skips print nothing and go to tool.log as `filewatch.ownsave`.
+Every change that a reaction acts on prints one Output line from `ReactToFileChanged` (`Reloaded MainScreen: Screens/MainScreen.gusx changed on disk`, or `Kept unsaved changes to ...`); a new reaction returns its description instead of printing. Inside a flush the lines wait for the scope to close; a batch of more than 10 prints one `Reloaded N files changed on disk: a, b, c and N-3 more` line for its plain reloads and a line each for the rest. Referenced files judged at the end of a flush print one line from the deferral scope. Events the ignore list skips print nothing and go to tool.log as `filewatch.ownsave`.
 
 | Extension | Action |
 |-----------|--------|
@@ -125,6 +125,8 @@ The File Watch tab (hidden by default, toggled via **View > Show File Watch**) s
 **A reloaded element updates the elements that read it, after the whole flush is reloaded**: `ReactToElementSaveChanged` calls `IVariableReferenceLogic.ApplyReferencesToElement(element, trySave: true)`, the cascade an in-tool edit runs, so readers get new materialized values, are saved (Auto Save on) and the canvas and Variables tab refresh. `FileWatchManager.Flush` wraps its loop in `FileChangeReactionLogic.DeferDependentUpdates()`, so a reader that is itself in the batch is reloaded before any save of it; saving it first would overwrite the external edit still waiting in the queue. The reloaded element is never saved by this path. Readers keep their object and undo history, so `IUndoManager.RebaseStoredValues` writes the changed values into every snapshot of them; otherwise a later Ctrl+Z restores the replaced value and saves it.
 
 **Flush debounce is cumulative**: `TimeToNextFlush = (LastFileChange + 500ms) - Now`. Every new file change resets `LastFileChange`, pushing the flush window out by another 500ms. Rapid successive changes delay flushing until things settle.
+
+**A flush costs O(1) heavy refreshes, not one per file**: inside `DeferDependentUpdates`, an element or behavior reload skips `GumProjectSave.Initialize`, `RefreshElementTreeView`, `ElementReloaded` and the canvas rebuild, and the scope's `Dispose` runs each once (initialize first, since the reloaded elements are not initialized until then). The selected element or behavior is the exception: re-selecting it needs the initialized project and tree at once. `Flush` reacts to the project file first; once it starts a project reload, the element and behavior files after it in the batch are skipped, since the load reads them all. A new per-element reaction that refreshes UI must check `_reloadedWhileDeferring` and defer the same way, or a CLI edit of every file freezes the tool again.
 
 **Watcher callbacks only check the ignore list, then post to the UI thread**: `HandleFileSystemChange`/`HandleRename`/`HandleFileSystemDelete` run on a watcher thread and hand their work to the UI thread through `IDispatcher`. New callback code goes inside the posted reaction; anything else runs off the UI thread against UI-owned state.
 

@@ -533,6 +533,12 @@ public class FileWatchManager : IFileWatchManager
                 // else Locked: leave in queue and retry next cycle (e.g. git is writing it).
             }
 
+            // The project file goes first: its reload replaces every element, so the element files after it in the
+            // same batch are skipped instead of reloaded one by one (#8445).
+            filesToProcess = filesToProcess
+                .OrderByDescending(file => file.Extension == GumProjectSave.ProjectExtension || file.Extension == GumProjectSave.ProjectJsonExtension)
+                .ToList();
+
             // Readers of the reloaded elements are updated once every file in the batch is back in memory.
             using (_fileChangeReactionLogic.DeferDependentUpdates())
             {
