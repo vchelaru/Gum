@@ -152,6 +152,10 @@ NVorbis — Copyright (c) 2020 Andrew Ward
     https://github.com/NVorbis/NVorbis
     NuGet: NVorbis
 
+Sentry — Copyright (c) 2018 Sentry
+    https://github.com/getsentry/sentry-dotnet
+    NuGet: Sentry
+
 ShadowDusk (Compiler / Core / GLSL / HLSL / ShaderToy / SkSL) — Copyright (c) 2026 ShadowDusk
     Contributors
     https://github.com/kaltinril/ShadowDusk

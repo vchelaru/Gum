@@ -3,6 +3,7 @@ using System.IO;
 using Avalonia;
 using Avalonia.Threading;
 using Gum.Avalonia.Diagnostics;
+using Gum.Avalonia.Diagnostics.CrashReporting;
 using Gum.Avalonia.Services;
 using Gum.Diagnostics;
 using Gum.Services;
@@ -10,6 +11,7 @@ using Gum.Services.Dialogs;
 using Gum.Settings;
 using Gum.Startup;
 using Gum.Startup.SingleInstance;
+using Gum.ToolStates;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,6 +24,7 @@ namespace Gum.Avalonia;
 public static class Program
 {
     private const string CrashLogsFolderName = "CrashLogs";
+    private const string SentryCacheFolderName = "SentryCache";
 
     // Held so the thread-pool timer isn't collected while the run is alive.
     private static UnattendedExitDeadline? _exitDeadline;
@@ -64,12 +67,26 @@ public static class Program
             Path.Combine(GetAppDataDirectory(), CrashLogsFolderName),
             ToolVersion.Describe(typeof(Program).Assembly),
             message => ShowErrorMessage(services, options, message));
-        UnhandledExceptionHooks.InstallProcessHooks(crashReporter);
+        // Both set once the host is built; until then nothing is sent. The project folder is looked up
+        // only when a report is scrubbed, so a launch without crash reporting resolves nothing extra.
+        ICrashReportingConsent? consent = null;
+        IServiceProvider? hostServices = null;
+        ICrashReporter reporter = SentryCrashReporter.Wrap(crashReporter, SentryCrashReporter.Dsn,
+            () => SentryCrashReportSender.Start(SentryCrashReportSender.CreateOptions(
+                SentryCrashReporter.Dsn,
+                ToolVersion.Describe(typeof(Program).Assembly),
+                Path.Combine(GetAppDataDirectory(), SentryCacheFolderName),
+                new CrashReportScrubber(
+                    new PathScrubber(Environment.UserName, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)),
+                    () => hostServices?.GetService<IProjectState>()?.ProjectDirectory))),
+            () => consent?.IsSendingAllowed == true);
+        UnhandledExceptionHooks.InstallProcessHooks(reporter);
 
         using IHost host = CreateHostBuilder(args)
             .ConfigureServices(serviceCollection =>
             {
-                serviceCollection.AddSingleton<ICrashReporter>(crashReporter);
+                serviceCollection.AddSingleton<ICrashReporter>(reporter);
+                CrashReportingConsent.AddServices(serviceCollection, SentryCrashReporter.Dsn);
                 if (gate?.Inbox is { } inbox)
                 {
                     serviceCollection.AddSingleton<IOpenRequestInbox>(inbox);
@@ -78,6 +95,8 @@ public static class Program
             .Build();
         StartupTiming.Mark("Host built");
         Locator.Register(host.Services);
+        consent = host.Services.GetService<ICrashReportingConsent>();
+        hostServices = host.Services;
         if (gate != null)
         {
             // The claim follows the project this Gum has open, so a launch for any other project
@@ -90,7 +109,7 @@ public static class Program
         int exitCode = BuildAvaloniaApp(host.Services, options)
             .AfterSetup(_ =>
             {
-                UnhandledExceptionHooks.InstallDispatcherHook(crashReporter);
+                UnhandledExceptionHooks.InstallDispatcherHook(reporter);
                 services = host.Services;
             })
             .StartWithClassicDesktopLifetime(args);
@@ -229,6 +248,7 @@ public static class Program
                 services.AddOptions();
                 services.ConfigureWritable<ThemeSettings>(context.Configuration, nameof(ThemeSettings), settingsPath);
                 services.ConfigureWritable<LayoutSettings>(context.Configuration, nameof(LayoutSettings), settingsPath);
+                services.ConfigureWritable<CrashReportingSettings>(context.Configuration, nameof(CrashReportingSettings), settingsPath);
                 services.AddGumCore();
                 services.AddGumAvalonia();
             });

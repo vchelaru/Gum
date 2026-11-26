@@ -385,6 +385,11 @@ public class HeadProcessTests
                 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 File.Copy(file, target);
             }
+            // Crash reporting answered "don't send": a run without --exit-after would otherwise open
+            // the consent prompt, and no test run should send a report.
+            string userData = Path.Combine(workingDirectory, "UserData");
+            Directory.CreateDirectory(userData);
+            File.WriteAllText(Path.Combine(userData, "appsettings.json"), "{ \"CrashReportingSettings\": { \"SendCrashReports\": false } }");
             return new ScratchProject(workingDirectory, projectDirectory, Directory.GetFiles(projectDirectory, "*.gumx").Single());
         }
 

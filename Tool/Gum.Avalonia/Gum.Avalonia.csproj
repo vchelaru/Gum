@@ -46,6 +46,8 @@
 		     tab's filter and add buttons and the States tree. -->
 		<PackageReference Include="FluentIcons.Avalonia" Version="2.1.345" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+		<!-- Opt-in crash reports (#8444). The head only: Gum.Presentation and Gum.Cli stay free of it. -->
+		<PackageReference Include="Sentry" Version="6.12.1" />
 		<!-- Runtime dependencies of the Skia plugin (SVG and Lottie), matching what Gum.csproj ships for
 		     the WPF head: a plugin's NuGet dependencies load from the application folder. -->
 		<PackageReference Include="SkiaSharp.Extended" Version="$(GumSkiaSharpExtendedVersion)" />
