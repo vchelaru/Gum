@@ -32,7 +32,7 @@ public class PluginOnlyStandardDefaultStateTests : BaseTestClass
     public void ElementInitialize_ShouldUseProjectStandardDefault_WhenTypeHasNoBuiltInOrCustomDefault()
     {
         GumProjectSave project = CreateProjectWithInstanceOf("RoundedRectangle", out ComponentSave component, includeStandard: true);
-        VariableSave instanceVariable = component.DefaultState.Variables[0];
+        VariableSave instanceVariable = component.DefaultState!.Variables[0];
         instanceVariable.Value = "5";
 
         bool wasModified = component.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component"));
@@ -60,12 +60,12 @@ public class PluginOnlyStandardDefaultStateTests : BaseTestClass
     {
         GumProjectSave project = CreateProjectWithInstanceOf("RoundedRectangle", out ComponentSave component, includeStandard: true);
         StandardElementSave standard = project.StandardElements.Find(item => item.Name == "RoundedRectangle")!;
-        int variableCountBefore = standard.DefaultState.Variables.Count;
+        int variableCountBefore = standard.DefaultState!.Variables.Count;
         List<string> modifications = new List<string>();
 
         project.Initialize(modifications: modifications);
 
-        standard.DefaultState.Variables.Count.ShouldBe(variableCountBefore);
+        standard.DefaultState!.Variables.Count.ShouldBe(variableCountBefore);
         modifications.ShouldNotContain(item => item.StartsWith("Standard:RoundedRectangle"));
     }
 
