@@ -16,6 +16,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Gum.Avalonia.Accessibility;
 using Gum.Avalonia.Canvas;
 using Gum.Avalonia.Diagnostics;
+using Gum.Avalonia.Diagnostics.CrashReporting;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
 using Gum.Avalonia.Shell.MacOS;
@@ -105,6 +106,7 @@ public sealed class App : Application
             IDisposable inputHooks = AppInputHooks.Install(_services.GetRequiredService<ICanvasRedrawScheduler>(),
                 _services.GetRequiredService<IOperatingSystemInfo>());
             MainWindow window = _services.GetRequiredService<MainWindow>();
+            _services.GetService<ICrashReportingConsent>()?.AddHelpMenuItem(_services.GetRequiredService<MenuModel>());
             // Agents and CI run this hundreds of times; don't take the user's focus.
             if (_options.ExitAfterSeconds != null)
             {
@@ -199,6 +201,8 @@ public sealed class App : Application
 
     private async Task<UnattendedStartupOutcome> RunStartupStepsAsync(IClassicDesktopStyleApplicationLifetime desktop)
     {
+        // Before the startup sequence, which may open the New Project dialog, so the two never come back to back.
+        _services.GetService<ICrashReportingConsent>()?.PromptIfUnset(isUnattended: _options.ExitAfterSeconds != null);
         await new GumStartupSequence(_services, _services.GetRequiredService<AvaloniaHeadStartup>()).RunAsync();
         StartupTiming.Mark("InitializeGum complete");
         if (!ApplyStartupSelection() && _options.ExitAfterSeconds != null)
