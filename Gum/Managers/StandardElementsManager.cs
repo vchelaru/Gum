@@ -969,16 +969,10 @@ public class StandardElementsManager
         }
         else
         {
-
-            StateSave? customState = CustomGetDefaultState?.Invoke(type);
-            // Vic says - not sure if this is still used. If so, we need to create a 
-            // CustomGetDefaultState that returns a state as shown below.
-            //#if SKIA
-            //                // In Skia we will assume that any type that comes through has a default state:
-            //                customState = new StateSave();
-            //                AddPositioningVariables(customState, addOriginVariables: true);
-            //                mDefaults[type] = customState;
-            //#endif
+            // A host that loads no plugin (FRB1, a bare runtime) has no default for a plugin-only
+            // standard such as RoundedRectangle, so the project's own .gutx default is used (#8447).
+            StateSave? customState = CustomGetDefaultState?.Invoke(type)
+                ?? ObjectFinder.Self.GetStandardElement(type)?.DefaultState;
 
             if (customState == null && throwExceptionOnMissing)
             {
