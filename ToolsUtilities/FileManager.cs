@@ -1720,6 +1720,25 @@ namespace ToolsUtilities
                 Directory.CreateDirectory(directory);
             }
 
+            WriteBytesIfChanged(fileName, bytes);
+
+            return bytes;
+        }
+
+        /// <summary>
+        /// Writes <paramref name="bytes"/> to <paramref name="fileName"/> unless the file already holds
+        /// exactly those bytes, so saving an unchanged object leaves the file (and its timestamp) alone and
+        /// raises no file-watcher event. Returns whether the file was written. The directory must exist.
+        /// </summary>
+        public static bool WriteBytesIfChanged(string fileName, byte[] bytes)
+        {
+            if (System.IO.File.Exists(fileName)
+                && new FileInfo(fileName).Length == bytes.Length
+                && AreEqual(System.IO.File.ReadAllBytes(fileName), bytes))
+            {
+                return false;
+            }
+
             // for info on why we do this:
             // https://stackoverflow.com/questions/8515720/how-to-prevent-system-io-file-open-with-filemode-truncate-from-causing-a-file-ch
             if (System.IO.File.Exists(fileName))
@@ -1732,7 +1751,24 @@ namespace ToolsUtilities
                 fs.Write(bytes, 0, bytes.Length);
             }
 
-            return bytes;
+            return true;
+        }
+
+        // A loop rather than Span.SequenceEqual, which netstandard2.0 lacks without System.Memory.
+        private static bool AreEqual(byte[] first, byte[] second)
+        {
+            if (first.Length != second.Length)
+            {
+                return false;
+            }
+            for (int i = 0; i < first.Length; i++)
+            {
+                if (first[i] != second[i])
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
 #if NET5_0_OR_GREATER

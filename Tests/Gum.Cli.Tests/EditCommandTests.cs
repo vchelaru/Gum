@@ -77,6 +77,39 @@ public class EditCommandTests : BaseTestClass
         game.DefaultState.GetValue("HudInstance.Counter1Text").ShouldBe("5");
     }
 
+    // One op on one element must not rewrite the rest of the project; an open tool reloads every file
+    // that changes on disk (#8445).
+    [Fact]
+    public void Edit_OneOperationOnOneElement_LeavesEveryOtherFileUntouched()
+    {
+        string projectPath = CreateEmptyProject();
+        CliTestHelper.Run("edit", projectPath, WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "Edited" },
+              { "op": "addComponent", "name": "Other" },
+              { "op": "addScreen", "name": "Game" }
+            ]}
+            """)).ExitCode.ShouldBe(0);
+        DateTime oldTime = new DateTime(2001, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        string[] files = Directory.GetFiles(Path.GetDirectoryName(projectPath)!, "*", SearchOption.AllDirectories);
+        foreach (string file in files)
+        {
+            File.SetLastWriteTimeUtc(file, oldTime);
+        }
+        string editedFile = Path.Combine(Path.GetDirectoryName(projectPath)!, "Components", "Edited.gucx");
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, WriteOperations("""
+            { "version": 1, "operations": [
+              { "op": "setVariable", "element": "Edited", "name": "Width", "value": 123 }
+            ]}
+            """));
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        File.GetLastWriteTimeUtc(editedFile).ShouldNotBe(oldTime);
+        files.Where(file => file != editedFile && File.GetLastWriteTimeUtc(file) != oldTime)
+            .ShouldBeEmpty();
+    }
+
     [Fact]
     public void Edit_UnexposeVariable_ClearsTheExposedNameAndTheValuesSetThroughIt()
     {

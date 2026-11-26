@@ -413,6 +413,48 @@ public class FileManagerTests : IDisposable
         }
     }
 
+    // A save that would write the bytes already on disk leaves the file alone, so a watcher sees no event (#8445).
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Save_ShouldLeaveTheFileUntouched_WhenItAlreadyHoldsTheSameBytes(bool json)
+    {
+        string root = Path.Combine(Path.GetTempPath(), "GumXmlSerializeTests_" + Guid.NewGuid().ToString("N"));
+        string fileName = Path.Combine(root, "Sub", "values.txt");
+        DateTime oldTime = new DateTime(2001, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        void Save(string value)
+        {
+            if (json)
+            {
+                Gum.DataTypes.Serialization.Json.GumJsonFileSerializer.WriteToFile(fileName, "\"" + value + "\"");
+            }
+            else
+            {
+                FileManager.XmlSerialize(new List<string> { value }, fileName);
+            }
+        }
+
+        try
+        {
+            Save("a");
+            File.SetLastWriteTimeUtc(fileName, oldTime);
+
+            Save("a");
+            File.GetLastWriteTimeUtc(fileName).ShouldBe(oldTime);
+
+            Save("b");
+            File.GetLastWriteTimeUtc(fileName).ShouldNotBe(oldTime);
+            File.ReadAllText(fileName).ShouldContain("b");
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
     [Fact]
     public void ClearDirectoryContents_ShouldNotThrow_WhenDirectoryDoesNotExist()
     {
