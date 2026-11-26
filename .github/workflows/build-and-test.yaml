@@ -992,19 +992,20 @@ jobs:
             Tests/SkiaGum.GpuTests/bin/Release/net8.0
 
       # The same Mesa archive ships lavapipe (vulkan_lvp.dll + lvp_icd.x86_64.json), Mesa's software Vulkan driver, for
-      # BrutalGum.Vulkan.Tests (#8440). It needs a Vulkan loader (vulkan-1.dll), which a runner without GPU drivers may
-      # lack; the log line says which, and the test skips without one.
-      - name: Point Vulkan at lavapipe (Windows, #8440)
+      # BrutalGum.Vulkan.Tests (#8440); the runner image has the Vulkan loader. The runner is elevated, and an elevated
+      # process's loader ignores VK_DRIVER_FILES and VK_ICD_FILENAMES, so the ICD is registered where the loader looks.
+      - name: Register lavapipe as a Vulkan driver (Windows, #8440)
         if: runner.os == 'Windows' && steps.plan.outputs.active == 'true' && matrix.mesa
         shell: pwsh
         run: |
           $icd = Get-ChildItem -Path (Join-Path $env:RUNNER_TEMP "mesa") -Recurse -Filter lvp_icd.x86_64.json |
                  Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
           if (-not $icd) { Write-Error "lvp_icd.x86_64.json not found in the Mesa archive"; exit 1 }
-          Write-Host "lavapipe ICD: $($icd.FullName)"; Get-Content $icd.FullName
-          Write-Host "System Vulkan loader present: $(Test-Path "$env:WINDIR\System32\vulkan-1.dll")"
-          "VK_DRIVER_FILES=$($icd.FullName)" >> $env:GITHUB_ENV
-          "VK_ICD_FILENAMES=$($icd.FullName)" >> $env:GITHUB_ENV
+          if (-not (Test-Path "$env:WINDIR\System32\vulkan-1.dll")) { Write-Error "no Vulkan loader (vulkan-1.dll) on the runner"; exit 1 }
+          $key = "HKLM:\SOFTWARE\Khronos\Vulkan\Drivers"
+          New-Item -Path $key -Force | Out-Null
+          New-ItemProperty -Path $key -Name $icd.FullName -Value 0 -PropertyType DWord -Force | Out-Null
+          Write-Host "Registered lavapipe ICD $($icd.FullName)"
 
       # Windows runs the test projects as concurrent streams (#6282): the headless projects in one, the
       # Mesa llvmpipe ones in two more, each project still its own `dotnet test` with its own trx. The
