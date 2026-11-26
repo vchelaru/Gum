@@ -74,6 +74,7 @@ public static class GumJsonFileSerializer
 
     /// <summary>
     /// Writes <paramref name="json"/> as <see cref="WriteToFile"/> does and returns the bytes written.
+    /// A file that already holds those bytes is left untouched.
     /// </summary>
     public static byte[] WriteToFileAndGetBytes(string fileName, string json)
     {
@@ -84,7 +85,7 @@ public static class GumJsonFileSerializer
         }
 
         byte[] bytes = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false).GetBytes(json);
-        File.WriteAllBytes(fileName, bytes);
+        ToolsUtilities.FileManager.WriteBytesIfChanged(fileName, bytes);
         return bytes;
     }
 }
