@@ -39,7 +39,11 @@ internal sealed class CodeTabHarness : IDisposable
     private readonly bool _wasSelected;
 
     /// <param name="beforeLoad">Runs after the project is first saved and before it is reopened, for files the load should see (a .csproj, a .codsj).</param>
-    public CodeTabHarness(Action<string>? beforeLoad = null)
+    /// <param name="openProjectSettingsPage">
+    /// Whether the Settings window's Code generation page is open next to the tab. False is a user
+    /// who has not opened the Settings window, so only the tab itself reacts to the project.
+    /// </param>
+    public CodeTabHarness(Action<string>? beforeLoad = null, bool openProjectSettingsPage = true)
     {
         Tree = new ProjectTreeHarness();
         try
@@ -56,11 +60,14 @@ internal sealed class CodeTabHarness : IDisposable
             Tab.IsSelected = true;
             // The project-wide settings are a page of the Settings window; it is hosted under the tab.
             ProjectSettingsPage = new CodeGenerationSettingsPageView { DataContext = SettingsPagesForTests.Page(SettingsPageIds.CodeGeneration).Content };
-            ActivateProjectSettingsPage();
             _host = new global::Avalonia.Controls.Grid { RowDefinitions = new RowDefinitions("*,*") };
-            global::Avalonia.Controls.Grid.SetRow(ProjectSettingsPage, 1);
             _host.Children.Add(View);
-            _host.Children.Add(ProjectSettingsPage);
+            if (openProjectSettingsPage)
+            {
+                ActivateProjectSettingsPage();
+                global::Avalonia.Controls.Grid.SetRow(ProjectSettingsPage, 1);
+                _host.Children.Add(ProjectSettingsPage);
+            }
             _driver = new HeadlessWindowDriver(_host, width: 1000, height: 1000, framesFolderName: "GumCodeTab");
         }
         catch
@@ -244,11 +251,14 @@ internal sealed class CodeTabHarness : IDisposable
     }
 
     /// <summary>Saves and opens the project again through the tool's load path; element objects taken before are stale.</summary>
-    public void Reopen()
+    public void Reopen(bool openProjectSettingsPage = true)
     {
         Project.SaveAndReload();
         Tree.TreeManager.RefreshUi();
-        ActivateProjectSettingsPage();
+        if (openProjectSettingsPage)
+        {
+            ActivateProjectSettingsPage();
+        }
         _driver.Layout();
     }
 
