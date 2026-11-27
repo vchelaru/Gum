@@ -179,7 +179,7 @@ GumUI.Draw();
 window.SwapBuffers();
 ```
 
-`Draw` composites Gum's frame over the window's default framebuffer (or [your own framebuffer](brutal.md#drawing-into-your-own-framebuffer-opengl) when one is bound), so call `SwapBuffers` after it. Skia leaves the OpenGL program, vertex array, buffers, viewport, scissor, blend and depth state as it used them, so set your own again if you draw after Gum.
+`Draw` composites Gum's frame over the window's default framebuffer (or [your own framebuffer](#drawing-into-your-own-framebuffer-opengl) when one is bound), so call `SwapBuffers` after it. Skia leaves the OpenGL program, vertex array, buffers, viewport, scissor, blend and depth state as it used them, so set your own again if you draw after Gum.
 {% endtab %}
 
 {% tab title="Vulkan" %}
