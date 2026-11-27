@@ -506,7 +506,8 @@ public class FormsUtilities
 
         // InteractiveGue.IsInputBlocked: the walk skips blocked subtrees, and the devices above still poll,
         // so a press made while blocked is consumed rather than saved for later. Focus is left alone.
-        Gum.Input.InputBlocker inputBlocker = IGumService.Default?.InputBlocker ?? _fallbackInputBlocker;        Gum.Input.InputBlocker.ReleaseBlockedPush(cursor);
+        Gum.Input.InputBlocker inputBlocker = IGumService.Default?.InputBlocker ?? _fallbackInputBlocker;
+        Gum.Input.InputBlocker.ReleaseBlockedPush(cursor);
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
             innerList,
             cursor,
