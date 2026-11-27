@@ -237,7 +237,7 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         screen.AddToRoot();
         ComboBox comboBox = new();
         screen.AddChild(comboBox);
-        comboBox.Items.Add("first");
+        comboBox.Items!.Add("first");
         comboBox.Items.Add("second");
 
         comboBox.IsDropDownOpen = true;
@@ -254,7 +254,7 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         screen.AddToRoot();
         ListBox listBox = new();
         screen.AddChild(listBox);
-        listBox.Items.Add("first");
+        listBox.Items!.Add("first");
         listBox.Items.Add("second");
 
         screen.RemoveFromRoot();
@@ -274,7 +274,7 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         screen.AddChild(goldLabel);
         ListBox listBox = new();
         screen.AddChild(listBox);
-        listBox.Items.Add("first");
+        listBox.Items!.Add("first");
         listBox.Items.Add("second");
         // A screen built from a project lists its instances as contained elements, which
         // RemoveFromManagers walks.
@@ -292,6 +292,35 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         goldLabel.BindingContext.ShouldBe(labelViewModel);
         goldLabel.Text.ShouldBe("40");
         listBox.ListBoxItems[1].BindingContext.ShouldBe("second");
+    }
+
+    private class RemovesOtherOnRemoval : Gum.GueDeriving.ContainerRuntime
+    {
+        public GraphicalUiElement? Other;
+
+        public override void RemoveFromManagers()
+        {
+            Other?.RemoveFromManagers();
+            base.RemoveFromManagers();
+        }
+    }
+
+    [Fact]
+    public void RemoveFromManagers_UnrelatedElementRemovedDuringChildWalk_ClearsItsOwnContext()
+    {
+        GameViewModel otherViewModel = new() { Gold = 1 };
+        Gum.GueDeriving.ContainerRuntime other = new();
+        other.AddToManagers(SystemManagers.Default, null);
+        other.BindingContext = otherViewModel;
+        Gum.GueDeriving.ContainerRuntime screen = new();
+        RemovesOtherOnRemoval child = new() { Other = other };
+        screen.Children.Add(child);
+        child.ElementGueContainingThis = screen;
+        screen.AddToManagers(SystemManagers.Default, null);
+
+        screen.RemoveFromManagers();
+
+        other.BindingContext.ShouldBeNull();
     }
 
     [Fact]

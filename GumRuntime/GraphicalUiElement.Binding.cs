@@ -122,7 +122,7 @@ public partial class GraphicalUiElement
             "was actually called by the app to set up the binding in the first place.")]
     partial void CustomRemoveFromManagers()
     {
-        if (_removeFromManagersChildDepth == 0)
+        if (!IsRemovingFromManagersWithContainer)
         {
             BindingContext = null;
         }
