@@ -16,7 +16,7 @@ With the **Gum Forms** output library (the default), the class is generated with
 
 Runtime classes are created with the `partial` keyword. This allows classes to be spread across multiple files. Typically one file includes the generated code which can change whenever a change is made in Gum. The other file includes code which can be modified by hand and which is not changed by Gum (unless an element is renamed or a namespace setting changes). See [Folder Layout](README.md#folder-layout) for where the two files go.
 
-If your project is set up to automatically generate files when changed, or if you click the **Generate Code** button, then Gum automatically generates both a generated file and a second file for you to write custom code. These are often referred to as _generated_ and _custom_ code files.
+If your project is set up to automatically generate files when changed, or if you click the **Generate** button, then Gum automatically generates both a generated file and a second file for you to write custom code. These are often referred to as _generated_ and _custom_ code files.
 
 If you are manually copying the generated code, then you are free to include the partial keyword. Doing so does not require a second code file - classes can be partial regardless of how many code files they span.
 

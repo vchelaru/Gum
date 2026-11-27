@@ -244,7 +244,7 @@ Note that Gum may choose to override this base class in certain conditions inclu
 This controls when Gum generates code for a component.
 
 * NeverGenerate - generated code is not saved for this element, and Gum leaves its existing code files alone
-* GenerateManually - generated code is only saved for this element if the **Generate Code** button is clicked, or if it is a requirement for another component or screen which is generated.
+* GenerateManually - generated code is only saved for this element if the **Generate** button is clicked, or if it is a requirement for another component or screen which is generated.
 * GenerateAutomaticallyOnPropertyChanged - this is generated whenever a change is made to this element in Gum.
 
 ### Debug Only
