@@ -32,6 +32,9 @@ internal sealed class TextBlobBatch
         public SKPoint[] Positions;
         public SKTypeface Typeface;
         public float FontSize;
+        // Synthetic bold and italic (GumFontMapper.ApplySyntheticStyle), which the merged blob must keep.
+        public bool Embolden;
+        public float SkewX;
         public float X;
         public float Y;
     }
@@ -234,16 +237,19 @@ internal sealed class TextBlobBatch
         _font.Hinting = _hinting;
         _font.Edging = _edging;
         _font.Subpixel = _subpixel;
-        // Consecutive items with the same typeface and size go into one positioned run, in order, since SkiaSharp
+        // Consecutive items with the same typeface, size and synthetic style go into one positioned run, in order, since SkiaSharp
         // allocates a managed run buffer for each run.
         int groupStart = 0;
         while (groupStart < count)
         {
             SKTypeface typeface = _items[groupStart].Typeface;
             float fontSize = _items[groupStart].FontSize;
+            bool embolden = _items[groupStart].Embolden;
+            float skewX = _items[groupStart].SkewX;
             int groupEnd = groupStart;
             int glyphCount = 0;
-            while (groupEnd < count && ReferenceEquals(_items[groupEnd].Typeface, typeface) && _items[groupEnd].FontSize == fontSize)
+            while (groupEnd < count && ReferenceEquals(_items[groupEnd].Typeface, typeface) && _items[groupEnd].FontSize == fontSize
+                && _items[groupEnd].Embolden == embolden && _items[groupEnd].SkewX == skewX)
             {
                 glyphCount += _items[groupEnd].Glyphs.Length;
                 groupEnd++;
@@ -270,6 +276,8 @@ internal sealed class TextBlobBatch
 
             _font.Typeface = typeface;
             _font.Size = fontSize;
+            _font.Embolden = embolden;
+            _font.SkewX = skewX;
             SKPositionedRunBuffer buffer = _builder.AllocatePositionedRun(_font, glyphCount);
             buffer.SetGlyphs(_glyphs.AsSpan(0, glyphCount));
             buffer.SetPositions(_positions.AsSpan(0, glyphCount));

@@ -64,6 +64,35 @@ public class GumFontMapper : FontMapper
     private const int RegularFontWeight = 400;
 
     /// <summary>
+    /// The skew of synthetic italic: tan(12 degrees), the slant KernSmith gives the italic atlas it bakes for a
+    /// font with no italic file on MonoGame and raylib (its default <c>ItalicAngle</c>). Negative leans right.
+    /// </summary>
+    private const float SyntheticItalicSkewX = -0.21256f;
+
+    /// <summary>
+    /// Sets <paramref name="font"/> to draw <paramref name="style"/>'s bold and italic synthetically when the
+    /// typeface the run resolved to has no such cut (a font registered from one file), matching the bold and
+    /// italic atlases KernSmith bakes from a single file on MonoGame and raylib (#8480). A typeface that is already
+    /// bold or italic draws unchanged. Only the drawn glyphs change; shaping, and so measurement and wrapping, read
+    /// the typeface's own advances.
+    /// </summary>
+    public static void ApplySyntheticStyle(SKFont font, IStyle style, SKTypeface? typeface)
+    {
+        font.Embolden = NeedsSyntheticBold(style, typeface);
+        font.SkewX = NeedsSyntheticItalic(style, typeface) ? SyntheticItalicSkewX : 0;
+    }
+
+    /// <summary>True when <see cref="ApplySyntheticStyle"/> changes how a run with this style and typeface draws.</summary>
+    public static bool NeedsSyntheticStyle(IStyle style, SKTypeface? typeface) =>
+        NeedsSyntheticBold(style, typeface) || NeedsSyntheticItalic(style, typeface);
+
+    private static bool NeedsSyntheticBold(IStyle style, SKTypeface? typeface) =>
+        style.FontWeight > RegularFontWeight && typeface != null && typeface.FontWeight < (int)SKFontStyleWeight.SemiBold;
+
+    private static bool NeedsSyntheticItalic(IStyle style, SKTypeface? typeface) =>
+        style.FontItalic && typeface != null && typeface.FontSlant == SKFontStyleSlant.Upright;
+
+    /// <summary>
     /// Registers an already-loaded <see cref="SKTypeface"/> directly (as opposed to
     /// <see cref="RegisterFontFile"/>, which loads one from a path) and returns the family-name
     /// key to assign as <c>Style.FontFamily</c> to reference it -- used by <c>Text.Typeface</c>.

@@ -2170,6 +2170,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             public SKTypeface Typeface;
             public float FontSize;
             public SKFontEdging Edging;
+            public bool Embolden;
+            public float SkewX;
             // The built-in effect drawn on this one-glyph run, and the glyph's distance from the start of its line.
             public ParameterizedLetterCustomizationCall? Effect;
             public float LetterX;
@@ -2230,10 +2232,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 Drop();
                 Block = block;
                 _effects = effects;
-                // RichTextKit paints a whole block with one edging, so a block with an unsmoothed run draws its
-                // blobs from the first frame (#8344). Built-in effects are applied only to blobs, so a block with
-                // effects draws them from the first frame too.
-                _isFirstFrame = effects == null && !HasUnsmoothedRun(block);
+                // RichTextKit paints a whole block with one edging and draws no synthetic bold or italic, so a block
+                // with an unsmoothed run (#8344) or a synthetic-style run (#8480) draws its blobs from the first frame.
+                // Built-in effects are applied only to blobs, so a block with effects draws them from the first frame too.
+                _isFirstFrame = effects == null && !HasRunOnlyBlobsDraw(block);
             }
             else
             {
@@ -2365,6 +2367,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     Positions = run.Positions,
                     Typeface = run.Typeface,
                     FontSize = run.FontSize,
+                    Embolden = run.Embolden,
+                    SkewX = run.SkewX,
                     X = x + dx,
                     Y = y + dy + run.VerticalOffset,
                 });
@@ -2561,9 +2565,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             halo.StrokeJoin = SKStrokeJoin.Round;
         }
 
-        private static bool HasUnsmoothedRun(TextBlock block)
+        private static bool HasRunOnlyBlobsDraw(TextBlock block)
         {
-            if (HasUnsmoothedRunInBlock(block))
+            if (HasRunOnlyBlobsDrawInBlock(block))
             {
                 return true;
             }
@@ -2571,7 +2575,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             {
                 for (int i = 0; i < letters.Count; i++)
                 {
-                    if (HasUnsmoothedRunInBlock(letters[i].Block))
+                    if (HasRunOnlyBlobsDrawInBlock(letters[i].Block))
                     {
                         return true;
                     }
@@ -2580,7 +2584,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return false;
         }
 
-        private static bool HasUnsmoothedRunInBlock(TextBlock block)
+        private static bool HasRunOnlyBlobsDrawInBlock(TextBlock block)
         {
             IReadOnlyList<TextLine> lines = block.Lines;
             for (int l = 0; l < lines.Count; l++)
@@ -2588,7 +2592,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 IReadOnlyList<FontRun> runs = lines[l].Runs;
                 for (int r = 0; r < runs.Count; r++)
                 {
-                    if (runs[r].Style is UnsmoothedStyle)
+                    FontRun run = runs[r];
+                    if (run.Style is UnsmoothedStyle || Content.Fonts.GumFontMapper.NeedsSyntheticStyle(run.Style, run.Typeface))
                     {
                         return true;
                     }
@@ -2666,6 +2671,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 Typeface = run.Typeface,
                 FontSize = font.Size,
                 Edging = font.Edging,
+                Embolden = font.Embolden,
+                SkewX = font.SkewX,
                 Effect = effect,
                 LetterX = letterX,
             });
@@ -2715,6 +2722,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     font.Hinting = options.Hinting;
                     font.Edging = style is UnsmoothedStyle ? SKFontEdging.Alias : options.Edging;
                     font.Subpixel = options.SubpixelPositioning;
+                    Content.Fonts.GumFontMapper.ApplySyntheticStyle(font, style, run.Typeface);
 
                     if (!hasMatrix && _effects != null && HasEffectGlyph(run))
                     {
