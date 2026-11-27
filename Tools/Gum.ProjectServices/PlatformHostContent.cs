@@ -37,15 +37,10 @@ internal static class PlatformHostContent
     internal static string GetGumProjectFolder(HostPlatform platform) =>
         platform == HostPlatform.KniSkia ? "Content/GumProject/" : "GumProject/";
 
-    /// <summary>Extra Game1 constructor lines. The Skia host resizes its render target with the window, so it opts in to a resizable one; the Shapes package needs the HiDef graphics profile.</summary>
-    internal static IReadOnlyList<string> GetWindowLines(HostPlatform platform, IReadOnlyList<string> addedPackages)
+    /// <summary>Extra Game1 constructor lines: the Shapes package needs the HiDef graphics profile.</summary>
+    internal static IReadOnlyList<string> GetWindowLines(IReadOnlyList<string> addedPackages)
     {
         List<string> lines = new List<string>();
-        if (platform == HostPlatform.KniSkia)
-        {
-            lines.Add("Window.AllowUserResizing = true;");
-        }
-
         if (AddsShapes(addedPackages))
         {
             lines.Add("_graphics.GraphicsProfile = GraphicsProfile.HiDef;");

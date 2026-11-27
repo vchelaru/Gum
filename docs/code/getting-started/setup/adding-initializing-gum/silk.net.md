@@ -106,6 +106,8 @@ WindowOptions options = WindowOptions.Default;
 options.API = new GraphicsAPI(ContextAPI.OpenGL, ContextProfile.Core, ContextFlags.ForwardCompatible, new APIVersion(3, 3));
 options.Size = new Vector2D<int>(800, 450);
 options.Title = "My Game";
+// Gum resizes its canvas to the window, so the UI gets more room rather than scaling.
+options.WindowBorder = WindowBorder.Resizable;
 options.VSync = true;
 options.PreferredDepthBufferBits = 24;
 options.PreferredStencilBufferBits = 8;
@@ -114,8 +116,6 @@ IWindow window = Window.Create(options);
 window.Initialize();
 
 GL gl = GL.GetApi(window);
-
-GumService GumUI = GumService.Default;
 
 GumUI.Initialize(window);
 GumUI.UseKeyboardDefaults();
@@ -145,6 +145,11 @@ while (!window.IsClosing)
 }
 
 window.Dispose();
+
+partial class Program
+{
+    static GumService GumUI => GumService.Default;
+}
 ```
 
 The button in the center of the window confirms Gum works. Delete it once you start building your game.

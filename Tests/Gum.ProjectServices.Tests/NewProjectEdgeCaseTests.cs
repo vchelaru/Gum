@@ -201,6 +201,7 @@ namespace Gum
         public void Draw() { }
         public GumService UseKeyboardDefaults() => this;
         public GumService UseGamepadDefaults() => this;
+        public void EnableExpandToWindow(float defaultZoom = 1f) { }
     }
     // Non-generic, so they win over the real generic extensions this test project can also see.
     public static class GumServiceAddOnStubs

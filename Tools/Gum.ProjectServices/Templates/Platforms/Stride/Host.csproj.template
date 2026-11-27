@@ -7,6 +7,7 @@
     <!-- Gum.Stride renders on the GPU only. Stride's Windows default is Direct3D11, which Gum.Stride
          supports (with Direct3D12) only from net10.0-windows7.0; plain net10.0 supports Vulkan only. -->
     <TargetFramework>net10.0-windows7.0</TargetFramework>
+    <Nullable>enable</Nullable>
     <RootNamespace>{{RootNamespace}}</RootNamespace>
     <NuGetAuditMode>direct</NuGetAuditMode>
   </PropertyGroup>

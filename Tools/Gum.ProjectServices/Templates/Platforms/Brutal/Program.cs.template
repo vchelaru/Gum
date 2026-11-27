@@ -19,7 +19,6 @@ using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = 
 window.MakeContextCurrent();
 Glfw.SwapInterval(1);
 
-GumService GumUI = GumService.Default;
 GumUI.Initialize(window, "Content/GumProject/{{GumProjectFile}}");
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
@@ -37,3 +36,8 @@ while (!window.ShouldClose)
 }
 
 Glfw.Terminate();
+
+partial class Program
+{
+    static GumService GumUI => GumService.Default;
+}
