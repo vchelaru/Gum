@@ -38,7 +38,6 @@ internal sealed class ProjectTreeHarness : IDisposable
 
     private readonly HeadlessWindowDriver _driver;
     private readonly ToolExceptionWatch _exceptions;
-    private readonly Dictionary<AvaloniaPluginTab, bool> _tabVisibilityAtStart;
     private VariableGridHarness? _grid;
     private StatesTabHarness? _states;
     private TaskCompletionSource<DragDropEffects>? _drag;
@@ -52,10 +51,6 @@ internal sealed class ProjectTreeHarness : IDisposable
         ToolStartup.EnsureInitialized();
         TreeManager = Services.GetRequiredService<ElementTreeViewManager>();
         View = (AvaloniaElementTreeView)TreeManager.View;
-        // The head's tabs outlive the test, and selecting an element with an animation file shows
-        // the Animations tab, so Dispose puts each tab back as it was.
-        _tabVisibilityAtStart = ((AvaloniaTabManager)Services.GetRequiredService<ITabManager>()).AllTabs
-            .ToDictionary(tab => tab, tab => tab.IsVisible);
         Project = new ToolProjectFixture(folderName, projectFileName);
         _exceptions = new ToolExceptionWatch();
         try
@@ -664,10 +659,6 @@ internal sealed class ProjectTreeHarness : IDisposable
             // So is its menu; one left open by a failed test would be open in the next.
             View.ContextMenu.Close();
             View.IncludeVariablesCheckBox.IsChecked = false;
-            foreach (KeyValuePair<AvaloniaPluginTab, bool> tab in _tabVisibilityAtStart)
-            {
-                tab.Key.IsVisible = tab.Value;
-            }
             _grid?.Dispose();
             _states?.Dispose();
             _driver.Dispose();

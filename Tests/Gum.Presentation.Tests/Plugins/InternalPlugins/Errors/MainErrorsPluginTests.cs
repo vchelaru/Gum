@@ -88,6 +88,7 @@ public class MainErrorsPluginTests : BaseTestClass
     [InlineData("VariableRemovedFromCategory")]
     [InlineData("BehaviorReferencesChanged")]
     [InlineData("RequestErrorRefreshMessage")]
+    [InlineData("AfterUndo")]
     public void ANotificationTheTreeIndicatorReliesOn_ChecksTheElementOnce(string notification)
     {
         _selectedState.Setup(s => s.SelectedElement).Returns(_screen);
@@ -112,6 +113,9 @@ public class MainErrorsPluginTests : BaseTestClass
                 break;
             case "BehaviorReferencesChanged":
                 _plugin.CallBehaviorReferencesChanged(_screen);
+                break;
+            case "AfterUndo":
+                _plugin.CallAfterUndo();
                 break;
             case "RequestErrorRefreshMessage":
                 _messenger.Send(new RequestErrorRefreshMessage());

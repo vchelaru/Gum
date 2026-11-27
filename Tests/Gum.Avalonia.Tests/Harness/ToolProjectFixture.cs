@@ -22,7 +22,7 @@ namespace Gum.Avalonia.Tests.Harness;
 /// through the tool's own commands so every plugin sees the events it would see in the tool. Every
 /// dialog the tool opens meanwhile is answered by <see cref="Dialogs"/>. Dispose puts the tool back
 /// the way it was: no project in the temp folder, no selection, the real dialogs, the user's own
-/// per-user folder.
+/// per-user folder, the head's tabs as the tool starts them.
 /// </summary>
 internal sealed class ToolProjectFixture : IDisposable
 {
@@ -44,6 +44,7 @@ internal sealed class ToolProjectFixture : IDisposable
         // Work another test left queued (a tree view syncing its selection, say) runs now, against
         // that test's state, not later against this fixture's project and selection.
         Dispatcher.UIThread.RunJobs();
+        ToolStartup.ResetTabVisibility();
         ProjectFolder = Path.Combine(Path.GetTempPath(), folderName, Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(ProjectFolder);
 
@@ -250,6 +251,7 @@ internal sealed class ToolProjectFixture : IDisposable
     private void Restore()
     {
         _pluginManager.Plugins = _originalPlugins;
+        ToolStartup.ResetTabVisibility();
         _dialogScope.Dispose();
         FileManager.UserApplicationDataFolderOverride = _originalUserDataOverride;
     }
