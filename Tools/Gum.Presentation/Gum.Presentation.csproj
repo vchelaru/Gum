@@ -47,7 +47,7 @@
 		     easing/tweening library under the FlatRedBall brand (not the FRB engine) and has no
 		     WPF/WinForms dependency, so it does not violate the headless boundary above. Pin matches
 		     StateAnimationPlugin.csproj so a single bump propagates predictably. -->
-		<PackageReference Include="FlatRedBall.InterpolationCore" Version="2025.4.22.1" />
+		<PackageReference Include="FlatRedBall.InterpolationCore" Version="2026.11.27.1138" />
 		<!-- RecentProjectReference (IProjectManager.RecentProjects) uses [JsonIgnore] on its computed
 		     FilePath property. Newtonsoft.Json has no WPF/WinForms dependency and is already pulled in
 		     transitively via Gum.ProjectServices; pin matches that project's version explicitly since

@@ -42,7 +42,7 @@
     <Folder Include="Libraries\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FlatRedBall.InterpolationCore" Version="2025.4.22.1" />
+    <PackageReference Include="FlatRedBall.InterpolationCore" Version="2026.11.27.1138" />
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.1</Version>
     </PackageReference>
