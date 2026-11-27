@@ -28,6 +28,8 @@ public class PackCommandTests : BaseTestClass
     {
         string projectPath = CreateProjectWithTextFontFile("FontFile");
         string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+        // A new project ships its default Text font baked; this project has never generated one.
+        Directory.Delete(Path.Combine(Path.GetDirectoryName(projectPath)!, "FontCache"), recursive: true);
 
         CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath);
 
