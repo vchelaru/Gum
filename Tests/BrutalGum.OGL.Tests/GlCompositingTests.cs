@@ -248,4 +248,32 @@ public unsafe class GlCompositingTests : BaseTestClass
             PixelAt(10, Size - 10).ShouldBe(((byte)0, (byte)0, (byte)255, (byte)255));
         });
     }
+
+    [SkippableFact]
+    public void Draw_AfterAFrameIntoTheGamesFramebuffer_WithNothingBound_DrawsIntoTheWindowAndRestoresViewports()
+    {
+        WithWindow(window =>
+        {
+            const int GL_VIEWPORT = 0x0BA2;
+            RectangleRuntime rectangle = new() { X = 0, Y = 0, Width = Size, Height = Size / 2, FillColor = SKColors.Red, IsFilled = true, StrokeWidth = 0 };
+            GumService.Default.Root.AddChild(rectangle);
+            BindGameFramebuffer();
+            Load<ViewportFn>("glViewport")(3, 4, Size - 8, Size - 9);
+            GumService.Default.Update(0.016);
+            GumService.Default.Draw();
+            int* vp = stackalloc int[4];
+            Load<GetIntegervFn>("glGetIntegerv")(GL_VIEWPORT, vp);
+            (vp[0], vp[1], vp[2], vp[3]).ShouldBe((3, 4, Size - 8, Size - 9));
+
+            GameClear(0f, 0f, 1f);
+            Load<ViewportFn>("glViewport")(1, 2, 5, 6);
+            GumService.Default.Update(0.016);
+            GumService.Default.Draw();
+            Load<GetIntegervFn>("glGetIntegerv")(GL_VIEWPORT, vp);
+            (vp[0], vp[1], vp[2], vp[3]).ShouldBe((1, 2, 5, 6));
+
+            PixelAt(10, Size - 10).ShouldBe(((byte)255, (byte)0, (byte)0, (byte)255));
+            PixelAt(10, 10).ShouldBe(((byte)0, (byte)0, (byte)255, (byte)255));
+        });
+    }
 }
