@@ -92,6 +92,23 @@ public class UndoRedoCanvasScenarioTests
     }
 
     [Fact]
+    public void UndoAndRedo_OfAValueAnotherElementReferences_ReApplyTheReferenceInThatElement()
+    {
+        OnCanvas((canvas, button) =>
+        {
+            // Scratch follows the Button's Width, so the Button's undo snapshot does not hold Scratch's value.
+            ProjectTreeHarness tree = canvas.Tree;
+            ElementSave scratch = ObjectFinder.Self.GetElementSave("Scratch")!;
+            tree.Click(tree.NodeFor(scratch));
+            tree.Grid.TypeLinesAndApply("VariableReferences", "Width = Components/Button.Width");
+            canvas.Frame();
+
+            Select(canvas, button, "");
+            EditUndoRedo(canvas, () => tree.Grid.TypeAndEnter("Width", "300"), observeOn: scratch);
+        });
+    }
+
+    [Fact]
     public void UndoAndRedo_OfAVariableReferenceLine_ShowWhatTheEditShowedBeforeAndAfter()
     {
         OnCanvas((canvas, button) =>
