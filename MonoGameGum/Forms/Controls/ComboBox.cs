@@ -1316,13 +1316,13 @@ public class ComboBox :
         }
     }
 
-    [UnconditionalSuppressMessage("Trimming", "IL2075",
-        Justification = "Only reflects when DisplayMemberPath is set, and its setter carries the " +
-            "RequiresUnreferencedCode warning that surfaces the risk at the caller.")]
     /// <summary>
     /// Displays the given object (or its DisplayMemberPath value) as the text, unless the Text or
     /// the TextInstance's Text is data bound.
     /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2075",
+        Justification = "Only reflects when DisplayMemberPath is set, and its setter carries the " +
+            "RequiresUnreferencedCode warning that surfaces the risk at the caller.")]
     public virtual void UpdateToObject(object? o)
     {
         if (IsDataBound(nameof(Text)) || IsTextDataBound(textComponent))
