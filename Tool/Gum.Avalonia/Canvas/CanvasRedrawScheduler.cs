@@ -26,6 +26,13 @@ public interface ICanvasRedrawScheduler
 
     /// <summary>Whether a canvas should draw this frame.</summary>
     bool IsRedrawNeeded { get; }
+
+    /// <summary>
+    /// How many times <see cref="RequestRedraw"/> has been called. A canvas that has not drawn since
+    /// the latest request still draws once after the settle period ends, so a request is not lost
+    /// when the UI thread is busy for longer than that period (#8478).
+    /// </summary>
+    long RequestCount { get; }
 }
 
 /// <inheritdoc/>
@@ -52,8 +59,12 @@ public sealed class CanvasRedrawScheduler : ICanvasRedrawScheduler
     public void RequestRedraw()
     {
         _lastRequestTimestamp = _timeProvider.GetTimestamp();
+        RequestCount++;
         RedrawRequested?.Invoke();
     }
+
+    /// <inheritdoc/>
+    public long RequestCount { get; private set; }
 
     /// <inheritdoc/>
     public void AddContinuousRedrawSource(Func<bool> isChanging) => _continuousSources.Add(isChanging);

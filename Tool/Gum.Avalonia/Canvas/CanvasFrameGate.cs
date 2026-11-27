@@ -3,7 +3,8 @@ namespace Gum.Avalonia.Canvas;
 /// <summary>
 /// One canvas's side of on-demand rendering: on top of what the shared
 /// <see cref="ICanvasRedrawScheduler"/> asks for, a canvas draws its first frame, after its surface
-/// changes size, after frames it skipped while hidden or minimized, and while a failed frame retries.
+/// changes size, after frames it skipped while hidden or minimized, once after every redraw request
+/// however late its next tick comes, and while a failed frame retries.
 /// </summary>
 public sealed class CanvasFrameGate
 {
@@ -11,6 +12,7 @@ public sealed class CanvasFrameGate
     private bool _isDrawOwed;
     private int _drawnWidth;
     private int _drawnHeight;
+    private long _drawnRequestCount;
 
     /// <summary>Creates the gate; the first frame is always drawn.</summary>
     public CanvasFrameGate(ICanvasRedrawScheduler scheduler)
@@ -25,12 +27,14 @@ public sealed class CanvasFrameGate
         width != _drawnWidth ||
         height != _drawnHeight ||
         hasRenderError ||
+        _scheduler.RequestCount != _drawnRequestCount ||
         _scheduler.IsRedrawNeeded;
 
     /// <summary>Records a drawn and presented frame.</summary>
     public void MarkDrawn(int width, int height)
     {
         _isDrawOwed = false;
+        _drawnRequestCount = _scheduler.RequestCount;
         _drawnWidth = width;
         _drawnHeight = height;
     }
