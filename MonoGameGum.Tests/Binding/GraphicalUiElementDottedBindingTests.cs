@@ -212,7 +212,34 @@ public class GraphicalUiElementDottedBindingTests
         sut.IntPropertyOnGue.ShouldBe(42);
     }
 
+    [Fact]
+    public void SetBinding_DottedPath_ThroughObjectTypedIntermediate_ReadsAndWritesRuntimeTypeLeaf()
+    {
+        // Arrange
+        BindableGueDerived sut = new();
+        TestViewModel child = new() { IntPropertyOnVm = 3 };
+        ObjectHolderViewModel viewModel = new() { Held = child };
+        sut.BindingContext = viewModel;
+        sut.SetBinding(nameof(sut.IntPropertyOnGue), "Held.IntPropertyOnVm");
+        sut.IntPropertyOnGue.ShouldBe(3);
+
+        // Act
+        sut.IntPropertyOnGue = 7;
+
+        // Assert
+        child.IntPropertyOnVm.ShouldBe(7);
+    }
+
     #region View models and helpers
+
+    private class ObjectHolderViewModel : ViewModel
+    {
+        public object? Held
+        {
+            get => Get<object?>();
+            set => Set(value);
+        }
+    }
 
     private class TestViewModel : ViewModel
     {

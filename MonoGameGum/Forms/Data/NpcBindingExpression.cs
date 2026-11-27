@@ -159,13 +159,20 @@ internal class NpcBindingExpression : UntypedBindingExpression
             _ => GetSourceValue()
         };
 
-        if (value == GumProperty.UnsetValue)
+        bool isPathBroken = value == GumProperty.UnsetValue;
+        if (isPathBroken)
         {
             // treat binding errors as null
             value = null;
         }
 
-        if (value is null && Binding.FallbackValue is not null)
+        // A resolved null shows TargetNullValue; a broken path (or a null with no TargetNullValue) shows
+        // FallbackValue. Neither runs through the converter.
+        if (value is null && !isPathBroken && Binding.TargetNullValue is not null)
+        {
+            value = Binding.TargetNullValue;
+        }
+        else if (value is null && Binding.FallbackValue is not null)
         {
             value = Binding.FallbackValue;
         }
