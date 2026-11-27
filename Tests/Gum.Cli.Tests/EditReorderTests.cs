@@ -92,6 +92,34 @@ public class EditReorderTests : BaseTestClass
     public void MoveInstance_AfterTheSiblingItAlreadyFollows_ChangesNothing() =>
         MoveInstanceAndRead("\"name\": \"B\", \"after\": \"A\"").ShouldBe(new[] { "A", "B", "C", "D" });
 
+    [Theory]
+    [InlineData(0, new[] { "D", "A", "B", "C" })]
+    [InlineData(1, new[] { "A", "D", "B", "C" })]
+    [InlineData(3, new[] { "A", "B", "C", "D" })]
+    public void MoveInstance_Index_PutsItAtThatPositionAmongItsSiblings(int index, string[] expected) =>
+        MoveInstanceAndRead($"\"name\": \"D\", \"index\": {index}").ShouldBe(expected);
+
+    [Fact]
+    public void MoveInstance_IndexForward_CountsTheFinalPosition() =>
+        MoveInstanceAndRead("\"name\": \"A\", \"index\": 2").ShouldBe(new[] { "B", "C", "A", "D" });
+
+    [Fact]
+    public void MoveInstance_Index_CountsOnlyChildrenOfTheSameParent()
+    {
+        string projectPath = CreateEmptyProject();
+        CliTestHelper result = Edit(projectPath, $$"""
+            { "version": 1, "operations": [ {{FourInstances}},
+              { "op": "addInstance", "element": "Panel", "name": "P", "type": "Container", "parent": "B" },
+              { "op": "addInstance", "element": "Panel", "name": "Q", "type": "Container", "parent": "B" },
+              { "op": "addInstance", "element": "Panel", "name": "R", "type": "Container", "parent": "B" },
+              { "op": "moveInstance", "element": "Panel", "name": "R", "index": 0 } ] }
+            """);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        SavedInstances(projectPath, "Panel").ShouldBe(new[] { "A", "B", "C", "D", "R", "P", "Q" });
+        ShouldBeCheckCleanAndResaveStable(projectPath);
+    }
+
     [Fact]
     public void MoveInstance_KeepsTheValuesItHad()
     {
@@ -164,6 +192,10 @@ public class EditReorderTests : BaseTestClass
     [InlineData("\"name\": \"A\", \"after\": \"Nope\"", "no instance named Nope")]
     [InlineData("\"name\": \"A\", \"toFront\": false", "must be true")]
     [InlineData("\"name\": \"Nope\", \"toFront\": true", "no instance named Nope")]
+    [InlineData("\"name\": \"A\", \"index\": 4", "index 4 is out of range: A has 4 siblings counting itself, so use 0 to 3")]
+    [InlineData("\"name\": \"A\", \"index\": -1", "out of range")]
+    [InlineData("\"name\": \"A\", \"index\": 1, \"toBack\": true", "only one of before, after, toFront, toBack, index")]
+    [InlineData("\"name\": \"A\", \"index\": 1.5", "\"index\" must be a whole number")]
     public void MoveInstance_BadPosition_IsRefusedWithAMessage(string fields, string expected)
     {
         string projectPath = CreateEmptyProject();

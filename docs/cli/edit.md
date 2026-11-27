@@ -16,7 +16,7 @@ Available in December 2026, or now if building Gum from source.
 - `<project.gumj>`: Path to the `.gumj` or `.gumx` project file
 - `<operations.json>`: Path to the operations file
 - `--json`: Report new errors as a JSON array, in the same format as [check](check.md)
-- `--schema`: Print every operation with its required and optional fields and the JSON type each field takes (`string`, `bool`, or `any` for a field such as `value` that takes any JSON value) instead of editing. It takes no project or operations file. The text output marks operations that accept a standard element with `*`. It also lists the names `setProjectProperty` sets, with their value type and allowed values. With `--json` it prints `{ "version": 1, "projectProperties": [ { "name": "FontGenerator", "type": "string", "allowed": ["BmFont", "KernSmith"], "description": "..." } ], "operations": [ { "op": "setVariable", "standardElements": true, "required": [ { "name": "element", "type": "string" }, ... ], "optional": [ ... ] } ] }`.
+- `--schema`: Print every operation with its required and optional fields and the JSON type each field takes (`string`, `bool`, `int`, or `any` for a field such as `value` that takes any JSON value) instead of editing. It takes no project or operations file. The text output marks operations that accept a standard element with `*`. It also lists the names `setProjectProperty` sets, with their value type and allowed values. With `--json` it prints `{ "version": 1, "projectProperties": [ { "name": "FontGenerator", "type": "string", "allowed": ["BmFont", "KernSmith"], "description": "..." } ], "operations": [ { "op": "setVariable", "standardElements": true, "required": [ { "name": "element", "type": "string" }, ... ], "optional": [ ... ] } ] }`.
 
 ## The Operations File
 
@@ -60,6 +60,18 @@ A standard element has no instances, custom variables or variable references, so
 `baseType` applies only to `addComponent`. It is optional and defaults to `Container`.
 
 When `baseType` is a component, the new component gets a copy of each of its instances marked as defined by the base, as the tool does when you pick a base type. You can then `setVariable` and `clearVariable` on those instances.
+
+### duplicateComponent
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+```json
+{ "op": "duplicateComponent", "name": "Controls/Counter", "newName": "Controls/CounterCopy" }
+```
+
+Copies a Component like the tool's **Duplicate**: the copy has the same instances, states, categories, behaviors and variables, plus a copy of the component's animations and code settings. `newName` includes the folder. The op fails if `name` is not a Component or `newName` is already taken. An animation file already at the new name is replaced; the tool asks first.
 
 ### addInstance
 
@@ -142,7 +154,7 @@ Instance order is draw order: the last instance draws in front. State order is t
 { "op": "moveState", "element": "Hud", "category": "Size", "name": "Big", "toCategory": "Mood" }
 ```
 
-Give exactly one position: `before` or `after` naming a sibling, or `toFront` / `toBack` for an instance and `toStart` / `toEnd` for a state. `moveInstance` orders against siblings that share a parent, and an instance defined in a base element cannot be moved; components that derive from `element` follow the new order. A variable reference that reads `Index` is not recalculated, so open the project in the tool after reordering.
+Give exactly one position: `before` or `after` naming a sibling, or `toFront` / `toBack` for an instance and `toStart` / `toEnd` for a state. `moveInstance` also takes `index`, the instance's 0-based position among the siblings that share its parent once it has moved, such as `"index": 0` for the back. `moveInstance` orders against siblings that share a parent, and an instance defined in a base element cannot be moved; components that derive from `element` follow the new order. A variable reference that reads `Index` is not recalculated, so open the project in the tool after reordering.
 
 `moveState` takes `category` for the category the state is in (leave it out for an uncategorized state). With `toCategory` the state moves to that category's end, or to the `before` / `after` position, and the category's variables are added to it as in the tool. Uncategorized states can be reordered but not moved into a category, the default state stays first, and a state a behavior needs cannot change category.
 

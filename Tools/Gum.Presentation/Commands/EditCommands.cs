@@ -522,10 +522,8 @@ public class EditCommands : IEditCommands
 
             if (_dialogService.GetUserString(message, title, options) is { } name)
             {
-                var newScreen = elementAsScreen.Clone();
-                newScreen.Name = name;
+                var newScreen = ElementDuplication.CopyScreen(elementAsScreen, name);
                 _elementDuplicateRestrictions.RemoveUnsupportedParents(newScreen);
-                newScreen.Initialize(null);
                 _standardElementsManagerGumTool.FixCustomTypeConverters(newScreen);
 
                 // Before the add, so the copy's sidecar files exist when ElementAdd handlers run.
@@ -559,14 +557,9 @@ public class EditCommands : IEditCommands
 
             if (_dialogService.GetUserString(message, title, options) is { } name)
             {
-                var newComponent = elementAsComponent.Clone();
-                if (!string.IsNullOrEmpty(folder))
-                {
-                    folder += "/";
-                }
-                newComponent.Name = folder + name;
+                string newName = string.IsNullOrEmpty(folder) ? name : folder + "/" + name;
+                var newComponent = ElementDuplication.CopyComponent(elementAsComponent, newName);
                 _elementDuplicateRestrictions.RemoveUnsupportedParents(newComponent);
-                newComponent.Initialize(null);
                 _standardElementsManagerGumTool.FixCustomTypeConverters(newComponent);
 
                 // Before the add, so the copy's sidecar files exist when ElementAdd handlers run.
