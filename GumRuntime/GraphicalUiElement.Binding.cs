@@ -406,7 +406,7 @@ public partial class GraphicalUiElement
     /// Returns whether <paramref name="uiProperty"/> on this element has a binding from
     /// <see cref="SetBinding(string, string, string?)"/>.
     /// </summary>
-    public bool IsDataBound(string uiProperty) =>
+    internal bool IsDataBound(string uiProperty) =>
         vmPropsToUiProps.Values.Any(item => item.UiProperty == uiProperty);
 
     /// <summary>
