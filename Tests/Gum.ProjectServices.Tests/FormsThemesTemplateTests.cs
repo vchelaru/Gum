@@ -104,10 +104,6 @@ public class FormsThemesTemplateTests
         "FormsThemes/Meadow", "FormsThemes/Neon", "FormsThemes/Retro95"
     };
 
-    // The Standard template ships no FontCache; its text resolves through the runtime font creator.
-    public static IEnumerable<object[]> ThemeFolders =>
-        AllTemplateFolders.Where(folder => folder != "FormsTemplate").Select(folder => new object[] { folder });
-
     public static IEnumerable<object[]> TemplateFolders => AllTemplateFolders.Select(folder => new object[] { folder });
 
     public static IEnumerable<object[]> TemplateFoldersAndSubfolders =>
@@ -402,12 +398,12 @@ public class FormsThemesTemplateTests
         }
     }
 
-    // The release loads a template without a runtime font creator, so a font missing from FontCache
-    // silently falls back to the default font, and an icon glyph such as the ComboBox arrow draws as
-    // '?' (#7387). Every font an element uses has a cached .fnt, which was baked with the project's
-    // FontRanges (the glyph block the icons live in).
+    // A new project, and the release loading a template, have no runtime font creator, so a font
+    // missing from FontCache silently falls back to the default font, and an icon glyph such as the
+    // ComboBox arrow draws as '?' (#7387). Every font an element uses has a cached .fnt, which was
+    // baked with the project's FontRanges (the glyph block the icons live in).
     [Theory]
-    [MemberData(nameof(ThemeFolders))]
+    [MemberData(nameof(TemplateFolders))]
     public void FontCache_ShouldContainEveryFontTheTemplateUses(string templateFolder)
     {
         StandardElementsManager.Self.Initialize();

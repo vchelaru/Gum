@@ -8,7 +8,7 @@ namespace Gum.ProjectServices.Tests;
 public class NewProjectThemeTests : NewProjectServiceTestBase
 {
     [Fact]
-    public async Task Execute_EveryTheme_OnARotatingPlatform_LoadsWithTheThemesFontsAndTheCodeProjectAroundIt()
+    public async Task Execute_EveryTheme_OnARotatingPlatform_LoadsWithEveryFontItUsesAndTheCodeProjectAroundIt()
     {
         string[] themes = ThemeNames(ThemesRoot);
         themes.Length.ShouldBeGreaterThanOrEqualTo(8);
@@ -16,6 +16,7 @@ public class NewProjectThemeTests : NewProjectServiceTestBase
         // A theme's files do not depend on the platform, so each theme takes the next platform in turn: every theme and
         // every platform is covered without the cost of the cross product (each creation copies the theme's fonts).
         string[] allThemes = themes.Append("Standard").ToArray();
+        List<string> missingFonts = new();
         for (int i = 0; i < allThemes.Length; i++)
         {
             string theme = allThemes[i];
@@ -30,6 +31,7 @@ public class NewProjectThemeTests : NewProjectServiceTestBase
             Gum.DataTypes.GumProjectSave project = Gum.DataTypes.GumProjectSave.Load(Path.Combine(gumFolder, "GumProject.gumj"));
             project.Screens.Count.ShouldBe(1, label);
             project.Components.Count.ShouldBeGreaterThan(10, label);
+            missingFonts.AddRange(MissingCachedFonts.Find(Path.Combine(gumFolder, "GumProject.gumj")).Select(fileName => $"{label}: {fileName}"));
 
             if (theme != "Standard")
             {
@@ -45,6 +47,20 @@ public class NewProjectThemeTests : NewProjectServiceTestBase
             csproj.ShouldContain("CopyToOutputDirectory", Case.Sensitive, label);
             Directory.Delete(Game(folderName), recursive: true);
         }
+
+        missingFonts.ShouldBeEmpty();
+    }
+
+    // The empty template's Standards also name a font, and `new` without --platform writes the same Gum project.
+    [Theory]
+    [InlineData(null)]
+    [InlineData("raylib")]
+    public async Task Execute_EmptyTemplate_ShipsEveryFontItsContentUsesInFontCache(string? platform)
+    {
+        NewProjectResult result = await Run(Request(platform, template: "empty"));
+
+        result.Files.Success.ShouldBeTrue(result.Files.ErrorMessage);
+        MissingCachedFonts.Find(result.Files.GumProjectPath!).ShouldBeEmpty();
     }
 
     [Fact]

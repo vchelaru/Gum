@@ -628,6 +628,40 @@ public class FormsThemeImporterTests
         result.ShouldBeTrue();
     }
 
+    // A game has no runtime font creator unless KernSmith is added, so the theme's baked fonts (complete for every
+    // template, FormsThemesTemplateTests) must reach the project; the import carries no FontCache file.
+    [Fact]
+    public async Task ImportThemeAsync_CopiesTheThemesCachedFonts_ButNotOverOnesTheProjectHas()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "GumImporterFontCache_" + Guid.NewGuid().ToString("N"));
+        string themeDirectory = Path.Combine(root, "theme");
+        string projectDirectory = Path.Combine(root, "project");
+        Directory.CreateDirectory(Path.Combine(themeDirectory, "FontCache"));
+        Directory.CreateDirectory(Path.Combine(projectDirectory, "FontCache"));
+        try
+        {
+            File.WriteAllText(Path.Combine(themeDirectory, "FontCache", "Font14Neon_ttf_1.fnt"), "theme fnt");
+            File.WriteAllBytes(Path.Combine(themeDirectory, "FontCache", "Font14Neon_ttf_1_0.png"), new byte[] { 1 });
+            File.WriteAllText(Path.Combine(themeDirectory, "FontCache", "Font18Neon_ttf_1.fnt"), "theme 18");
+            File.WriteAllText(Path.Combine(projectDirectory, "FontCache", "Font18Neon_ttf_1.fnt"), "project 18");
+            _formsFileService.Setup(x => x.GetThemeDirectory(It.IsAny<string>())).Returns(themeDirectory);
+            _projectState.Setup(x => x.ProjectDirectory).Returns(projectDirectory);
+
+            await _importer.ImportThemeAsync("Neon", isIncludeDemoScreenGum: false);
+
+            File.ReadAllText(Path.Combine(projectDirectory, "FontCache", "Font14Neon_ttf_1.fnt")).ShouldBe("theme fnt");
+            File.Exists(Path.Combine(projectDirectory, "FontCache", "Font14Neon_ttf_1_0.png")).ShouldBeTrue();
+            File.ReadAllText(Path.Combine(projectDirectory, "FontCache", "Font18Neon_ttf_1.fnt")).ShouldBe("project 18");
+            _fileWatch.Verify(
+                x => x.IgnoreNextChangeUntil(It.Is<FilePath>(p => p.FullPath.EndsWith("Font14Neon_ttf_1.fnt")), It.IsAny<DateTime?>()),
+                Times.Once);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
     [Fact]
     public async Task ImportThemeAsync_CopiesTheFontLicenseFiles_ButNotOverOnesTheProjectHas()
     {

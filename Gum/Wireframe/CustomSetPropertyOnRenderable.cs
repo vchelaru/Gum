@@ -1,4 +1,4 @@
-﻿#if MONOGAME || KNI || XNA4 || FNA
+#if MONOGAME || KNI || XNA4 || FNA
 #define XNALIKE
 #endif
 using Gum.Content.AnimationChain;
@@ -167,11 +167,9 @@ public partial class CustomSetPropertyOnRenderable
         set
         {
             _fontService = value;
-#if !RAYLIB
             // #4563: a signature cached as unresolvable was only unresolvable against the *previous*
             // FontService -- swapping it in (or clearing it) is a "try again" signal, not a no-op.
             _knownUnresolvableFontKeys.Clear();
-#endif
         }
     }
 #endif
@@ -196,10 +194,10 @@ public partial class CustomSetPropertyOnRenderable
         {
             _inMemoryFontCreator = value;
             InMemoryFontCreatorVersion++;
-#if !RAYLIB
             // #4563: same reasoning as FontService's setter above -- a new (or removed) creator gets
             // a fresh attempt at any signature previously marked unresolvable.
             _knownUnresolvableFontKeys.Clear();
+#if !RAYLIB
 
             // #6154: keep the creator's alpha mode in step with Renderer.UsePremultipliedAlpha.
             // Unsubscribe first so repeated assignment never subscribes twice. A switch that is off
@@ -2596,7 +2594,6 @@ public partial class CustomSetPropertyOnRenderable
     /// </summary>
     public static HashSet<string> Tags => BbCodeParser.KnownTags;
 
-#if !RAYLIB
     // #4563: signatures (GetOrCreateBakedFont's `fullFileName` cache key) for which every resolution
     // tier has already failed. Checked up front so a repeated request for the identical signature
     // short-circuits instead of re-running the in-memory-creator/FontService/disk cascade -- which can
@@ -2606,6 +2603,27 @@ public partial class CustomSetPropertyOnRenderable
     // -- is itself null on most real hosts (SystemManagers/LoaderManager only populate it when the
     // default font is a .fnt bitmap font, not the far more common SpriteFont/"hudFont" default).
     private static readonly HashSet<string> _knownUnresolvableFontKeys = new();
+
+    // True while every tier has failed for this signature and its file is still missing. The font may have been
+    // generated since (the tool saves the project before it writes the .fnt, and hot reload copies it in later), so
+    // a file that exists now gets a fresh attempt.
+    private static bool IsKnownUnresolvable(string fullFileName)
+    {
+        if (!_knownUnresolvableFontKeys.Contains(fullFileName))
+        {
+            return false;
+        }
+
+        if (!ToolsUtilities.FileManager.FileExists(fullFileName))
+        {
+            return true;
+        }
+
+        _knownUnresolvableFontKeys.Remove(fullFileName);
+        return false;
+    }
+
+#if !RAYLIB
 
     /// <summary>
     /// Resolves (loading/generating as needed) a <see cref="BitmapFont"/> for <paramref name="fontFilePath"/>
@@ -2629,16 +2647,9 @@ public partial class CustomSetPropertyOnRenderable
 
         string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
 
-        if (_knownUnresolvableFontKeys.Contains(fullFileName))
+        if (IsKnownUnresolvable(fullFileName))
         {
-            // The font may have been generated since (the tool saves the project before it writes the
-            // .fnt, and hot reload copies it in later); only a file that is still missing stays unresolvable.
-            if (!ToolsUtilities.FileManager.FileExists(fullFileName))
-            {
-                return null;
-            }
-
-            _knownUnresolvableFontKeys.Remove(fullFileName);
+            return null;
         }
 
         // Issue #4665: BitmapFont's "-shadow.fnt" sibling probe is opt-in (see
@@ -2826,6 +2837,12 @@ public partial class CustomSetPropertyOnRenderable
             return cachedManagedFont.Font;
         }
 
+        // #4563: every Text sharing a font nothing resolves skips the cascade (and its report) after the first.
+        if (IsKnownUnresolvable(fullFileName))
+        {
+            return default;
+        }
+
         // In-memory font creation (no disk I/O). BuildFontSyncBmfcSave is shared with the XNALIKE
         // path's GetOrCreateBakedFont; only the created-font type (Raylib_cs.Font vs BitmapFont) and how
         // it is cached are necessarily platform-gated. Null/failure falls through to the disk/system-font
@@ -2879,6 +2896,7 @@ public partial class CustomSetPropertyOnRenderable
         {
             RaisePropertyAssignmentError(
                 $"No usable font could be resolved for '{fontName}' (in-memory creator, disk cache, and system font all failed) - falling back to raylib's default font.");
+            _knownUnresolvableFontKeys.Add(fullFileName);
         }
 
         return fontFromGum;

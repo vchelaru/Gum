@@ -44,6 +44,8 @@ public class FormsTemplateCreator : IFormsTemplateCreator
             extractedPaths.Add(destinationPath);
         }
 
+        EmbeddedFontCache.ExtractTo(assembly, ResourcePrefix, directory);
+
         var extractedXmlProjectPath = Path.Combine(directory, xmlProjectFileName);
         StripStaleBehaviorSourcePaths(extractedXmlProjectPath);
 

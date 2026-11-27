@@ -161,7 +161,7 @@ public class FormsThemeImporter : IFormsThemeImporter
             return false;
         }
 
-        CopyFontLicenseFiles(themeDirectory);
+        CopyUnreferencedFontFiles(themeDirectory);
 
         if (result.SkippedElements.Count > 0)
         {
@@ -256,22 +256,29 @@ public class FormsThemeImporter : IFormsThemeImporter
     }
 
     /// <summary>
-    /// Copies the license text beside each bundled font (for example <c>Fonts/OFL.txt</c>) into the
-    /// project. Nothing references them, so the import does not carry them. A file the project
-    /// already has is left alone.
+    /// Copies the font files nothing references, so the import does not carry them: the license text
+    /// beside each bundled font (for example <c>Fonts/OFL.txt</c>) and the theme's baked fonts in
+    /// <c>FontCache</c>, which a game with no runtime font creator needs. A file the project already has
+    /// is left alone.
     /// </summary>
-    private void CopyFontLicenseFiles(string themeDirectory)
+    private void CopyUnreferencedFontFiles(string themeDirectory)
+    {
+        CopyMissingFiles(themeDirectory, "Fonts", "*.txt");
+        CopyMissingFiles(themeDirectory, "FontCache", "*");
+    }
+
+    private void CopyMissingFiles(string themeDirectory, string folder, string searchPattern)
     {
         string? projectDirectory = _projectState.ProjectDirectory;
-        string themeFontsDirectory = Path.Combine(themeDirectory, "Fonts");
-        if (projectDirectory == null || !Directory.Exists(themeFontsDirectory))
+        string themeFolder = Path.Combine(themeDirectory, folder);
+        if (projectDirectory == null || !Directory.Exists(themeFolder))
         {
             return;
         }
 
-        foreach (string licenseFile in Directory.GetFiles(themeFontsDirectory, "*.txt"))
+        foreach (string file in Directory.GetFiles(themeFolder, searchPattern))
         {
-            string destination = Path.Combine(projectDirectory, "Fonts", Path.GetFileName(licenseFile));
+            string destination = Path.Combine(projectDirectory, folder, Path.GetFileName(file));
             if (File.Exists(destination))
             {
                 continue;
@@ -280,7 +287,7 @@ public class FormsThemeImporter : IFormsThemeImporter
             _fileWatch.IgnoreNextChangeUntil(new FilePath(Path.GetDirectoryName(destination)!));
             _fileWatch.IgnoreNextChangeUntil(new FilePath(destination));
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-            File.Copy(licenseFile, destination);
+            File.Copy(file, destination);
         }
     }
 

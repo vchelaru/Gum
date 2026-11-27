@@ -35,5 +35,7 @@ public class DefaultFontBundler : IDefaultFontBundler
             using var fileStream = File.Create(outputPath);
             stream.CopyTo(fileStream);
         }
+
+        EmbeddedFontCache.ExtractTo(assembly, "Gum.ProjectServices.Templates.Default.", projectDirectory);
     }
 }
