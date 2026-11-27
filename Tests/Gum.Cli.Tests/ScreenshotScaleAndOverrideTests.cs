@@ -73,6 +73,28 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
         ReadProjectFiles().ShouldBe(filesBefore);
     }
 
+    // A category named like a GumCommon enum types its selector with that name, which must still take state names.
+    [Theory]
+    [InlineData("InputDevice", "Panel")]
+    [InlineData("InputDevice", "Screen")]
+    [InlineData("Orientation", "Panel")]
+    [InlineData("Orientation", "Screen")]
+    [InlineData("Foo", "Panel")]
+    public void Screenshot_WithSetOnCategoryNamedLikeAType_RendersTheState(string categoryName, string element)
+    {
+        string projectPath = CreatePanelProject(withReference: false, sizeCategoryName: categoryName);
+        string set = (element == "Screen" ? "Panel." : "") + categoryName + "State=Big";
+
+        GumCliProcess result = RenderWithSets(projectPath, element, out SKBitmap bitmap, set);
+
+        using (bitmap)
+        {
+            result.ExitCode.ShouldBe(0, result.StandardError);
+            bitmap.GetPixel(78, 8).ShouldBe(SKColors.White);
+            bitmap.GetPixel(82, 8).ShouldBe(SKColors.Black);
+        }
+    }
+
     [Theory]
     [InlineData("Screen", "Panel.Fill.Visible=false")]
     [InlineData("Frame", "Inner.Fill.Visible=false")]
@@ -208,13 +230,13 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
 
     /// <summary>
     /// Builds component Panel (Width 32, Height 16, a white filled Rectangle Fill that fills its width, and a
-    /// category Size whose state Big sets Width to 80) and a Screen with a Panel instance. With
+    /// category Size (named <paramref name="sizeCategoryName"/>) whose state Big sets Width to 80) and a Screen with a Panel instance. With
     /// <paramref name="withReference"/>, Panel also has a float custom variable BarWidth = 32 with the reference
     /// <c>Width = BarWidth</c>, and a Text instance Caption at X 64 whose Text is exposed as Label, set to
     /// <paramref name="label"/>. Component Frame holds a Panel instance Inner, and Screen FrameScreen holds a Frame
     /// instance Frame, for paths through nested instances.
     /// </summary>
-    private string CreatePanelProject(bool withReference, string label = "")
+    private string CreatePanelProject(bool withReference, string label = "", string sizeCategoryName = "Size")
     {
         string projectPath = Path.Combine(TempDirectory, "Project.gumx");
         GumProjectSave project = new ProjectCreator().Create(projectPath);
@@ -250,7 +272,7 @@ public class ScreenshotScaleAndOverrideTests : BaseTestClass
             });
         }
 
-        StateSaveCategory size = new StateSaveCategory { Name = "Size" };
+        StateSaveCategory size = new StateSaveCategory { Name = sizeCategoryName };
         StateSave big = new StateSave { Name = "Big", ParentContainer = panel };
         big.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 80f, SetsValue = true });
         size.States.Add(big);

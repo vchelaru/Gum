@@ -125,6 +125,42 @@ internal class VariableValueConverter
         return string.IsNullOrEmpty(declaredType) ? null : declaredType;
     }
 
+    /// <summary>
+    /// Converts <paramref name="value"/> for <paramref name="variableName"/> on <paramref name="element"/>
+    /// (<c>Instance.Variable</c> for an instance's variable). A state selector (<c>State</c>, or <c>{Category}State</c>
+    /// for a category the type defines) takes a state name whatever its type names, because the type is the
+    /// category's name and a category can share its name with an enum (<c>InputDevice</c>, <c>Orientation</c>).
+    /// Anything else converts as <see cref="ConvertValue"/> does.
+    /// </summary>
+    public object? ConvertVariableValue(JsonElement value, ElementSave element, string variableName, string type, string displayName)
+    {
+        if (!IsStateSelector(element, variableName))
+        {
+            return ConvertValue(value, type, displayName);
+        }
+        return value.ValueKind switch
+        {
+            JsonValueKind.Null => null,
+            JsonValueKind.String => value.GetString(),
+            _ => throw new EditException($"{value.GetRawText()} is not a state name, so {displayName} cannot be set to it.")
+        };
+    }
+
+    private bool IsStateSelector(ElementSave element, string variableName)
+    {
+        string rootName = VariableSave.GetRootName(variableName);
+        if (rootName == "State")
+        {
+            return true;
+        }
+        string? instanceName = VariableSave.GetSourceObject(variableName);
+        ElementSave? typeElement = string.IsNullOrEmpty(instanceName)
+            ? element
+            : ObjectFinder.Self.GetElementSave(element.GetInstance(instanceName)?.BaseType);
+        return typeElement != null && _variableDefinedByType.GetVariablesDefinedByType(typeElement)
+            .Any(defined => defined.Name == rootName && defined.Category != null);
+    }
+
     public object? ConvertValue(JsonElement value, string type, string variableName)
     {
         if (value.ValueKind == JsonValueKind.Null)
