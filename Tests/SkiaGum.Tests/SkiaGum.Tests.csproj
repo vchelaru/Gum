@@ -100,5 +100,8 @@
 		<None Include="Assets\Fonts\TestFont.ttf">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<!-- A single-file font and a family with real bold and italic files, for the synthetic bold/italic tests. -->
+		<None Include="..\..\Integrations\KernSmith\KernSmith.GumCommon\Fonts\LiberationSans-Regular.ttf" Link="Assets\Fonts\LiberationSans-Regular.ttf" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\Themes\Gum.Themes.Bubblegum.MonoGame\Content\Fonts\Nunito-*.ttf" LinkBase="Assets\Fonts" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 </Project>

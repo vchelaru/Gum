@@ -158,6 +158,30 @@ public class TextBlobBatchGpuTests : IDisposable
         merged.ShouldBe(1);
     }
 
+    [Fact]
+    public void Draw_SyntheticBoldAndItalicTexts_MergedMatchesUnmerged()
+    {
+        // #8480: a single-file font draws bold and italic synthetically, which the merged blob must keep.
+        const string family = "TextBlobBatchGpuTests_Liberation";
+        global::SkiaGum.Content.Fonts.GumFontMapper.RegisterFont(family,
+            File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Assets", "Fonts", "LiberationSans-Regular.ttf")));
+
+        (int merged, int unmerged) = AssertMergedMatchesUnmerged(root =>
+        {
+            for (int i = 0; i < 9; i++)
+            {
+                TextRuntime label = Label("Dragon " + i, 10, 10 + i * 18);
+                label.Font = family;
+                label.IsBold = i % 3 == 1;
+                label.IsItalic = i % 3 == 2;
+                root.AddChild(label);
+            }
+        });
+
+        unmerged.ShouldBe(9);
+        merged.ShouldBe(1);
+    }
+
     // Pixels in rows [top, bottom) that white-on-black text covers only partly: an antialiased edge.
     static int CountPartialPixels(byte[] pixels, int top, int bottom)
     {
