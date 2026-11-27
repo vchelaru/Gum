@@ -123,6 +123,46 @@ public class ButtonTests : BaseTestClass
     }
 
     [Fact]
+    public void PerformClick_WhenEnabled_ShouldRaiseClick()
+    {
+        Button button = new();
+        int clickCount = 0;
+        button.Click += (_, _) => clickCount++;
+
+        button.PerformClick();
+
+        clickCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void PerformClick_WhenDisabled_ShouldNotRaiseClick()
+    {
+        Button button = new();
+        int clickCount = 0;
+        button.Click += (_, _) => clickCount++;
+        button.IsEnabled = false;
+
+        button.PerformClick();
+
+        clickCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void PerformClick_WhenParentDisabled_ShouldNotRaiseClick()
+    {
+        StackPanel parent = new();
+        Button button = new();
+        parent.AddChild(button);
+        int clickCount = 0;
+        button.Click += (_, _) => clickCount++;
+        parent.IsEnabled = false;
+
+        button.PerformClick();
+
+        clickCount.ShouldBe(0);
+    }
+
+    [Fact]
     public void OnFocusUpdate_ShouldClickOnEnter()
     {
         Button button = new ();
