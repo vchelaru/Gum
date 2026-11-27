@@ -55,7 +55,7 @@ To create a project that already references Gum source, run [`gumcli new MyGame 
 
 ## Initializing Gum
 
-The following is a complete `Game1` class that also shows a button. It needs only the base package and builds its UI in code, so it runs without a Gum project. `Window.AllowUserResizing` is optional: the render target follows the window when it is resized.
+The following is a complete `Game1` class that also shows a button. It needs only the base package and builds its UI in code, so it runs without a Gum project.
 
 ```csharp
 namespace MyGame;
@@ -77,7 +77,7 @@ public class Game1 : Game
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
-        Window.AllowUserResizing = true; // Optional: the Gum canvas follows the window size
+        Window.AllowUserResizing = true;
         IsMouseVisible = true;
     }
 
