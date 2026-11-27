@@ -58,6 +58,7 @@ public class CodeOutputSettingsMembers
     private readonly IProjectState _projectState;
     private readonly SyntaxVersionDetectionService _syntaxVersionDetectionService;
     private readonly CodeWindowViewModel _viewModel;
+    private CodeOutputProjectSettings? _projectSettings;
 
     /// <summary>Creates the members over the Code tab's view model.</summary>
     public CodeOutputSettingsMembers(
@@ -73,7 +74,15 @@ public class CodeOutputSettingsMembers
     }
 
     /// <summary>The loaded project's code generation settings the project rows edit.</summary>
-    public CodeOutputProjectSettings? ProjectSettings { get; set; }
+    public CodeOutputProjectSettings? ProjectSettings
+    {
+        get => _projectSettings;
+        set
+        {
+            _projectSettings = value;
+            RefreshNeedsSetup();
+        }
+    }
 
     /// <summary>The selected element's code generation settings the element rows edit.</summary>
     public CodeOutputElementSettings? ElementSettings { get; set; }
@@ -217,7 +226,21 @@ public class CodeOutputSettingsMembers
     }
 
     /// <summary>Asks the views to rebuild the rows, as after the settings were replaced.</summary>
-    public void RequestRebuild() => RebuildRequested?.Invoke(this, EventArgs.Empty);
+    public void RequestRebuild() => RaiseRebuildRequested();
+
+    // A rebuild follows a change that can end or restart setup, so the prompt is decided again first.
+    private void RaiseRebuildRequested()
+    {
+        RefreshNeedsSetup();
+        RebuildRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    // Setup would save over an unreadable file, so it is not offered then. This runs on every
+    // settings or project change, not only when the Settings window's rows are built, so the Code
+    // tab offers setup even when that window was never opened.
+    private void RefreshNeedsSetup() =>
+        _viewModel.NeedsSetup = !_viewModel.HasProjectSettingsLoadError
+            && _viewModel.ShouldShowSetup(ProjectSettings, HasClickedManualSetup);
 
     /// <summary>Fills in the project settings automatically, as the Auto setup button does.</summary>
     /// <returns>Whether setup went ahead.</returns>
@@ -228,7 +251,7 @@ public class CodeOutputSettingsMembers
         if (shouldContinue)
         {
             SettingsChanged?.Invoke(this, EventArgs.Empty);
-            RebuildRequested?.Invoke(this, EventArgs.Empty);
+            RaiseRebuildRequested();
         }
 
         return shouldContinue;
@@ -238,7 +261,7 @@ public class CodeOutputSettingsMembers
     public void ChooseManualSetup()
     {
         HasClickedManualSetup = true;
-        RebuildRequested?.Invoke(this, EventArgs.Empty);
+        RaiseRebuildRequested();
     }
 
     /// <summary>
@@ -277,9 +300,7 @@ public class CodeOutputSettingsMembers
         InstanceMember member = SettingsRows.Path("Code Project Root", "Code Project Root",
             "Folder holding your .csproj. Relative to the .gumx.", GetCodeProjectRootText, SetCodeProjectRoot, isFolder: true);
 
-        // Setup would save over an unreadable file, so it is not offered then.
-        _viewModel.NeedsSetup = !_viewModel.HasProjectSettingsLoadError
-            && _viewModel.ShouldShowSetup(ProjectSettings, HasClickedManualSetup);
+        RefreshNeedsSetup();
 
         return member;
     }
@@ -356,7 +377,7 @@ public class CodeOutputSettingsMembers
     {
         if (GetMarkUnavailableReason() != _markUnavailableReason)
         {
-            RebuildRequested?.Invoke(this, EventArgs.Empty);
+            RaiseRebuildRequested();
         }
     }
 
@@ -434,7 +455,7 @@ public class CodeOutputSettingsMembers
 
                     SettingsChanged?.Invoke(this, EventArgs.Empty);
 
-                    RebuildRequested?.Invoke(this, EventArgs.Empty);
+                    RaiseRebuildRequested();
                 }
             });
 
@@ -651,7 +672,7 @@ public class CodeOutputSettingsMembers
                 ElementSettings.GenerationBehavior = (GenerationBehavior)args.Value;
                 SettingsChanged?.Invoke(this, EventArgs.Empty);
 
-                RebuildRequested?.Invoke(this, EventArgs.Empty);
+                RaiseRebuildRequested();
             }
         };
 
