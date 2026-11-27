@@ -126,13 +126,14 @@ class ShopItemViewModel : ViewModel
 A button bound to `CanAfford` enables and disables itself as gold is spent and earned, with no event handlers written by hand:
 
 ```csharp
+// Initialize
 buyButton.BindingContext = shopItem;
 buyButton.SetBinding(nameof(buyButton.IsEnabled), nameof(ShopItemViewModel.CanAfford));
 ```
 
 The dependent property is also raised when any segment of the path is replaced or set to null, such as assigning a different `Game`. Paths can be deeper (`"Session.Game.Gold"`), and a segment can index into a collection (`"Games[0].Gold"`). Each segment only needs to implement `INotifyPropertyChanged`; it does not have to be a Gum `ViewModel`.
 
-The view model watches the referenced objects weakly, so a shop item that is no longer used can be garbage collected even while the game view model it references stays alive. If a segment names a property that does not exist, Gum writes a `[Gum]` message to the error output, once per path.
+If a segment names a property that does not exist, Gum writes a `[Gum]` message to the error output, once per path.
 
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source.
