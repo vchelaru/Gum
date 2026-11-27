@@ -120,7 +120,7 @@ public class VariableFocusLossScenarioTests
         InstanceSave item = grid.Project.AddInstance(button, "Item", itemType);
         if (editor == "FileBox")
         {
-            button.DefaultState.SetValue("Item.UseCustomFont", true, "bool");
+            button.GetDefaultStateOrThrow().SetValue("Item.UseCustomFont", true, "bool");
         }
         grid.Select(button);
         grid.Select(item);

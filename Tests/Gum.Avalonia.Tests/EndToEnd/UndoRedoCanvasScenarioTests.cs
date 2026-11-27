@@ -66,7 +66,7 @@ public class UndoRedoCanvasScenarioTests
     {
         OnCanvas((canvas, button) =>
         {
-            StateSave defaults = button.DefaultState;
+            StateSave defaults = button.GetDefaultStateOrThrow();
             defaults.SetValue("Label.WidthUnits", DimensionUnitType.RelativeToParent, "DimensionUnitType");
             defaults.SetValue("Label.Width", -10f, "float");
             ResetBaseline(canvas);
@@ -109,7 +109,7 @@ public class UndoRedoCanvasScenarioTests
             CopyTestPng(canvas, "frame.png");
             // The drop-down lists the images the project references, so another sprite references the file.
             canvas.AddInstance(button, "Hero", "Sprite", x: 100, y: 80, width: 40, height: 40);
-            button.DefaultState.SetValue("Hero.SourceFile", "frame.png", "string");
+            button.GetDefaultStateOrThrow().SetValue("Hero.SourceFile", "frame.png", "string");
             ResetBaseline(canvas);
 
             Select(canvas, button, "Icon");
@@ -313,8 +313,8 @@ public class UndoRedoCanvasScenarioTests
 
     private static void Expose(ComponentSave component, string variableName, string exposedAs, string value)
     {
-        component.DefaultState.SetValue(variableName, value, "string");
-        component.DefaultState.GetVariableSave(variableName).ExposedAsName = exposedAs;
+        component.GetDefaultStateOrThrow().SetValue(variableName, value, "string");
+        component.GetDefaultStateOrThrow().GetVariableSave(variableName)!.ExposedAsName = exposedAs;
     }
 
     private static void CopyTestPng(CanvasHarness canvas, string fileName)
@@ -333,7 +333,7 @@ public class UndoRedoCanvasScenarioTests
         foreach (GraphicalUiElement shown in ShownWithDescendants(canvas))
         {
             builder.Append(CultureInfo.InvariantCulture,
-                $"{shown.Name}: {shown.AbsoluteLeft:0.##},{shown.AbsoluteTop:0.##} {shown.GetAbsoluteWidth():0.##}x{shown.GetAbsoluteHeight():0.##} r{shown.Rotation:0.##} v{shown.Visible}");
+                $"{shown.Name}: {shown.AbsoluteLeft:0.##},{shown.AbsoluteTop:0.##} {shown.AbsoluteWidth:0.##}x{shown.AbsoluteHeight:0.##} r{shown.Rotation:0.##} v{shown.Visible}");
             switch (shown.RenderableComponent)
             {
                 case global::RenderingLibrary.Graphics.Text text:
