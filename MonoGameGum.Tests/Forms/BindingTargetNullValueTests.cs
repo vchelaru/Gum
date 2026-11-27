@@ -14,6 +14,40 @@ public class BindingTargetNullValueTests : BaseTestClass
     private class CaptionViewModel : ViewModel
     {
         public string? Caption { get => Get<string?>(); set => Set(value); }
+        public CaptionViewModel? Child { get => Get<CaptionViewModel?>(); set => Set(value); }
+    }
+
+    [Fact]
+    public void SourceNull_WithOnlyFallbackValue_TargetShowsFallbackValue()
+    {
+        CaptionViewModel viewModel = new() { Caption = null };
+        Label label = new() { BindingContext = viewModel };
+
+        label.SetBinding(nameof(Label.Text), new Binding(nameof(CaptionViewModel.Caption)) { FallbackValue = "fallback" });
+
+        label.Text.ShouldBe("fallback");
+    }
+
+    [Fact]
+    public void SourceNull_WithFallbackAndTargetNullValue_TargetShowsTargetNullValue()
+    {
+        CaptionViewModel viewModel = new() { Child = new CaptionViewModel { Caption = null } };
+        Label label = new() { BindingContext = viewModel };
+
+        label.SetBinding(nameof(Label.Text), new Binding("Child.Caption") { FallbackValue = "fallback", TargetNullValue = "(none)" });
+
+        label.Text.ShouldBe("(none)");
+    }
+
+    [Fact]
+    public void IntermediateNull_WithFallbackAndTargetNullValue_TargetShowsFallbackValue()
+    {
+        CaptionViewModel viewModel = new() { Child = null };
+        Label label = new() { BindingContext = viewModel };
+
+        label.SetBinding(nameof(Label.Text), new Binding("Child.Caption") { FallbackValue = "fallback", TargetNullValue = "(none)" });
+
+        label.Text.ShouldBe("fallback");
     }
 
     [Fact]

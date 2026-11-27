@@ -46,9 +46,11 @@ internal static class BinderHelpers
         }
 
         PathSegment[] segments = ParseSegments(path);
-        if (!TryWalkToLeafOwner(targetType, segments, out Type currentType, out _))
+        if (!TryWalkToLeafOwner(targetType, segments, out Type currentType, out int failedIndex))
         {
-            return false;
+            // Past the root, a declared type that lacks the member may hold a derived object that has it;
+            // BuildSetter resolves those segments on the runtime type at write time.
+            return failedIndex > 0;
         }
 
         PathSegment leaf = segments[^1];
@@ -58,7 +60,7 @@ internal static class BinderHelpers
             // The leaf is an indexed access like "Items[0]" — check the indexer has a setter
             if (!TryGetMember(currentType, leaf.Name, out _, out Type? collectionType))
             {
-                return false;
+                return segments.Length > 1;
             }
 
             PropertyInfo? indexer = FindIntIndexer(collectionType);
@@ -67,7 +69,7 @@ internal static class BinderHelpers
 
         if (!TryGetMember(currentType, leaf.Name, out MemberInfo? leafMember, out _))
         {
-            return false;
+            return segments.Length > 1;
         }
 
         return leafMember switch
@@ -168,70 +170,189 @@ internal static class BinderHelpers
     }
 
     /// <summary>
-    /// Null-safe getter: returns DependencyProperty.UnsetValue if any intermediate is null.
+    /// Builds a getter for <paramref name="path"/>. It returns <see cref="GumProperty.UnsetValue"/> when the
+    /// path is broken (a null intermediate or collection, or a member the held object does not have) and null
+    /// when the path resolves to a null leaf. Segments compile against declared types; from the first segment
+    /// the declared type lacks (an intermediate declared as <c>object</c> or a base class), the rest of the path
+    /// is resolved on the runtime type of the held object at every call.
     /// </summary>
     [RequiresUnreferencedCode(
-        "Walks the path on targetType by name (Expression.PropertyOrField). Those members may be " +
-        "removed under PublishTrimmed if nothing else in the app references them.")]
+        "Walks the path on targetType by name (Expression.PropertyOrField), and on runtime types by " +
+        "reflection past a segment the declared type lacks. Those members may be removed under " +
+        "PublishTrimmed if nothing else in the app references them.")]
     public static Func<object, object?> BuildGetter(Type targetType, string path)
     {
-        //parameter: the incoming object
         ParameterExpression instanceParam = Expression.Parameter(typeof(object), "instance");
-        // start by casting to the actual root type
+        LabelTarget returnTarget = Expression.Label(typeof(object), "result");
+        Expression unset = Expression.Constant(GumProperty.UnsetValue, typeof(object));
+        List<ParameterExpression> variables = new();
+        List<Expression> statements = new();
+
         Expression current = Expression.Convert(instanceParam, targetType);
-
-        // walk down each segment in the dotted path
         PathSegment[] segments = ParseSegments(path);
-        foreach (PathSegment segment in segments)
+        Expression? result = null;
+
+        for (int i = 0; i < segments.Length; i++)
         {
-            // raw access to the next property/field
-            Expression rawAccess = Expression.PropertyOrField(current, segment.Name);
-            Type segmentType = rawAccess.Type;
-
-            // If this is a non-nullable value type, just take it
-            if (segmentType.IsValueType && Nullable.GetUnderlyingType(segmentType) == null)
+            if (i > 0)
             {
-                current = rawAccess;
-            }
-            else
-            {
-                // reference type or Nullable<T> ⇒ inject null‐propagation:
-                //    current == null ? default(T) : current.Segment
-                Expression testNull = Expression.Equal(current, Expression.Constant(null, current.Type));
-                Expression ifNull = Expression.Default(segmentType);
-                Expression ifNotNull = rawAccess;
-                current = Expression.Condition(testNull, ifNull, ifNotNull);
+                current = ReturnUnsetIfNull(current, returnTarget, unset, variables, statements);
             }
 
-            // If the segment has an index, apply indexer access
-            if (segment.Index.HasValue)
+            PathSegment segment = segments[i];
+            // The root is cast to its runtime type, so a miss there is a real miss and throws below.
+            if (i > 0 && !TryGetMember(current.Type, segment.Name, out _, out _))
             {
-                current = BuildIndexAccess(current, segment.Index.Value);
+                result = Expression.Call(GetOnRuntimeTypeMethod,
+                    Expression.Convert(current, typeof(object)), Expression.Constant(segments), Expression.Constant(i));
+                break;
+            }
+
+            current = Expression.PropertyOrField(current, segment.Name);
+
+            if (segment.Index is int index)
+            {
+                current = ReturnUnsetIfNull(current, returnTarget, unset, variables, statements);
+                current = BuildIndexAccess(current, index);
             }
         }
 
-        // now 'current' is the final value of type T (value or ref).  Box it to object,
-        // but if it's null (or Nullable<T>.HasValue==false), return UnsetValue instead.
-        Type finalType = current.Type;
-        Expression body;
-        if (finalType.IsValueType && Nullable.GetUnderlyingType(finalType) == null)
-        {
-            // pure value‐type ⇒ just box
-            body = Expression.Convert(current, typeof(object));
-        }
-        else
-        {
-            // ref‐type or Nullable<T> ⇒ test for null/default
-            Expression isNull = Expression.Equal(current, Expression.Constant(null, finalType));
-            Expression ifUnset = Expression.Constant(GumProperty.UnsetValue, typeof(object));
-            Expression ifValue = Expression.Convert(current, typeof(object));
-            body = Expression.Condition(isNull, ifUnset, ifValue);
-        }
+        result ??= Expression.Convert(current, typeof(object));
+        statements.Add(Expression.Label(returnTarget, result));
 
-        // compile into a Func<object,object?>
-        LambdaExpression lambda = Expression.Lambda<Func<object, object?>>(body, instanceParam);
-        return (Func<object, object?>)lambda.Compile();
+        Expression body = Expression.Block(typeof(object), variables, statements);
+        return Expression.Lambda<Func<object, object?>>(body, instanceParam).Compile();
     }
+
+    // Stores value in a local and returns early with unset when it is null, so a broken path is told apart from
+    // a null leaf. Non-nullable value types pass through unchanged.
+    private static Expression ReturnUnsetIfNull(Expression value, LabelTarget returnTarget, Expression unset,
+        List<ParameterExpression> variables, List<Expression> statements)
+    {
+        if (value.Type.IsValueType && Nullable.GetUnderlyingType(value.Type) == null)
+        {
+            return value;
+        }
+
+        ParameterExpression local = Expression.Variable(value.Type);
+        variables.Add(local);
+        statements.Add(Expression.Assign(local, value));
+        statements.Add(Expression.IfThen(
+            Expression.Equal(local, Expression.Constant(null, local.Type)),
+            Expression.Return(returnTarget, unset)));
+        return local;
+    }
+
+    // A setter that compiles the declared-type prefix and resolves segments[startIndex..] on runtime types.
+    private static Action<object, object?> BuildRuntimeTypeSetter(Expression holder, PathSegment[] segments,
+        int startIndex, ParameterExpression instanceParam, ParameterExpression valueParam)
+    {
+        Expression call = Expression.Call(SetOnRuntimeTypeMethod,
+            Expression.Convert(holder, typeof(object)), Expression.Constant(segments), Expression.Constant(startIndex),
+            valueParam);
+        return Expression.Lambda<Action<object, object?>>(call, instanceParam, valueParam).Compile();
+    }
+
+    private static readonly MethodInfo GetOnRuntimeTypeMethod =
+        typeof(BinderHelpers).GetMethod(nameof(GetOnRuntimeType), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    private static readonly MethodInfo SetOnRuntimeTypeMethod =
+        typeof(BinderHelpers).GetMethod(nameof(SetOnRuntimeType), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    // Resolves segments[startIndex..] on the runtime type of each held object. Same return contract as
+    // BuildGetter's delegate.
+    [RequiresUnreferencedCode("Looks up members by name on runtime types.")]
+    private static object? GetOnRuntimeType(object? holder, PathSegment[] segments, int startIndex)
+    {
+        object? cursor = holder;
+        for (int i = startIndex; i < segments.Length; i++)
+        {
+            if (cursor == null || !TryGetRuntimeValue(cursor, segments[i], out cursor))
+            {
+                return GumProperty.UnsetValue;
+            }
+        }
+        return cursor;
+    }
+
+    // Writes value to the leaf of segments[startIndex..], resolving each segment on the runtime type of the
+    // object that holds it. Does nothing when the path is broken or the leaf is read-only.
+    [RequiresUnreferencedCode("Looks up members by name on runtime types.")]
+    private static void SetOnRuntimeType(object? holder, PathSegment[] segments, int startIndex, object? value)
+    {
+        object? owner = holder;
+        for (int i = startIndex; i < segments.Length - 1; i++)
+        {
+            if (owner == null || !TryGetRuntimeValue(owner, segments[i], out owner))
+            {
+                return;
+            }
+        }
+
+        if (owner == null)
+        {
+            return;
+        }
+
+        PathSegment leaf = segments[^1];
+        if (leaf.Index is int index)
+        {
+            if (TryGetMember(owner.GetType(), leaf.Name, out MemberInfo? collectionMember, out _) &&
+                GetMemberValue(collectionMember!, owner) is IList list && index >= 0 && index < list.Count)
+            {
+                list[index] = value;
+            }
+            return;
+        }
+
+        if (!TryGetMember(owner.GetType(), leaf.Name, out MemberInfo? member, out Type memberType))
+        {
+            return;
+        }
+
+        if (value == null && memberType.IsValueType && Nullable.GetUnderlyingType(memberType) == null)
+        {
+            value = Activator.CreateInstance(memberType);
+        }
+
+        switch (member)
+        {
+            case PropertyInfo { SetMethod.IsPublic: true } property:
+                property.SetValue(owner, value);
+                break;
+            case FieldInfo { IsInitOnly: false, IsLiteral: false } field:
+                field.SetValue(owner, value);
+                break;
+        }
+    }
+
+    [RequiresUnreferencedCode("Looks up members by name on runtime types.")]
+    private static bool TryGetRuntimeValue(object holder, PathSegment segment, out object? value)
+    {
+        value = null;
+        if (!TryGetMember(holder.GetType(), segment.Name, out MemberInfo? member, out _))
+        {
+            return false;
+        }
+
+        value = GetMemberValue(member!, holder);
+        if (segment.Index is int index)
+        {
+            if (value is not IList list || index < 0 || index >= list.Count)
+            {
+                return false;
+            }
+            value = list[index];
+        }
+        return true;
+    }
+
+    private static object? GetMemberValue(MemberInfo member, object holder) => member switch
+    {
+        PropertyInfo property => property.GetValue(holder),
+        FieldInfo field => field.GetValue(holder),
+        _ => null
+    };
 
     /// <summary>
     /// Null-safe setter: no-op if any intermediate is null.
@@ -252,6 +373,11 @@ internal static class BinderHelpers
         PathSegment[] segments = ParseSegments(path);
         for (int i = 0; i < segments.Length - 1; i++)
         {
+            if (i > 0 && !TryGetMember(current.Type, segments[i].Name, out _, out _))
+            {
+                return BuildRuntimeTypeSetter(current, segments, i, instanceParam, valueParam);
+            }
+
             Expression rawAccess = Expression.PropertyOrField(current, segments[i].Name);
             if (rawAccess.Type.IsValueType)
             {
@@ -276,6 +402,11 @@ internal static class BinderHelpers
         }
 
         PathSegment lastSegment = segments[segments.Length - 1];
+
+        if (segments.Length > 1 && !TryGetMember(current.Type, lastSegment.Name, out _, out _))
+        {
+            return BuildRuntimeTypeSetter(current, segments, segments.Length - 1, instanceParam, valueParam);
+        }
 
         if (lastSegment.Index.HasValue)
         {
