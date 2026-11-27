@@ -1,4 +1,4 @@
-using Gum.Forms.Controls.Primitives;
+﻿using Gum.Forms.Controls.Primitives;
 using Gum.Input;
 using Gum.Wireframe;
 using System;
@@ -99,7 +99,7 @@ public class TabControl : ItemsControl
             if (value != _contentTemplate)
             {
                 _contentTemplate = value;
-                if (Items?.Count > 0)
+                if (Items.Count > 0)
                 {
                     HandleItemsCollectionChanged(this,
                         new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
@@ -169,7 +169,7 @@ public class TabControl : ItemsControl
             Header = header,
             Content = content
         };
-        Items?.Add(tab);
+        Items.Add(tab);
         return tab;
     }
 
@@ -407,7 +407,7 @@ public class TabControl : ItemsControl
         {
             // A tab put straight into the strip (not through Items) is the Visual owner's, who parents its
             // pages into the content panel too, so it gets no placeholder until the control is read.
-            bool isParentedByVisualOwner = tab.DataObject == null && Items?.Contains(tab) != true;
+            bool isParentedByVisualOwner = tab.DataObject == null && !Items.Contains(tab);
             tab.DataObject ??= tab;
             InsertTab(tab, CountTabItemsInPanelBefore(newItemIndex), createPage: !isParentedByVisualOwner);
             // A tab with no page of its own takes a page the content panel already holds.

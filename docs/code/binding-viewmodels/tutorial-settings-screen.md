@@ -169,32 +169,7 @@ SfxSlider.SetBinding(
 
 Notice that `nameof` allows using either an instance to get a property (such as `SfxSlider.Value`) or a class name (such as `SettingsViewModel.SfxVolume`). In fact, we could have even replaced `SfxSlider.Value` with `Slider.Value` since Value is a property on the `Slider` class.
 
-Creating a local property for the ViewModel can also help simplify the code slightly. For example, we could modify the code to have a ViewModel property that is used in the SetBinding calls as shown in the following code block:
-
-```csharp
-
-SettingsViewModel ViewModel => (SettingsViewModel)BindingContext;
-
-// this could be used to set up binding:
-
-SfxSlider.SetBinding(
-    nameof(SfxSlider.Value),
-    nameof(ViewModel.SfxVolume));
-
-SfxValueLabel.SetBinding(
-    nameof(SfxValueLabel.Text),
-    nameof(ViewModel.SfxVolumeDisplay));
-
-MusicSlider.SetBinding(
-    nameof(MusicSlider.Value),
-    nameof(ViewModel.MusicVolume));
-
-MusicValueLabel.SetBinding(
-    nameof(MusicValueLabel.Text),
-    nameof(ViewModel.MusicVolumeDisplay));
-```
-
-This approach can also be used to handle events as shown in the [Task Screen tutorial](tutorial-task-screen.md).
+The [Task Screen tutorial](tutorial-task-screen.md) shows how an event handler reaches the ViewModel through `BindingContext`.
 
 ## Using the SettingsScreen
 

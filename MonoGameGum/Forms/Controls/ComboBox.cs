@@ -176,10 +176,14 @@ public class ComboBox :
         }
     }
     
-    public IList? Items
-
+    /// <summary>
+    /// The items shown in the drop-down. Never null: assigning null clears the rows and assigns a new
+    /// empty collection.
+    /// </summary>
+    [AllowNull]
+    public IList Items
     {
-        get => listBox != null ? listBox.Items : _pendingItems;
+        get => listBox != null ? listBox.Items : PendingItems;
         set
         {
             if (value != Items)
@@ -191,7 +195,7 @@ public class ComboBox :
                 else
                 {
                     // Like ListBox: swapping Items drops the selection, even when the new items contain it.
-                    SetPendingItems(value);
+                    SetPendingItems(value ?? new System.Collections.ObjectModel.ObservableCollection<object>());
                     SetPendingSelection(-1);
                 }
 
@@ -289,7 +293,7 @@ public class ComboBox :
             else
             {
                 // Like ListBox: an object that is not in Items clears the selection.
-                SetPendingSelection(value == null ? -1 : (Items?.IndexOf(value) ?? -1));
+                SetPendingSelection(value == null ? -1 : Items.IndexOf(value));
             }
         }
     }
@@ -312,15 +316,15 @@ public class ComboBox :
             }
             else
             {
-                IList? items = Items;
+                IList items = Items;
                 // Like ListBox (#6737): -1 clears the selection and any other out-of-range index is
                 // ignored, unless a binding delivered it ahead of its items.
-                if (value == -1 || (items != null && value >= 0 && value < items.Count))
+                if (value == -1 || (value >= 0 && value < items.Count))
                 {
                     _deferredSelectedIndex = -1;
                     SetPendingSelection(value);
                 }
-                else if (deferIfPastEnd && value >= (items?.Count ?? 0))
+                else if (deferIfPastEnd && value >= items.Count)
                 {
                     _deferredSelectedIndex = value;
                 }
@@ -332,6 +336,18 @@ public class ComboBox :
     // itself and hands them to the ListBox when it is built on the first open.
     VisualTemplate? _lazyDropDownTemplate;
     IList? _pendingItems;
+
+    private IList PendingItems
+    {
+        get
+        {
+            if (_pendingItems == null)
+            {
+                SetPendingItems(new System.Collections.ObjectModel.ObservableCollection<object>());
+            }
+            return _pendingItems!;
+        }
+    }
     // The selection is kept by position, as ListBox keeps it by row: inserting or removing other items
     // moves the index, and removing or replacing the selected item clears it.
     int _pendingSelectedIndex = -1;
@@ -465,7 +481,7 @@ public class ComboBox :
         {
             built.DisplayMemberPath = _displayMemberPath;
         }
-        IList? items = _pendingItems;
+        IList items = PendingItems;
         int selectedIndex = _pendingSelectedIndex;
         SetPendingItems(null);
         _pendingSelectedIndex = -1;
@@ -665,10 +681,6 @@ public class ComboBox :
         {
             // A from-file ComboBox with no ListBoxInstance child: the drop-down is built on the first open.
             _lazyDropDownTemplate = lazyDropDownTemplate;
-            if (listBox == null && _pendingItems == null)
-            {
-                SetPendingItems(new System.Collections.ObjectModel.ObservableCollection<object>());
-            }
             Text = null;
             return;
         }
@@ -1490,7 +1502,7 @@ public class ComboBox :
 #endif
     }
 
-    int ItemCount => Items?.Count ?? 0;
+    int ItemCount => Items.Count;
 
     private void DoDropDownOpenFocusUpdate(bool movedDown, bool movedUp, bool pressedButton)
     {

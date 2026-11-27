@@ -352,14 +352,11 @@ public class MenuItem : ItemsControl
         container.Children.CollectionChanged -= HandleSubItemContainerChanged;
         _subscribedSubItemContainer = null;
 
-        if (Items != null)
+        foreach (object item in Items)
         {
-            foreach (object item in Items)
+            if (item is MenuItem menuItem && IsVisualAuthoredItem(menuItem))
             {
-                if (item is MenuItem menuItem && IsVisualAuthoredItem(menuItem))
-                {
-                    menuItem.Visual.Parent = container;
-                }
+                menuItem.Visual.Parent = container;
             }
         }
 
@@ -574,7 +571,7 @@ public class MenuItem : ItemsControl
         if (SubmenuIndicatorInstance != null)
         {
             SubmenuIndicatorInstance.Visible =
-                this.Items?.Count > 0 &&
+                this.Items.Count > 0 &&
                 // If ParentMenuItem is null, then this
                 // is a top-level menu item
                 this.ParentMenuItem != null;
@@ -634,7 +631,7 @@ public class MenuItem : ItemsControl
             "bindings, which already carry this warning at the SetBinding call that created them.")]
     internal void TryShowPopup()
     {
-        if (this.Items?.Count > 0 && itemsPopup == null)
+        if (this.Items.Count > 0 && itemsPopup == null)
         {
             timeOpened = MainCursor.LastPrimaryPushTime;
 
@@ -746,7 +743,7 @@ public class MenuItem : ItemsControl
             bool suspendedPanel = SuspendPopupPanelLayout();
             try
             {
-                foreach (var item in Items!)
+                foreach (var item in Items)
                 {
                     FrameworkElement row = CreatePopupRow(item);
                     popupRows.Add(row);
@@ -1060,7 +1057,7 @@ public class MenuItem : ItemsControl
             if (row is MenuItem menuItem && generatedPopupRows.Contains(menuItem))
             {
                 // A row built for a data object starts the way a new one does.
-                menuItem.UpdateToObject(Items![i]);
+                menuItem.UpdateToObject(Items[i]);
                 menuItem.BindingContext = Items[i];
                 if (menuItem.IsHighlighted)
                 {
@@ -1077,8 +1074,8 @@ public class MenuItem : ItemsControl
     // a control, a row built for the object otherwise, each still in the popup's panel.
     private bool ClosedPopupMatchesItems(ScrollViewer popup)
     {
-        System.Collections.IList? items = Items;
-        if (items == null || items.Count != _closedPopupRows.Count)
+        System.Collections.IList items = Items;
+        if (items.Count != _closedPopupRows.Count)
         {
             return false;
         }
@@ -1113,7 +1110,7 @@ public class MenuItem : ItemsControl
     /// </summary>
     private void RefreshOpenPopup()
     {
-        if (Items == null || Items.Count == 0)
+        if (Items.Count == 0)
         {
             // Nothing left to show. Deselect rather than only tear down, so the item can open again.
             // The rows leave with the popup, so no cursor roll-off will clear their highlight.

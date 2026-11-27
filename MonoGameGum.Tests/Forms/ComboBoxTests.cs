@@ -433,6 +433,33 @@ public  class ComboBoxTests : BaseTestClass
 
         comboBox.ListBox.ListBoxItems.Count.ShouldBe(0);
         comboBox.SelectedIndex.ShouldBe(-1);
+        comboBox.Items.ShouldNotBeNull();
+        comboBox.Items.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Items_BoundToNullCollection_ShouldBeEmptyAndLeaveViewModelNull()
+    {
+        NullableItemsViewModel vm = new() { Items = new ObservableCollection<string> { "A", "B" } };
+        ComboBox comboBox = new();
+        comboBox.SetBinding(nameof(ComboBox.Items), nameof(NullableItemsViewModel.Items));
+        comboBox.BindingContext = vm;
+
+        vm.Items = null;
+
+        comboBox.Items.ShouldNotBeNull();
+        comboBox.Items.Count.ShouldBe(0);
+        comboBox.ListBox.ListBoxItems.Count.ShouldBe(0);
+        vm.Items.ShouldBeNull("because a null view-model collection is not replaced by the control's empty one");
+    }
+
+    private class NullableItemsViewModel : Gum.Mvvm.ViewModel
+    {
+        public ObservableCollection<string>? Items
+        {
+            get => Get<ObservableCollection<string>?>();
+            set => Set(value);
+        }
     }
 
     [Fact]

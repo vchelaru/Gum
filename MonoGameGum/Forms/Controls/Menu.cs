@@ -158,7 +158,7 @@ public class Menu : ItemsControl
         // HandleNextPush cannot tell that this selection came from the push that is happening now.
         // Decide it here: a cursor selection that opens a submenu turns on hover switching (#6692).
         bool selectedByCursor = MainCursor.PrimaryPush || MainCursor.PrimaryClick;
-        if (selectedByCursor && (sender as MenuItem)?.Items?.Count > 0)
+        if (selectedByCursor && (sender as MenuItem)?.Items.Count > 0)
         {
             foreach (var item in MenuItemsInternal)
             {
@@ -238,7 +238,7 @@ public class Menu : ItemsControl
         {
             var menuItemPushed = (MainCursor.WindowPushed as InteractiveGue)?.FormsControlAsObject 
                 as MenuItem;
-            shouldCloseAll = menuItemPushed?.Items == null || menuItemPushed.Items.Count == 0;
+            shouldCloseAll = menuItemPushed == null || menuItemPushed.Items.Count == 0;
         }
 
 
@@ -405,7 +405,7 @@ public class Menu : ItemsControl
             }
             else if (current != null && (confirm || direction == RepositionDirections.Down))
             {
-                if (current.Items?.Count > 0)
+                if (current.Items.Count > 0)
                 {
                     OpenSubmenu(current);
                 }
@@ -443,7 +443,7 @@ public class Menu : ItemsControl
         }
         else if (direction == RepositionDirections.Right)
         {
-            if (highlighted?.Items?.Count > 0)
+            if (highlighted?.Items.Count > 0)
             {
                 OpenSubmenu(highlighted);
             }
@@ -465,7 +465,7 @@ public class Menu : ItemsControl
         }
         else if (confirm && highlighted != null)
         {
-            if (highlighted.Items?.Count > 0)
+            if (highlighted.Items.Count > 0)
             {
                 OpenSubmenu(highlighted);
             }
@@ -560,7 +560,7 @@ public class Menu : ItemsControl
             return;
         }
 
-        if (neighbor.Items?.Count > 0)
+        if (neighbor.Items.Count > 0)
         {
             open.ClearSubItemHighlightsRecursively();
             // Selecting the neighbor deselects (and closes) the open item.
