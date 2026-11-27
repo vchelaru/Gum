@@ -88,3 +88,53 @@ void CustomInitialize()
 ```
 
 <figure><img src="../../.gitbook/assets/13_08 51 15.gif" alt=""><figcaption><p>Two buttons updating money</p></figcaption></figure>
+
+## Depending on Another View Model
+
+`DependsOn` also takes a dotted path into another view model. The following item view model raises `CanAfford` when its own `Price` changes and when `Gold` changes on the shared `GameViewModel` it references:
+
+```csharp
+class GameViewModel : ViewModel
+{
+    public int Gold
+    {
+        get => Get<int>();
+        set => Set(value);
+    }
+}
+
+class ShopItemViewModel : ViewModel
+{
+    public int Price
+    {
+        get => Get<int>();
+        set => Set(value);
+    }
+
+    public GameViewModel Game
+    {
+        get => Get<GameViewModel>();
+        set => Set(value);
+    }
+
+    [DependsOn(nameof(Price))]
+    [DependsOn("Game.Gold")]
+    public bool CanAfford => Game != null && Game.Gold >= Price;
+}
+```
+
+A button bound to `CanAfford` enables and disables itself as gold is spent and earned, with no event handlers written by hand:
+
+```csharp
+// Initialize
+buyButton.BindingContext = shopItem;
+buyButton.SetBinding(nameof(buyButton.IsEnabled), nameof(ShopItemViewModel.CanAfford));
+```
+
+The dependent property is also raised when any segment of the path is replaced or set to null, such as assigning a different `Game`. Paths can be deeper (`"Session.Game.Gold"`), and a segment can index into a collection (`"Games[0].Gold"`). Each segment only needs to implement `INotifyPropertyChanged`; it does not have to be a Gum `ViewModel`.
+
+If a segment names a property that does not exist, Gum writes a `[Gum]` message to the error output, once per path.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}

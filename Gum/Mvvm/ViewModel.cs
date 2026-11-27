@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using GumRuntime;
 
 namespace Gum.Mvvm
 {
@@ -37,7 +38,7 @@ namespace Gum.Mvvm
         Dictionary<string, List<string>> notifyRelationships = new Dictionary<string, List<string>>();
         private Dictionary<string, object?> propertyDictionary = new Dictionary<string, object?>();
 
-        public int GetPropertyChangeCount() => PropertyChanged?.GetInvocationList().Length ?? 0;
+        public int GetPropertyChangeCount() => _propertyChanged?.GetInvocationList().Length ?? 0;
 
         // A value-typed property is stored in a mutable typed cell, so a changed value overwrites the
         // cell instead of allocating a new box. Cells are private to one instance (Clone copies
@@ -362,6 +363,12 @@ namespace Gum.Mvvm
 
                         string parent = attribute.ParentProperty;
 
+                        if (parent.IndexOf('.') >= 0)
+                        {
+                            AddDottedDependency(parent, string.Intern(child));
+                            continue;
+                        }
+
                         List<string> childrenProps;
                         if (notifyRelationships.ContainsKey(parent) == false)
                         {
@@ -430,9 +437,15 @@ namespace Gum.Mvvm
         protected virtual void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
-            if (PropertyChanged != null)
+            // Before the event, so a replaced root is already watched when listeners react.
+            if (_dottedByRoot != null)
             {
-                PropertyChanged(this, GetEventArgs(propertyName));
+                OnPossibleDottedRootChanged(propertyName!);
+            }
+
+            if (_propertyChanged != null)
+            {
+                _propertyChanged(this, GetEventArgs(propertyName));
             }
 
             // Most view models declare no [DependsOn]; an empty dictionary skips the lookup call. The
@@ -447,7 +460,237 @@ namespace Gum.Mvvm
             }
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        private PropertyChangedEventHandler? _propertyChanged;
+
+        /// <inheritdoc/>
+        public event PropertyChangedEventHandler? PropertyChanged
+        {
+            add
+            {
+                PropertyChangedEventHandler? current = _propertyChanged;
+                while (true)
+                {
+                    PropertyChangedEventHandler? combined = (PropertyChangedEventHandler?)Delegate.Combine(current, value);
+                    PropertyChangedEventHandler? previous = System.Threading.Interlocked.CompareExchange(ref _propertyChanged, combined, current);
+                    if (ReferenceEquals(previous, current))
+                    {
+                        break;
+                    }
+                    current = previous;
+                }
+
+                // Dotted paths are watched once someone listens, so a root assigned without a
+                // notification (a get-only property set in the constructor) is still picked up.
+                if (_dottedByRoot != null && _areDottedPathsAttached == false)
+                {
+                    AttachDottedPaths();
+                }
+            }
+            remove
+            {
+                PropertyChangedEventHandler? current = _propertyChanged;
+                while (true)
+                {
+                    PropertyChangedEventHandler? removed = (PropertyChangedEventHandler?)Delegate.Remove(current, value);
+                    PropertyChangedEventHandler? previous = System.Threading.Interlocked.CompareExchange(ref _propertyChanged, removed, current);
+                    if (ReferenceEquals(previous, current))
+                    {
+                        break;
+                    }
+                    current = previous;
+                }
+            }
+        }
+
+        #region Dotted DependsOn
+
+        // One entry per distinct dotted path, such as "Game.Gold". The root segment ("Game") is a
+        // property of this view model, so its changes arrive through NotifyPropertyChanged. The rest
+        // of the path ("Gold") is watched on the root's value by a PropertyPathObserver, whose
+        // listeners hold it weakly: a long-lived referenced view model never keeps this one alive.
+        private sealed class DottedDependency
+        {
+            public DottedDependency(string path, PathSegment[] rootSegment, string remainingPath)
+            {
+                Path = path;
+                RootSegment = rootSegment;
+                RemainingPath = remainingPath;
+            }
+
+            public string Path { get; }
+            public PathSegment[] RootSegment { get; }
+            public string RemainingPath { get; }
+            public List<string> Dependents { get; } = new List<string>();
+            public PropertyPathObserver? Observer { get; set; }
+            public bool IsRaising { get; set; }
+            public bool IsValidated { get; set; }
+        }
+
+        // Null for view models with no dotted [DependsOn], which then pay one null check per notification.
+        private Dictionary<string, List<DottedDependency>>? _dottedByRoot;
+        private bool _areDottedPathsAttached;
+
+        // Paths already reported as invalid, per view model type, so each is reported once per run.
+        private static readonly HashSet<(Type, string)> _reportedInvalidPaths = new HashSet<(Type, string)>();
+
+        private void AddDottedDependency(string path, string child)
+        {
+            _dottedByRoot ??= new Dictionary<string, List<DottedDependency>>();
+            int firstDot = path.IndexOf('.');
+            PathSegment[] rootSegment = PathSegmentParser.ParseSegments(path.Substring(0, firstDot));
+            string rootName = rootSegment[0].Name;
+
+            if (_dottedByRoot.TryGetValue(rootName, out List<DottedDependency>? dependencies) == false)
+            {
+                dependencies = new List<DottedDependency>();
+                _dottedByRoot[rootName] = dependencies;
+            }
+
+            DottedDependency? dependency = dependencies.Find(item => item.Path == path);
+            if (dependency == null)
+            {
+                dependency = new DottedDependency(path, rootSegment, path.Substring(firstDot + 1));
+                dependencies.Add(dependency);
+            }
+
+            dependency.Dependents.Add(child);
+        }
+
+        private void AttachDottedPaths()
+        {
+            _areDottedPathsAttached = true;
+            foreach (List<DottedDependency> dependencies in _dottedByRoot!.Values)
+            {
+                foreach (DottedDependency dependency in dependencies)
+                {
+                    AttachToRootValue(dependency);
+                }
+            }
+        }
+
+        private void OnPossibleDottedRootChanged(string propertyName)
+        {
+            if (_dottedByRoot!.TryGetValue(propertyName, out List<DottedDependency>? dependencies) == false)
+            {
+                return;
+            }
+
+            _areDottedPathsAttached = true;
+            foreach (DottedDependency dependency in dependencies)
+            {
+                AttachToRootValue(dependency);
+                RaiseDottedDependents(dependency);
+            }
+        }
+
+        [UnconditionalSuppressMessage("Trimming", "IL2026",
+            Justification = "The root is a property of this view model, which the class-level " +
+                "DynamicallyAccessedMembers keeps. Deeper segments are on the user's own types, kept the same " +
+                "way when they derive from ViewModel.")]
+        private void AttachToRootValue(DottedDependency dependency)
+        {
+            if (dependency.Observer == null)
+            {
+                dependency.Observer = new PropertyPathObserver(dependency.RemainingPath);
+                dependency.Observer.ValueChanged += () => RaiseDottedDependents(dependency);
+            }
+            else
+            {
+                dependency.Observer.Detach();
+            }
+
+            object? rootValue = PropertyPathObserver.WalkSegments(this, dependency.RootSegment, 1);
+            if (rootValue != null)
+            {
+                dependency.Observer.Attach(rootValue);
+            }
+
+            if (dependency.IsValidated == false)
+            {
+                ValidateDottedPath(dependency);
+            }
+        }
+
+        private void RaiseDottedDependents(DottedDependency dependency)
+        {
+            // A dependency cycle across view models would otherwise raise forever.
+            if (dependency.IsRaising)
+            {
+                return;
+            }
+
+            dependency.IsRaising = true;
+            try
+            {
+                foreach (string dependent in dependency.Dependents)
+                {
+                    NotifyPropertyChanged(dependent);
+                }
+            }
+            finally
+            {
+                dependency.IsRaising = false;
+            }
+        }
+
+        [UnconditionalSuppressMessage("Trimming", "IL2026",
+            Justification = "Walks the same members as AttachToRootValue.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2075",
+            Justification = "Walks the same members as AttachToRootValue.")]
+        private void ValidateDottedPath(DottedDependency dependency)
+        {
+            PathSegment[] segments = PathSegmentParser.ParseSegments(dependency.Path);
+            for (int i = 0; i < segments.Length; i++)
+            {
+                object? owner = PropertyPathObserver.WalkSegments(this, segments, i);
+                if (owner == null)
+                {
+                    // A null segment can't be checked yet; it is checked again when the root changes.
+                    return;
+                }
+
+                if (owner.GetType().GetProperty(segments[i].Name) == null)
+                {
+                    dependency.IsValidated = true;
+                    ReportInvalidDottedPath(dependency, segments[i].Name, owner.GetType());
+                    return;
+                }
+            }
+
+            dependency.IsValidated = true;
+        }
+
+        private void ReportInvalidDottedPath(DottedDependency dependency, string segmentName, Type ownerType)
+        {
+            lock (_reportedInvalidPaths)
+            {
+                if (_reportedInvalidPaths.Add((GetType(), dependency.Path)) == false)
+                {
+                    return;
+                }
+            }
+
+            string message = $"[DependsOn(\"{dependency.Path}\")] on {GetType().Name}.{string.Join(", ", dependency.Dependents)} " +
+                $"never updates: {ownerType.Name} has no property named {segmentName}.";
+            // Swap for ElementSaveExtensions.ReportDiagnostic once that shared reporter is on main.
+            try
+            {
+                if (ElementSaveExtensions.ReportPropertyAssignmentError != null)
+                {
+                    ElementSaveExtensions.ReportPropertyAssignmentError(message);
+                }
+                else
+                {
+                    Console.Error.WriteLine($"[Gum] {message}");
+                }
+            }
+            catch (Exception exception) when (exception is not OutOfMemoryException)
+            {
+                Console.Error.WriteLine($"[Gum] A PropertyAssignmentError subscriber threw while reporting a DependsOn path: {exception}");
+            }
+        }
+
+        #endregion
 
         protected T Clone<T>()
         {
@@ -463,6 +706,26 @@ namespace Gum.Mvvm
             // MemberwiseClone copied the reference; the subscriptions belong to this instance, and a
             // clone replacing a collection must not unsubscribe the original.
             asViewModel.collectionSubscriptions = null;
+            // The clone gets its own observers, so it watches its own root values.
+            if (_dottedByRoot != null)
+            {
+                asViewModel._dottedByRoot = null;
+                asViewModel._areDottedPathsAttached = false;
+                foreach (List<DottedDependency> dependencies in _dottedByRoot.Values)
+                {
+                    foreach (DottedDependency dependency in dependencies)
+                    {
+                        foreach (string dependent in dependency.Dependents)
+                        {
+                            asViewModel.AddDottedDependency(dependency.Path, dependent);
+                        }
+                    }
+                }
+                if (asViewModel._propertyChanged != null)
+                {
+                    asViewModel.AttachDottedPaths();
+                }
+            }
             var asT = (T)asObject;
 
             return asT;
