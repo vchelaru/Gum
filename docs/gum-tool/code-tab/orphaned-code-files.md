@@ -50,4 +50,8 @@ Available in December 2026, or now if building Gum from source.
 
 `gumcli codegen <project.gumj> --prune` regenerates the project and then deletes generated files with no matching element. This is often the better option for a project already under source control: it is explicit, it handles every file at once, and the result shows up as a reviewable diff.
 
-`--prune` never deletes custom code or `.codsj` settings files. It lists them so you can decide.
+`--prune` also deletes a custom code file that is still the untouched stub, the same way deleting an element in the tool does. It never deletes a custom code file you added code to, or a `.codsj` settings file. It lists them so you can decide.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}

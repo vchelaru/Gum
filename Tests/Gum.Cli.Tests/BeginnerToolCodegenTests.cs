@@ -247,7 +247,7 @@ public class BeginnerToolCodegenTests : BaseTestClass
     }
 
     [Fact]
-    public void Codegen_AfterRenamingAnElementWithPrune_DeletesOnlyTheStaleGeneratedFileAndListsTheStaleCustomFile()
+    public void Codegen_AfterRenamingAnElementWithPrune_DeletesTheStaleGeneratedFileAndUntouchedStub_AndTheGameBuilds()
     {
         string gumx = CreateGame();
         EditProject(gumx, project => AddComponent(project, "ScorePanel", "Container", ("Value", "Text")));
@@ -258,8 +258,10 @@ public class BeginnerToolCodegenTests : BaseTestClass
 
         pruned.ExitCode.ShouldBe(0, pruned.StandardError);
         File.Exists(Path.Combine(TempDirectory, "Components", "ScorePanel.Generated.cs")).ShouldBeFalse();
-        File.Exists(Path.Combine(TempDirectory, "Components", "ScorePanel.cs")).ShouldBeTrue("custom code is never deleted by codegen");
-        pruned.StandardOutput.ShouldContain("ScorePanel.cs", Case.Sensitive, "the leftover custom file is named so the beginner can delete it");
+        File.Exists(Path.Combine(TempDirectory, "Components", "ScorePanel.cs")).ShouldBeFalse(
+            "the untouched stub alone fails the build with CS0759 and holds nothing to lose");
+        File.Exists(Path.Combine(TempDirectory, "Components", "ScoreBox.cs")).ShouldBeTrue();
+        Compile().ShouldBeEmpty();
     }
 
     [Fact]

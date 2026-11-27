@@ -372,8 +372,8 @@ the scan, planner and applier already follow `GetGeneratedFileName`.
 ### Command line
 
 `gumcli codegen <project.gumx> --prune` regenerates and then removes generated files with no matching
-element. It only ever deletes `.Generated.cs`; orphaned custom and `.codsj` files are listed for you to
-decide on. For a project under source control this is usually the better tool than deleting during
+element, plus an orphaned custom `.cs` that `CustomCodeStubDetector` calls an untouched stub (the
+delete dialog's rule). Edited custom files and `.codsj` files are listed for you to decide on. For a project under source control this is usually the better tool than deleting during
 editing, because it is explicit, batched, and lands as a reviewable diff.
 
 ## Invariants to preserve

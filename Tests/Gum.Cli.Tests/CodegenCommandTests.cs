@@ -417,7 +417,7 @@ public class CodegenCommandTests : BaseTestClass
         Directory.CreateDirectory(Path.GetDirectoryName(staleGenerated)!);
         Directory.CreateDirectory(Path.GetDirectoryName(staleCustom)!);
         File.WriteAllText(staleGenerated, "//Code for Gone\r\npublic partial class Gone { }");
-        File.WriteAllText(staleCustom, "// my code");
+        File.WriteAllText(staleCustom, "partial class Gone { void Mine() { } }");
 
         CliTestHelper result = CliTestHelper.Run("codegen", gumxPath, "--prune");
 
@@ -846,6 +846,43 @@ public class CodegenCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void Codegen_WithPrune_AfterRemovingAnElement_DeletesItsUntouchedCustomStub()
+    {
+        string gumxPath = CreateProjectWithScreen("Shop", "");
+        CliTestHelper.Run("codegen", gumxPath).ExitCode.ShouldBe(0);
+        string customPath = Path.Combine(TempDirectory, "Screens", "Shop.cs");
+        File.Exists(customPath).ShouldBeTrue("codegen writes the stub");
+        RunEdit(gumxPath, """{ "op": "removeScreen", "name": "Shop" }""");
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath, "--prune");
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        File.Exists(Path.Combine(TempDirectory, "Screens", "Shop.Generated.cs")).ShouldBeFalse();
+        File.Exists(customPath).ShouldBeFalse(
+            "an untouched stub left without its generated half breaks the build (CS0759) and holds nothing to lose");
+        result.StandardOutput.ShouldContain("Pruned " + customPath);
+        result.StandardOutput.ShouldNotContain("Orphaned custom code file");
+    }
+
+    [Fact]
+    public void Codegen_WithPrune_AfterRemovingAnElement_KeepsAnEditedCustomFile()
+    {
+        string gumxPath = CreateProjectWithScreen("Shop", "");
+        CliTestHelper.Run("codegen", gumxPath).ExitCode.ShouldBe(0);
+        string customPath = Path.Combine(TempDirectory, "Screens", "Shop.cs");
+        string stub = File.ReadAllText(customPath);
+        stub.ShouldContain("partial void CustomInitialize()");
+        File.WriteAllText(customPath, stub.Replace("partial void CustomInitialize()", "int score; partial void CustomInitialize()"));
+        RunEdit(gumxPath, """{ "op": "removeScreen", "name": "Shop" }""");
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath, "--prune");
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        File.Exists(customPath).ShouldBeTrue("a custom file with any code in it is user-authored and stays");
+        result.StandardOutput.ShouldContain("Orphaned custom code file (not removed): " + customPath);
+    }
+
+    [Fact]
     public void Codegen_WithPrune_WhenNothingOrphaned_ReportsNothingPruned()
     {
         string gumxPath = CreateProjectWithCodeSettings();
@@ -906,6 +943,14 @@ public class CodegenCommandTests : BaseTestClass
             }
             """);
         return gumxPath;
+    }
+
+    private void RunEdit(string gumxPath, string operationJson)
+    {
+        string operationsPath = Path.Combine(TempDirectory, "ops.json");
+        File.WriteAllText(operationsPath, $$"""{ "version": 1, "operations": [ {{operationJson}} ] }""");
+        CliTestHelper result = CliTestHelper.Run("edit", gumxPath, operationsPath);
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError + result.StandardOutput);
     }
 
     private string WriteGeneratedFile(string elementName)

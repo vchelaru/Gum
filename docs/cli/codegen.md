@@ -57,11 +57,15 @@ gumcli codegen MyProject/MyProject.gumj --prune
 ```
 Generated code for 12 element(s).
 Pruned C:\MyGame\Screens\DeletedScreen.Generated.cs
-Pruned 1 orphaned generated file(s).
+Pruned 1 orphaned file(s).
 Orphaned custom code file (not removed): C:\MyGame\Screens\DeletedScreen.cs
 ```
 
-A `.Generated.cs` file is a pure function of its element, so deleting one is lossless. Custom `.cs` files and per-element `.codsj` settings files are yours, so `--prune` lists them and leaves them in place.
+A `.Generated.cs` file is a pure function of its element, so deleting one is lossless. A custom `.cs` file that is still the untouched stub (an empty `CustomInitialize` and no other code) is deleted too, since it holds nothing and would no longer compile on its own. Comments and whitespace do not count as code. A custom `.cs` file with any code in it, and per-element `.codsj` settings files, are yours, so `--prune` lists them and leaves them in place.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
 
 Detection is conservative and never touches a file Gum did not write. It only recognizes a `.Generated.cs` file carrying the header Gum's code generation writes, and it only considers a custom `.cs` file whose `.Generated.cs` sibling is itself orphaned. Extra hand-written partials such as `MyScreen.Input.cs`, and files belonging to elements set to `NeverGenerate`, are never reported. See [Orphaned Code Files](../gum-tool/code-tab/orphaned-code-files.md) for the tool-side equivalent.
 
