@@ -284,7 +284,6 @@ using GlfwWindow window = Glfw.CreateWindow(new GlfwWindow.CreateInfo { Title = 
 window.MakeContextCurrent();
 Glfw.SwapInterval(1);
 
-GumService GumUI = GumService.Default;
 GumUI.Initialize(window);
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
@@ -306,6 +305,11 @@ while (!window.ShouldClose)
 }
 
 Glfw.Terminate();
+
+partial class Program
+{
+    static GumService GumUI => GumService.Default;
+}
 ```
 {% endtab %}
 
@@ -389,7 +393,6 @@ unsafe
 using Device deviceScope = device;
 Queue queue = device.GetQueue(queueFamily, 0);
 
-GumService GumUI = GumService.Default;
 GumUI.Initialize(window, instance, physicalDevice, device, queue, queueFamily, surface);
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
@@ -413,6 +416,11 @@ device.WaitIdle();
 GumUI.Uninitialize();
 instance.DestroySurfaceKHR(surface, null);
 Glfw.Terminate();
+
+partial class Program
+{
+    static GumService GumUI => GumService.Default;
+}
 ```
 {% endtab %}
 {% endtabs %}

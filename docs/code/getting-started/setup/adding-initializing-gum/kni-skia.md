@@ -86,6 +86,8 @@ public class Game1 : Game
         GumUI.Initialize(this);
         GumUI.UseKeyboardDefaults();
         GumUI.UseGamepadDefaults();
+        // The canvas grows and shrinks with the window, so the UI gets more room rather than scaling.
+        GumUI.EnableExpandToWindow();
 
         var button = new Button();
         button.AddToRoot();

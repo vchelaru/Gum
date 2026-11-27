@@ -79,14 +79,15 @@ using Raylib_cs;
 const int screenWidth = 800;
 const int screenHeight = 450;
 
+Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
 Raylib.InitWindow(screenWidth, screenHeight, "My Game");
 Raylib.SetTargetFPS(60);
-
-GumService GumUI = GumService.Default;
 
 GumUI.Initialize();
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
+// The canvas grows and shrinks with the window, so the UI gets more room rather than scaling.
+GumUI.EnableExpandToWindow();
 
 var button = new Button();
 button.AddToRoot();
@@ -106,6 +107,11 @@ while (!Raylib.WindowShouldClose())
 }
 
 Raylib.CloseWindow();
+
+partial class Program
+{
+    static GumService GumUI => GumService.Default;
+}
 ```
 
 The button in the center of the window confirms Gum works. Delete it once you start building your game.

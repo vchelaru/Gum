@@ -98,6 +98,63 @@ public class PlatformProjectScaffolderTests : IDisposable
         EvaluateOutputType(csproj, "Release").ShouldBe("WinExe");
     }
 
+    [Theory]
+    [InlineData(HostPlatform.MonoGame)]
+    [InlineData(HostPlatform.Kni)]
+    [InlineData(HostPlatform.KniSkia)]
+    [InlineData(HostPlatform.Raylib)]
+    [InlineData(HostPlatform.SilkNet)]
+    [InlineData(HostPlatform.Stride)]
+    [InlineData(HostPlatform.Brutal)]
+    public void Create_ShouldEnableNullableLikeTheDotnetTemplates(HostPlatform platform)
+    {
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, platform, includeFormsTemplate: true);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        XDocument csproj = XDocument.Load(result.CsprojPath);
+        csproj.Descendants("Nullable").Select(element => element.Value).ShouldBe(new[] { "enable" });
+    }
+
+    [Theory]
+    [InlineData(HostPlatform.MonoGame, "Game1.cs", "Window.AllowUserResizing = true;", "GumUI.EnableExpandToWindow();")]
+    [InlineData(HostPlatform.Kni, "Game1.cs", "Window.AllowUserResizing = true;", "GumUI.EnableExpandToWindow();")]
+    [InlineData(HostPlatform.KniSkia, "Game1.cs", "Window.AllowUserResizing = true;", "GumUI.EnableExpandToWindow();")]
+    [InlineData(HostPlatform.Raylib, "Program.cs", "Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);", "GumUI.EnableExpandToWindow();")]
+    [InlineData(HostPlatform.Stride, "Program.cs", "game.Window.AllowUserResizing = true;", "GumUI.Initialize(")]
+    [InlineData(HostPlatform.SilkNet, "Program.cs", "options.WindowBorder = WindowBorder.Resizable;", "GumUI.Initialize(")]
+    public void Create_ShouldMakeTheWindowResizableAndTheCanvasFollowIt(
+        HostPlatform platform, string hostFile, string resizableLine, string canvasFollowsLine)
+    {
+        // The Skia-backed hosts resize the canvas to the window by themselves; MonoGame, KNI and raylib need EnableExpandToWindow.
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, platform, includeFormsTemplate: true);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        string host = File.ReadAllText(Path.Combine(projectDirectory, hostFile));
+        host.ShouldContain(resizableLine);
+        host.ShouldContain(canvasFollowsLine);
+    }
+
+    [Theory]
+    [InlineData(HostPlatform.Raylib)]
+    [InlineData(HostPlatform.SilkNet)]
+    [InlineData(HostPlatform.Brutal)]
+    public void Create_ProgramShouldDeclareGumUIAsAPropertySoOtherFilesCanDeclareTheirOwn(HostPlatform platform)
+    {
+        // A top-level local named GumUI makes every other file's GumUI an error (CS8801).
+        string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
+
+        PlatformProjectResult result = _sut.Create(projectDirectory, platform, includeFormsTemplate: true);
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        string program = File.ReadAllText(Path.Combine(projectDirectory, "Program.cs"));
+        program.ShouldNotContain("GumService GumUI = ");
+        program.ShouldContain("static GumService GumUI => GumService.Default;");
+    }
+
     [Fact]
     public void Create_ForKniSkia_WritesAGame1WhoseOnlyGumCallsAreInitializeUpdateAndDraw()
     {
@@ -182,7 +239,7 @@ public class PlatformProjectScaffolderTests : IDisposable
         program.ShouldNotContain("Begin()");
         program.ShouldNotContain("Presenter");
         File.Exists(Path.Combine(projectDirectory, "Presenter.cs")).ShouldBeFalse();
-        program.Split('\n').Length.ShouldBeLessThan(45);
+        program.Split('\n').Length.ShouldBeLessThan(50);
         // Matches the shared docs samples: the per-frame value is gameTime, in seconds.
         program.ShouldContain("double gameTime = clock.Elapsed.TotalSeconds;");
         program.ShouldContain("GumUI.Update(gameTime);");

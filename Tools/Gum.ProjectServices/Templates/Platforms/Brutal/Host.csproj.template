@@ -6,6 +6,7 @@
     <OutputType Condition="'$(Configuration)' == 'Release'">WinExe</OutputType>
     <!-- The BRUTAL packages target net10.0. Windows, Linux and macOS with an OpenGL 3.3 driver. -->
     <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
     <RootNamespace>{{RootNamespace}}</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NuGetAuditMode>direct</NuGetAuditMode>

@@ -17,6 +17,8 @@ void Start(Scene rootScene)
     // Stride draws through a GraphicsCompositor and a camera, so both must exist before Gum initializes.
     game.AddGraphicsCompositor().AddCleanUIStage();
     game.Add2DCamera();
+    // Gum resizes its canvas to the window, so the UI gets more room rather than scaling.
+    game.Window.AllowUserResizing = true;
 
     GumService GumUI = GumService.Default;
 
