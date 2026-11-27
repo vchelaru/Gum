@@ -48,4 +48,7 @@ internal sealed partial class GumContext
     internal List<Action> NextPushActionHoldingList { get; } = new List<Action>();
 
     internal List<Action> NextClickActionHoldingList { get; } = new List<Action>();
+
+    // FormsUtilities.LastEventRoots: the roots the last Update tested.
+    internal List<GraphicalUiElement> LastEventRoots { get; } = new List<GraphicalUiElement>();
 }

@@ -74,17 +74,61 @@ public static class ToolTipService
     // collected takes its entry with it.
     private static readonly ConditionalWeakTable<object, Registration> _registrations = new();
 
-    // The FrameworkElement or InteractiveGue currently hovered, as returned by FindHoveredHost.
-    private static object? _hoveredHost;
-    private static double _hoverStartTimeSeconds;
-    private static double _tooltipShownAtSeconds;
-    private static double _lastRefreshAtSeconds;
-    private static double _lastTooltipClosedAtSeconds = double.NegativeInfinity;
-    private static Tooltip? _currentOpenTooltip;
+    // Hover state belongs to the service whose cursor it tracks, so one service's Update cannot close
+    // another's tooltip and Uninitialize can drop the hovered host (#8473). The service that adopted the
+    // process statics, and code with no service (FlatRedBall, the tool), use the process-wide copy.
+    private sealed class HoverState
+    {
+        // The FrameworkElement or InteractiveGue currently hovered, as returned by FindHoveredHost.
+        public object? HoveredHost;
+        public double HoverStartTimeSeconds;
+        public double TooltipShownAtSeconds;
+        public double LastRefreshAtSeconds;
+        public double LastTooltipClosedAtSeconds = double.NegativeInfinity;
+        public Tooltip? CurrentOpenTooltip;
 
-    // Set when a content callback returned null or threw, so it is not asked again every frame for as
-    // long as the cursor stays on the same host. Cleared when the hovered host changes.
-    private static bool _openDeclinedForThisHover;
+        // Set when a content callback returned null or threw, so it is not asked again every frame for as
+        // long as the cursor stays on the same host. Cleared when the hovered host changes.
+        public bool OpenDeclinedForThisHover;
+    }
+
+    private static HoverState _processWideState = new HoverState();
+
+    private static HoverState State
+    {
+        get
+        {
+            global::Gum.GumContext? own = global::Gum.GumContext.Own;
+            if (own == null)
+            {
+                return _processWideState;
+            }
+            HoverState? state = own.GetState<HoverState>();
+            if (state == null)
+            {
+                state = new HoverState();
+                own.SetState(state);
+            }
+            return state;
+        }
+    }
+
+    /// <summary>
+    /// Forgets the current service's hovered host and open tooltip without hiding it, for a service
+    /// that is tearing down its roots anyway.
+    /// </summary>
+    internal static void Release()
+    {
+        global::Gum.GumContext? own = global::Gum.GumContext.Own;
+        if (own == null)
+        {
+            _processWideState = new HoverState();
+        }
+        else
+        {
+            own.SetState<HoverState>(null);
+        }
+    }
 
     /// <summary>
     /// Sets the tooltip shown while the cursor is over a plain visual (a <c>TextRuntime</c>,
@@ -228,10 +272,11 @@ public static class ToolTipService
             _registrations.Add(host, registration);
         }
 
-        if (_hoveredHost == host && registration == null && _currentOpenTooltip != null)
+        HoverState state = State;
+        if (state.HoveredHost == host && registration == null && state.CurrentOpenTooltip != null)
         {
-            _currentOpenTooltip.Hide();
-            _currentOpenTooltip = null;
+            state.CurrentOpenTooltip.Hide();
+            state.CurrentOpenTooltip = null;
         }
     }
 
@@ -258,27 +303,28 @@ public static class ToolTipService
             return;
         }
 
+        HoverState state = State;
         object? hovered = FindHoveredHost(cursor);
 
-        if (hovered != _hoveredHost)
+        if (hovered != state.HoveredHost)
         {
-            if (_currentOpenTooltip != null)
+            if (state.CurrentOpenTooltip != null)
             {
-                (_hoveredHost as FrameworkElement)?.RaiseToolTipClosing();
-                _currentOpenTooltip.Hide();
-                _currentOpenTooltip = null;
-                _lastTooltipClosedAtSeconds = gameTimeSeconds;
+                (state.HoveredHost as FrameworkElement)?.RaiseToolTipClosing();
+                state.CurrentOpenTooltip.Hide();
+                state.CurrentOpenTooltip = null;
+                state.LastTooltipClosedAtSeconds = gameTimeSeconds;
             }
 
-            _hoveredHost = hovered;
-            _hoverStartTimeSeconds = gameTimeSeconds;
-            _openDeclinedForThisHover = false;
+            state.HoveredHost = hovered;
+            state.HoverStartTimeSeconds = gameTimeSeconds;
+            state.OpenDeclinedForThisHover = false;
         }
-        else if (hovered != null && _currentOpenTooltip == null &&
+        else if (hovered != null && state.CurrentOpenTooltip == null &&
                  (cursor.XChange != 0 || cursor.YChange != 0))
         {
             // Cursor moved within the same element — restart the stationary-hover timer.
-            _hoverStartTimeSeconds = gameTimeSeconds;
+            state.HoverStartTimeSeconds = gameTimeSeconds;
         }
 
         if (hovered == null)
@@ -286,52 +332,52 @@ public static class ToolTipService
             return;
         }
 
-        if (_currentOpenTooltip != null)
+        if (state.CurrentOpenTooltip != null)
         {
-            var elapsedShown = gameTimeSeconds - _tooltipShownAtSeconds;
+            var elapsedShown = gameTimeSeconds - state.TooltipShownAtSeconds;
             if (elapsedShown >= ShowDuration.TotalSeconds)
             {
                 (hovered as FrameworkElement)?.RaiseToolTipClosing();
-                _currentOpenTooltip.Hide();
-                _currentOpenTooltip = null;
-                _lastTooltipClosedAtSeconds = gameTimeSeconds;
+                state.CurrentOpenTooltip.Hide();
+                state.CurrentOpenTooltip = null;
+                state.LastTooltipClosedAtSeconds = gameTimeSeconds;
             }
             else if (RefreshInterval > TimeSpan.Zero &&
-                     gameTimeSeconds - _lastRefreshAtSeconds >= RefreshInterval.TotalSeconds)
+                     gameTimeSeconds - state.LastRefreshAtSeconds >= RefreshInterval.TotalSeconds)
             {
                 RefreshOpenTooltip(hovered, gameTimeSeconds);
             }
             return;
         }
 
-        var hoverElapsed = gameTimeSeconds - _hoverStartTimeSeconds;
-        var sinceClosed = gameTimeSeconds - _lastTooltipClosedAtSeconds;
+        var hoverElapsed = gameTimeSeconds - state.HoverStartTimeSeconds;
+        var sinceClosed = gameTimeSeconds - state.LastTooltipClosedAtSeconds;
         var required = sinceClosed <= BetweenShowDelay.TotalSeconds
             ? 0.0
             : InitialShowDelay.TotalSeconds;
 
-        if (hoverElapsed >= required && !_openDeclinedForThisHover &&
+        if (hoverElapsed >= required && !state.OpenDeclinedForThisHover &&
             _registrations.TryGetValue(hovered, out Registration? registration))
         {
             if (registration.ContentProvider != null)
             {
                 // Marked before the call so a callback that throws is not called again every frame.
-                _openDeclinedForThisHover = true;
+                state.OpenDeclinedForThisHover = true;
                 string? content = registration.ContentProvider();
                 if (content == null)
                 {
                     return;
                 }
                 registration.Tooltip.Content = content;
-                _openDeclinedForThisHover = false;
+                state.OpenDeclinedForThisHover = false;
             }
 
             Tooltip tooltip = registration.Tooltip;
             (hovered as FrameworkElement)?.RaiseToolTipOpening();
             tooltip.Show(cursor.XRespectingGumZoomAndBounds(), cursor.YRespectingGumZoomAndBounds());
-            _currentOpenTooltip = tooltip;
-            _tooltipShownAtSeconds = gameTimeSeconds;
-            _lastRefreshAtSeconds = gameTimeSeconds;
+            state.CurrentOpenTooltip = tooltip;
+            state.TooltipShownAtSeconds = gameTimeSeconds;
+            state.LastRefreshAtSeconds = gameTimeSeconds;
         }
     }
 
@@ -341,12 +387,13 @@ public static class ToolTipService
     /// </summary>
     private static void RefreshOpenTooltip(object hovered, double gameTimeSeconds)
     {
+        HoverState state = State;
         // Set before the call so a callback that throws is asked again after an interval, not every frame.
-        _lastRefreshAtSeconds = gameTimeSeconds;
+        state.LastRefreshAtSeconds = gameTimeSeconds;
 
         if (!_registrations.TryGetValue(hovered, out Registration? registration) ||
             registration.ContentProvider == null ||
-            registration.Tooltip != _currentOpenTooltip)
+            registration.Tooltip != state.CurrentOpenTooltip)
         {
             return;
         }
@@ -355,11 +402,11 @@ public static class ToolTipService
         if (content == null)
         {
             (hovered as FrameworkElement)?.RaiseToolTipClosing();
-            _currentOpenTooltip!.Hide();
-            _currentOpenTooltip = null;
-            _lastTooltipClosedAtSeconds = gameTimeSeconds;
+            state.CurrentOpenTooltip!.Hide();
+            state.CurrentOpenTooltip = null;
+            state.LastTooltipClosedAtSeconds = gameTimeSeconds;
             // Like a null on open: not asked again until the cursor leaves the host and returns.
-            _openDeclinedForThisHover = true;
+            state.OpenDeclinedForThisHover = true;
             return;
         }
 
@@ -371,17 +418,18 @@ public static class ToolTipService
     /// </summary>
     public static void ResetForTesting()
     {
-        if (_currentOpenTooltip != null)
+        HoverState state = State;
+        if (state.CurrentOpenTooltip != null)
         {
-            _currentOpenTooltip.Hide();
-            _currentOpenTooltip = null;
+            state.CurrentOpenTooltip.Hide();
+            state.CurrentOpenTooltip = null;
         }
-        _hoveredHost = null;
-        _hoverStartTimeSeconds = 0;
-        _tooltipShownAtSeconds = 0;
-        _lastRefreshAtSeconds = 0;
-        _lastTooltipClosedAtSeconds = double.NegativeInfinity;
-        _openDeclinedForThisHover = false;
+        state.HoveredHost = null;
+        state.HoverStartTimeSeconds = 0;
+        state.TooltipShownAtSeconds = 0;
+        state.LastRefreshAtSeconds = 0;
+        state.LastTooltipClosedAtSeconds = double.NegativeInfinity;
+        state.OpenDeclinedForThisHover = false;
     }
 
     /// <summary>

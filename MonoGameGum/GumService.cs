@@ -871,7 +871,11 @@ public partial class GumService : IGumService
 
         DeferredQueue.Clear();
 
+        // This service's input state (its context, or the process statics it adopted).
         InteractiveGue.CurrentInputReceiver = null;
+        InteractiveGue.LastVisualPushed = null;
+        InteractiveGue.ClearNextPushActions();
+        InteractiveGue.ClearNextClickActions();
 
         // Only tear down Root if GumService itself created it. A reassigned Root
         // (see the Root property doc) is the host's own object — clearing its
