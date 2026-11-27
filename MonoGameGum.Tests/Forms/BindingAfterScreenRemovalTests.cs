@@ -263,7 +263,37 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         listBox.ListBoxItems[1].BindingContext.ShouldBe("second");
     }
 
-#pragma warning disable CS0618 // AddToManagers is obsolete; pinned so it keeps working.
+    [Fact]
+    public void AddToManagers_RemoveFromRoot_ContainedInstancesKeepTheirOwnContext()
+    {
+        GameViewModel screenViewModel = new() { Gold = 1 };
+        GameViewModel labelViewModel = new() { Gold = 2 };
+        StackPanel screen = new();
+        Label goldLabel = new();
+        goldLabel.SetBinding(nameof(Label.Text), nameof(GameViewModel.Gold));
+        screen.AddChild(goldLabel);
+        ListBox listBox = new();
+        screen.AddChild(listBox);
+        listBox.Items.Add("first");
+        listBox.Items.Add("second");
+        // A screen built from a project lists its instances as contained elements, which
+        // RemoveFromManagers walks.
+        goldLabel.Visual.ElementGueContainingThis = screen.Visual;
+        listBox.Visual.ElementGueContainingThis = screen.Visual;
+        screen.Visual.AddToManagers(SystemManagers.Default, null);
+        screen.AddToRoot();
+        screen.BindingContext = screenViewModel;
+        goldLabel.BindingContext = labelViewModel;
+
+        screen.RemoveFromRoot();
+        labelViewModel.Gold = 40;
+
+        screen.BindingContext.ShouldBeNull();
+        goldLabel.BindingContext.ShouldBe(labelViewModel);
+        goldLabel.Text.ShouldBe("40");
+        listBox.ListBoxItems[1].BindingContext.ShouldBe("second");
+    }
+
     [Fact]
     public void AddToManagers_ExplicitContext_FollowsViewModelUntilRemovedFromManagers()
     {
@@ -281,7 +311,6 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         screen.BindingContext.ShouldBeNull();
         goldLabel.Text.ShouldBe("5");
     }
-#pragma warning restore CS0618
 
     [Fact]
     public void DependsOn_UndottedComputedProperty_UpdatesBoundIsEnabledOnEachChange()

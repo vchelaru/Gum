@@ -152,8 +152,8 @@ For a full walkthrough, see the Multiple Screens tutorial for [Forms projects](.
 Removing UI does not destroy it. A removed element is an ordinary C# object with no parent:
 
 * Gum controls, visuals, and screens do not implement `IDisposable`, so there is nothing to dispose.
-* The element keeps its properties, its children, and any event handlers you attached, so you can call `AddToRoot` again to show it as it was.
-* Gum sets the element's own `BindingContext` to null, so it and the children that inherit it stop updating from its view model. A child given its own `BindingContext` keeps it. Set `BindingContext` again after you call `AddToRoot` on it.
+* The element keeps its properties, its children, and any event handlers you attached, so calling `AddToRoot` again shows it again.
+* Gum sets the element's own `BindingContext` to null, so it and the children that inherit it stop updating from its view model. A child given its own `BindingContext` keeps it. If you set a `BindingContext` on the element, set it again after you call `AddToRoot`.
 * Once your code holds no references to it, the .NET garbage collector frees it like any other object.
 
 {% hint style="info" %}

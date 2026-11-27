@@ -114,9 +114,18 @@ public partial class GraphicalUiElement
         }
     }
 
+    // Only the element RemoveFromManagers was called on loses its own context, matching leaving the
+    // root; contained children keep theirs.
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic teardown clearing BindingContext when this element is removed from " +
+            "managers. The trim risk this unwinds was already surfaced wherever BindingContext/SetBinding " +
+            "was actually called by the app to set up the binding in the first place.")]
     partial void CustomRemoveFromManagers()
     {
-        RemoveBindingContextRecursively();
+        if (_removeFromManagersChildDepth == 0)
+        {
+            BindingContext = null;
+        }
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2026",
@@ -162,29 +171,6 @@ public partial class GraphicalUiElement
     /// theirs. The GumService sets this on its Root; popup and modal roots leave it off.
     /// </summary>
     internal bool ClearsBindingContextOfRemovedChildren { get; set; }
-
-    [UnconditionalSuppressMessage("Trimming", "IL2026",
-        Justification = "Automatic teardown clearing BindingContext when this element is removed from " +
-            "managers. The trim risk this unwinds was already surfaced wherever BindingContext/SetBinding " +
-            "was actually called by the app to set up the binding in the first place.")]
-    private void RemoveBindingContextRecursively()
-    {
-        this.BindingContext = null;
-        if (this.Children != null)
-        {
-            foreach (var child in this.Children)
-            {
-                child.RemoveBindingContextRecursively();
-            }
-        }
-        else
-        {
-            foreach (var gue in this.ContainedElements)
-            {
-                gue.RemoveBindingContextRecursively();
-            }
-        }
-    }
 
     Dictionary<string, VmToUiProperty> vmPropsToUiProps = new Dictionary<string, VmToUiProperty>();
     Dictionary<string, VmToUiProperty> vmEventsToUiMethods = new Dictionary<string, VmToUiProperty>();

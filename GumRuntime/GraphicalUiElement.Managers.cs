@@ -469,14 +469,26 @@ public partial class GraphicalUiElement
         }
     }
 
+    // Greater than zero while RemoveFromManagers walks an element's contained children, so a child
+    // can tell it is not the element the call was made on.
+    static int _removeFromManagersChildDepth;
+
     public virtual void RemoveFromManagers()
     {
-        foreach (var child in this.mWhatThisContains)
+        _removeFromManagersChildDepth++;
+        try
         {
-            if (child is GraphicalUiElement)
+            foreach (var child in this.mWhatThisContains)
             {
-                (child as GraphicalUiElement).RemoveFromManagers();
+                if (child is GraphicalUiElement)
+                {
+                    (child as GraphicalUiElement).RemoveFromManagers();
+                }
             }
+        }
+        finally
+        {
+            _removeFromManagersChildDepth--;
         }
 
         // if mManagers is null, then it was never added to the managers
