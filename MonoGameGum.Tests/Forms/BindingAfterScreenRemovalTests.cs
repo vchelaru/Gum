@@ -1,13 +1,17 @@
 using Gum.Forms.Controls;
 using Gum.Mvvm;
+using Gum.Wireframe;
+using RenderingLibrary;
 using Shouldly;
+using System;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
-/// What a bound screen does once it leaves the root (RemoveFromRoot or Root.Children.Clear()), when it
-/// is added back, and when a new screen bound to the same view model replaces it.
+/// Leaving the root clears the leaving element's own explicitly set BindingContext, whichever way it
+/// leaves; descendants given their own keep theirs. Moving between other parents, and leaving the
+/// popup or modal root, keep it.
 /// </summary>
 public class BindingAfterScreenRemovalTests : BaseTestClass
 {
@@ -31,8 +35,98 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         return (screen, goldLabel, buyButton);
     }
 
+    private static void LeaveRoot(StackPanel screen, string path)
+    {
+        GraphicalUiElement root = Gum.GumService.Default.Root;
+        switch (path)
+        {
+            case "FormsRemoveFromRoot":
+                screen.RemoveFromRoot();
+                break;
+            case "VisualRemoveFromRoot":
+                screen.Visual.RemoveFromRoot();
+                break;
+            case "ChildrenRemove":
+                root.Children.Remove(screen.Visual);
+                break;
+            case "ChildrenClear":
+                root.Children.Clear();
+                break;
+            case "ParentNull":
+                screen.Visual.Parent = null;
+                break;
+            case "RemoveChild":
+                root.RemoveChild(screen.Visual);
+                break;
+            case "MoveToOtherParent":
+                new StackPanel().AddChild(screen);
+                break;
+            default:
+                throw new ArgumentException(path);
+        }
+    }
+
+    [Theory]
+    [InlineData("FormsRemoveFromRoot")]
+    [InlineData("VisualRemoveFromRoot")]
+    [InlineData("ChildrenRemove")]
+    [InlineData("ChildrenClear")]
+    [InlineData("ParentNull")]
+    [InlineData("RemoveChild")]
+    [InlineData("MoveToOtherParent")]
+    public void LeavingRoot_ExplicitContext_IsClearedAndScreenStopsFollowingViewModel(string path)
+    {
+        GameViewModel viewModel = new() { Gold = 1 };
+        (StackPanel screen, Label goldLabel, Button buyButton) = CreateScreen();
+        screen.AddToRoot();
+        screen.BindingContext = viewModel;
+
+        LeaveRoot(screen, path);
+        viewModel.Gold = 50;
+
+        screen.BindingContext.ShouldBeNull();
+        goldLabel.BindingContext.ShouldBeNull();
+        goldLabel.Text.ShouldBe("1");
+        buyButton.IsEnabled.ShouldBeFalse();
+    }
+
     [Fact]
-    public void RemoveFromRoot_ExplicitContext_ScreenKeepsFollowingViewModel()
+    public void LeavingRoot_ContextAssignedBeforeAddToRoot_IsCleared()
+    {
+        GameViewModel viewModel = new() { Gold = 1 };
+        (StackPanel screen, Label goldLabel, _) = CreateScreen();
+        screen.BindingContext = viewModel;
+        screen.AddToRoot();
+
+        Gum.GumService.Default.Root.Children.Clear();
+        viewModel.Gold = 7;
+
+        screen.BindingContext.ShouldBeNull();
+        goldLabel.Text.ShouldBe("1");
+    }
+
+    [Fact]
+    public void LeavingRoot_DescendantWithOwnExplicitContext_KeepsIt()
+    {
+        GameViewModel screenViewModel = new() { Gold = 1 };
+        GameViewModel childViewModel = new() { Gold = 2 };
+        (StackPanel screen, Label goldLabel, Button buyButton) = CreateScreen();
+        screen.AddToRoot();
+        screen.BindingContext = screenViewModel;
+        goldLabel.BindingContext = childViewModel;
+
+        screen.RemoveFromRoot();
+        childViewModel.Gold = 40;
+        screenViewModel.Gold = 50;
+
+        goldLabel.BindingContext.ShouldBe(childViewModel);
+        goldLabel.Text.ShouldBe("40");
+        buyButton.BindingContext.ShouldBeNull();
+        buyButton.IsEnabled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void RemoveFromRoot_ThenAddToRootAgain_NeedsContextAssignedAgain()
     {
         GameViewModel viewModel = new() { Gold = 1 };
         (StackPanel screen, Label goldLabel, _) = CreateScreen();
@@ -40,55 +134,23 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         screen.BindingContext = viewModel;
 
         screen.RemoveFromRoot();
-        viewModel.Gold = 50;
-
-        // Pinned current behavior: like Clear(), RemoveFromRoot only unparents, so the explicit
-        // context stays and the detached screen keeps receiving view model changes.
-        goldLabel.Text.ShouldBe("50");
-    }
-
-    [Fact]
-    public void RootChildrenClear_ExplicitContext_ScreenKeepsFollowingViewModel()
-    {
-        GameViewModel viewModel = new() { Gold = 1 };
-        (StackPanel screen, Label goldLabel, Button buyButton) = CreateScreen();
         screen.AddToRoot();
+        viewModel.Gold = 30;
+
+        screen.BindingContext.ShouldBeNull();
+        goldLabel.Text.ShouldBe("1");
+
         screen.BindingContext = viewModel;
-
-        Gum.GumService.Default.Root.Children.Clear();
-        viewModel.Gold = 50;
-
-        // Pinned current behavior: Clear() only unparents, so an explicitly assigned context stays
-        // and the detached screen keeps receiving view model changes (it is not collected while the
-        // view model lives).
-        screen.Visual.Parent.ShouldBeNull();
-        goldLabel.Text.ShouldBe("50");
-        buyButton.IsEnabled.ShouldBeTrue();
+        goldLabel.Text.ShouldBe("30");
+        viewModel.Gold = 31;
+        goldLabel.Text.ShouldBe("31");
     }
 
     [Fact]
-    public void RootChildrenClear_ThenNewScreenWithSameViewModel_NewScreenFollowsViewModel()
+    public void RemoveFromRoot_ThenNewScreenWithSameViewModel_OnlyNewScreenFollowsViewModel()
     {
         GameViewModel viewModel = new() { Gold = 1 };
-        (StackPanel oldScreen, _, _) = CreateScreen();
-        oldScreen.AddToRoot();
-        oldScreen.BindingContext = viewModel;
-
-        Gum.GumService.Default.Root.Children.Clear();
-        (StackPanel newScreen, Label goldLabel, Button buyButton) = CreateScreen();
-        newScreen.AddToRoot();
-        newScreen.BindingContext = viewModel;
-        viewModel.Gold = 20;
-
-        goldLabel.Text.ShouldBe("20");
-        buyButton.IsEnabled.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void RemoveFromRoot_ThenNewScreenWithSameViewModel_NewScreenFollowsViewModel()
-    {
-        GameViewModel viewModel = new() { Gold = 1 };
-        (StackPanel oldScreen, _, _) = CreateScreen();
+        (StackPanel oldScreen, Label oldGoldLabel, _) = CreateScreen();
         oldScreen.AddToRoot();
         oldScreen.BindingContext = viewModel;
 
@@ -100,51 +162,126 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
 
         goldLabel.Text.ShouldBe("20");
         buyButton.IsEnabled.ShouldBeTrue();
+        oldGoldLabel.Text.ShouldBe("1");
     }
 
     [Fact]
-    public void RemoveFromRoot_ThenAddToRootAgain_ScreenFollowsViewModelAgain()
+    public void ReparentBetweenNonRootParents_ExplicitContext_IsKept()
     {
         GameViewModel viewModel = new() { Gold = 1 };
-        (StackPanel screen, Label goldLabel, _) = CreateScreen();
+        StackPanel screen = new();
         screen.AddToRoot();
-        screen.BindingContext = viewModel;
+        StackPanel firstPanel = new();
+        StackPanel secondPanel = new();
+        screen.AddChild(firstPanel);
+        screen.AddChild(secondPanel);
+        Label goldLabel = new();
+        goldLabel.SetBinding(nameof(Label.Text), nameof(GameViewModel.Gold));
+        firstPanel.AddChild(goldLabel);
+        goldLabel.BindingContext = viewModel;
+
+        secondPanel.AddChild(goldLabel);
+        viewModel.Gold = 12;
+
+        goldLabel.BindingContext.ShouldBe(viewModel);
+        goldLabel.Text.ShouldBe("12");
+
+        goldLabel.Visual.Parent = null;
+        viewModel.Gold = 13;
+        goldLabel.BindingContext.ShouldBe(viewModel);
+        goldLabel.Text.ShouldBe("13");
+    }
+
+    [Fact]
+    public void ReparentBetweenNonRootParents_InheritedContext_FollowsNewParent()
+    {
+        GameViewModel firstViewModel = new() { Gold = 1 };
+        GameViewModel secondViewModel = new() { Gold = 2 };
+        StackPanel firstPanel = new();
+        firstPanel.BindingContext = firstViewModel;
+        StackPanel secondPanel = new();
+        secondPanel.BindingContext = secondViewModel;
+        Label goldLabel = new();
+        goldLabel.SetBinding(nameof(Label.Text), nameof(GameViewModel.Gold));
+        firstPanel.AddChild(goldLabel);
+        goldLabel.Text.ShouldBe("1");
+
+        secondPanel.AddChild(goldLabel);
+
+        goldLabel.BindingContext.ShouldBe(secondViewModel);
+        goldLabel.Text.ShouldBe("2");
+        firstPanel.BindingContext.ShouldBe(firstViewModel);
+    }
+
+    [Fact]
+    public void PopupAndModalRootRemoval_ExplicitContext_IsKept()
+    {
+        GameViewModel viewModel = new() { Gold = 1 };
+        (StackPanel popup, Label goldLabel, _) = CreateScreen();
+        popup.BindingContext = viewModel;
+
+        FrameworkElement.PopupRoot.AddChild(popup.Visual);
+        popup.Visual.Parent = null;
+        FrameworkElement.ModalRoot.AddChild(popup.Visual);
+        FrameworkElement.ModalRoot.Children.Clear();
+        viewModel.Gold = 8;
+
+        popup.BindingContext.ShouldBe(viewModel);
+        goldLabel.Text.ShouldBe("8");
+    }
+
+    [Fact]
+    public void ComboBoxInScreen_DropDownOpenedClosedAndOpened_ItemsKeepTheirContext()
+    {
+        StackPanel screen = new();
+        screen.AddToRoot();
+        ComboBox comboBox = new();
+        screen.AddChild(comboBox);
+        comboBox.Items.Add("first");
+        comboBox.Items.Add("second");
+
+        comboBox.IsDropDownOpen = true;
+        comboBox.IsDropDownOpen = false;
+        comboBox.IsDropDownOpen = true;
+
+        comboBox.ListBox.ListBoxItems[1].BindingContext.ShouldBe("second");
+    }
+
+    [Fact]
+    public void ListBoxInScreen_RemovedAndAddedAgain_ItemsKeepTheirContext()
+    {
+        StackPanel screen = new();
+        screen.AddToRoot();
+        ListBox listBox = new();
+        screen.AddChild(listBox);
+        listBox.Items.Add("first");
+        listBox.Items.Add("second");
 
         screen.RemoveFromRoot();
         screen.AddToRoot();
-        viewModel.Gold = 30;
 
-        goldLabel.Text.ShouldBe("30");
+        listBox.ListBoxItems[1].BindingContext.ShouldBe("second");
     }
 
+#pragma warning disable CS0618 // AddToManagers is obsolete; pinned so it keeps working.
     [Fact]
-    public void RootChildrenClear_ThenAddToRootAgain_ScreenFollowsViewModel()
+    public void AddToManagers_ExplicitContext_FollowsViewModelUntilRemovedFromManagers()
     {
         GameViewModel viewModel = new() { Gold = 1 };
         (StackPanel screen, Label goldLabel, _) = CreateScreen();
-        screen.AddToRoot();
+        screen.Visual.AddToManagers(SystemManagers.Default, null);
         screen.BindingContext = viewModel;
 
-        Gum.GumService.Default.Root.Children.Clear();
-        screen.AddToRoot();
-        viewModel.Gold = 30;
+        viewModel.Gold = 5;
+        goldLabel.Text.ShouldBe("5");
 
-        goldLabel.Text.ShouldBe("30");
+        screen.Visual.RemoveFromManagers();
+        viewModel.Gold = 6;
+
+        screen.BindingContext.ShouldBeNull();
+        goldLabel.Text.ShouldBe("5");
     }
-
-    [Fact]
-    public void RootChildrenClear_ContextAssignedBeforeAddToRoot_ScreenKeepsFollowingViewModel()
-    {
-        GameViewModel viewModel = new() { Gold = 1 };
-        (StackPanel screen, Label goldLabel, _) = CreateScreen();
-        screen.BindingContext = viewModel;
-        screen.AddToRoot();
-
-        Gum.GumService.Default.Root.Children.Clear();
-        viewModel.Gold = 7;
-
-        goldLabel.Text.ShouldBe("7");
-    }
+#pragma warning restore CS0618
 
     [Fact]
     public void DependsOn_UndottedComputedProperty_UpdatesBoundIsEnabledOnEachChange()

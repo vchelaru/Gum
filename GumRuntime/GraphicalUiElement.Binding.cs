@@ -128,6 +128,11 @@ public partial class GraphicalUiElement
         if (args.OldValue is GraphicalUiElement old)
         {
             old.BindingContextChanged -= ParentBindingContextChanged;
+
+            if (old.ClearsBindingContextOfRemovedChildren)
+            {
+                BindingContext = null;
+            }
         }
 
         GraphicalUiElement? newParent = args.NewValue as GraphicalUiElement;
@@ -150,6 +155,13 @@ public partial class GraphicalUiElement
     }
 
     public event EventHandler<BindingContextChangedEventArgs>? InheritedBindingContextChanged;
+
+    /// <summary>
+    /// Whether a child that leaves this element, by any path, has its own explicitly set BindingContext
+    /// set to null. Descendants that inherited it lose it with it; descendants given their own keep
+    /// theirs. The GumService sets this on its Root; popup and modal roots leave it off.
+    /// </summary>
+    internal bool ClearsBindingContextOfRemovedChildren { get; set; }
 
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "Automatic teardown clearing BindingContext when this element is removed from " +
@@ -209,6 +221,13 @@ public partial class GraphicalUiElement
     }
 
     object? mBindingContext;
+    /// <summary>
+    /// The object this element's bindings read from and write to. Children inherit it unless they
+    /// are given their own. Leaving the root, by any path (<see cref="RemoveFromRoot"/>, removing
+    /// from or clearing the root's <see cref="Children"/>, or assigning another
+    /// <see cref="Parent"/>), sets this element's own BindingContext to null, so children that inherit
+    /// it lose it too; a child given its own keeps it. Moving between other parents keeps it.
+    /// </summary>
     public object? BindingContext
     {
         get => mBindingContext ?? mInheritedBindingContext;

@@ -25,6 +25,8 @@ child.BindingContext = other;     // explicit overrides inherited
 
 Subscribes to `INotifyPropertyChanged` and updates bound UI properties on change.
 
+**Leaving the root clears the element's own context.** Any path off the GumService `Root` (Forms or visual `RemoveFromRoot`, `Root.Children.Remove`/`Clear`, `RemoveChild`, `Parent = null`, assigning another parent) sets `BindingContext = null` on the element that left (`HandleBindingParentChanged`, when the old parent has `ClearsBindingContextOfRemovedChildren`, which GumService sets on its `Root`). Descendants that inherited it lose it with it; a descendant given its own keeps it, which is what keeps the item contexts ListBox/ComboBox/Menu/TabControl assign to their rows. A re-added screen needs its context assigned again. Moving between other parents keeps it, and so does leaving `PopupRoot`/`ModalRoot`: popups such as a ComboBox drop-down leave and rejoin those roots on every open and close. The obsolete `AddToManagers` path still clears on `RemoveFromManagers` (`RemoveBindingContextRecursively`, which also clears descendants).
+
 ## GraphicalUiElement Binding (Visuals)
 
 Simple string-only binding. No converters, no modes, no path traversal:

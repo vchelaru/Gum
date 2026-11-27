@@ -153,7 +153,12 @@ Removing UI does not destroy it. A removed element is an ordinary C# object with
 
 * Gum controls, visuals, and screens do not implement `IDisposable`, so there is nothing to dispose.
 * The element keeps its properties, its children, and any event handlers you attached, so you can call `AddToRoot` again to show it as it was.
+* Gum sets the element's own `BindingContext` to null, so it and the children that inherit it stop updating from its view model. A child given its own `BindingContext` keeps it. Set `BindingContext` again after you call `AddToRoot` on it.
 * Once your code holds no references to it, the .NET garbage collector frees it like any other object.
+
+{% hint style="info" %}
+Clearing `BindingContext` on removal is available in December 2026, or now if building Gum from source. Before, removed UI kept its `BindingContext` and kept updating from its view model.
+{% endhint %}
 
 The last point means removed UI stays in memory as long as something references it. Fields that hold a screen keep it alive, which is what you want when reusing it. A less obvious reference is an event subscription on a longer-lived object. If a screen subscribes to an event on a static class or a game-wide service, that object holds a reference to the screen, so unsubscribe when you are done with the screen.
 

@@ -288,11 +288,13 @@ public partial class GumService : IGumService
             if (_root != null)
             {
                 _root.Children.CollectionChanged -= HandleRootChildrenCollectionChanged;
+                _root.ClearsBindingContextOfRemovedChildren = false;
             }
 
             _root = value;
             _rootOwnedByGumService = false;
             _root.Children.CollectionChanged += HandleRootChildrenCollectionChanged;
+            _root.ClearsBindingContextOfRemovedChildren = true;
         }
     }
 

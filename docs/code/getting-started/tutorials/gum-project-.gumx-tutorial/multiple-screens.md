@@ -138,6 +138,12 @@ Each screen removes everything under the root with `GumUI.Root.Children.Clear()`
 
 {% hint style="info" %}
 `Root.Children.Clear()` removes everything under Root. If other top-level content should stay (a HUD, for example), call `RemoveFromRoot()` on the screen instead, which removes only that screen. `PopupRoot` and `ModalRoot` are not affected by either.
+
+Both set the removed screen's own `BindingContext` to null, so controls inside it that inherit it stop updating too. Set `BindingContext` again when you re-add a screen.
+{% endhint %}
+
+{% hint style="info" %}
+Clearing `BindingContext` on removal is available in December 2026, or now if building Gum from source. Before, a removed screen kept its `BindingContext` and kept updating from its view model.
 {% endhint %}
 
 <figure><img src="../../../../.gitbook/assets/24_18 29 52.gif" alt=""><figcaption><p>The Go to Screen button destroys the current Screen and shows the next Screen</p></figcaption></figure>
