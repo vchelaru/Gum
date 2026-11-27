@@ -2984,6 +2984,24 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public bool IsDataBound(string propertyName) => PropertyRegistry.GetBindingExpression(propertyName) != null;
 
+    // Item display text (UpdateToObject) never overwrites a text visual whose Text is bound,
+    // on the visual itself or on the Forms control wrapping it. FRB's GraphicalUiElement binding
+    // comes from Glue's embedded copy, so only the Forms-level check applies there.
+    private protected static bool IsTextDataBound(GraphicalUiElement? textVisual)
+    {
+        if (textVisual == null)
+        {
+            return false;
+        }
+#if !FRB
+        if (textVisual.IsDataBound("Text"))
+        {
+            return true;
+        }
+#endif
+        return ((textVisual as InteractiveGue)?.FormsControlAsObject as FrameworkElement)?.IsDataBound("Text") == true;
+    }
+
     // True while a BindingContext change is being relayed to this control's bindings, before
     // OnBindingContextChanged runs.
     bool _isRelayingBindingContextChange;
