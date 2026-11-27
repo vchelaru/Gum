@@ -188,8 +188,91 @@ public class BindingPathWarningTests : BaseTestClass
         flat.Text.ShouldBe("5 gold");
     }
 
+    [Fact]
+    public void SetBinding_BaseTypedIntermediate_MemberOnRuntimeType_NeverReports()
+    {
+        GameViewModel viewModel = new GameViewModel { Champion = new ChampionViewModel { Title = "Legendary" } };
+        Label label = new Label { BindingContext = viewModel };
+        TextRuntime text = new TextRuntime { BindingContext = viewModel };
+
+        label.SetBinding(nameof(Label.Text), new Binding("Champion.Title"));
+        text.SetBinding(nameof(TextRuntime.Text), "Champion.Title");
+
+        _reports.ShouldBeEmpty();
+        label.Text.ShouldBe("Legendary");
+        text.Text.ShouldBe("Legendary");
+    }
+
+    [Fact]
+    public void SetBinding_BaseTypedIntermediate_MemberMissingOnRuntimeType_ReportsRuntimeType()
+    {
+        GameViewModel viewModel = new GameViewModel { Champion = new ChampionViewModel() };
+        Label label = new Label { BindingContext = viewModel };
+        TextRuntime text = new TextRuntime { BindingContext = viewModel };
+
+        label.SetBinding(nameof(Label.Text), new Binding("Champion.Titel"));
+        text.SetBinding(nameof(TextRuntime.Text), "Champion.Titel");
+
+        _reports.ShouldBe(new[]
+        {
+            "Binding path 'Champion.Titel' for Label.Text does not resolve: ChampionViewModel has no property 'Titel' (BindingContext: GameViewModel).",
+            "Binding path 'Champion.Titel' for TextRuntime.Text does not resolve: ChampionViewModel has no property 'Titel' (BindingContext: GameViewModel)."
+        });
+    }
+
+    [Fact]
+    public void SetBinding_NullIntermediate_ReportsOnlyWhenNoRuntimeTypeCouldHaveMember()
+    {
+        GameViewModel viewModel = new GameViewModel { Champion = null };
+        Label baseTyped = new Label { BindingContext = viewModel };
+        Label sealedTyped = new Label { BindingContext = viewModel };
+
+        baseTyped.SetBinding(nameof(Label.Text), new Binding("Champion.Title"));
+        sealedTyped.SetBinding(nameof(Label.Text), new Binding("Referee.Title"));
+
+        _reports.ShouldBe(new[]
+        {
+            "Binding path 'Referee.Title' for Label.Text does not resolve: RefereeViewModel has no property 'Title' (BindingContext: GameViewModel)."
+        });
+    }
+
+    [Fact]
+    public void FrameworkElementSetBinding_MisspelledRootPath_ShowsFallbackValue()
+    {
+        Label label = new Label { BindingContext = new GameViewModel() };
+
+        label.SetBinding(nameof(Label.Text), new Binding("GoldDisplayy") { FallbackValue = "fallback" });
+
+        label.Text.ShouldBe("fallback");
+    }
+
+    private sealed class RefereeViewModel : ViewModel
+    {
+    }
+
+    private class ChampionViewModel : PlayerViewModel
+    {
+        public string Title
+        {
+            get => Get<string>();
+            set => Set(value);
+        }
+    }
+
     private class GameViewModel : ViewModel
     {
+        public PlayerViewModel? Champion
+        {
+            get => Get<PlayerViewModel?>();
+            set => Set(value);
+        }
+
+        public RefereeViewModel? Referee
+        {
+            get => Get<RefereeViewModel?>();
+            set => Set(value);
+        }
+
         public int Gold
         {
             get => Get<int>();
