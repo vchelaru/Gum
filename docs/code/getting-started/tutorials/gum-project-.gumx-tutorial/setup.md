@@ -33,41 +33,21 @@ Once you are finished, your game project should reference the `Gum.MonoGame` pro
 
 Next we'll create a project in the Gum UI tool. If you have not yet run the Gum tool, you can get setup instructions in the Gum [Setup page](../../../../gum-tool/setup/).
 
-Once you have the tool downloaded, run it. You should have an empty project.
+Once you have the tool downloaded, run it and select **File** > **New Project**. In the **New Project** dialog:
 
-<figure><img src="../../../../.gitbook/assets/image (176).png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
+1. Set **Project name** to `GumProject`.
+2. Set **File format** to `.gumx (XML)`.
+3. Set **Location** to your game's Content folder. Gum creates a GumProject folder inside it to hold the project's files.
+4. Leave **Include Forms controls (recommended)** checked. Forms components are premade components for standard UI elements such as Button, TextBox, and ListBox. We'll use these components in later tutorials.
+5. Uncheck **Include demo screen**. This tutorial does not use DemoScreenGum.
+6. Leave **Create C# project** unchecked, since you are adding Gum to an existing game.
+7. Click **OK**.
 
-We need to save our Gum project in the Content folder of our game. Gum projects include many files. it's best to keep a Gum project and all of its files in a dedicated folder.
+<figure><img src="../../../../.gitbook/assets/27_07 56 59.png" alt=""><figcaption><p>New Project dialog set up for this tutorial</p></figcaption></figure>
 
-Add a new folder to your Game's Content folder which will contain the Gum project, such as GumProject.
-
-<figure><img src="../../../../.gitbook/assets/image (177).png" alt=""><figcaption><p>GumProject folder in Visual Studio</p></figcaption></figure>
-
-In the Gum tool click File -> Save Project.
-
-<figure><img src="../../../../.gitbook/assets/image (178).png" alt=""><figcaption><p>File -> Save project menu item</p></figcaption></figure>
-
-Select the GumProject folder created earlier as the target location. Give your Gum project a name such as GumProject.
-
-<figure><img src="../../../../.gitbook/assets/image (179).png" alt=""><figcaption><p>Save GumProject in the newly-created GumProject folder</p></figcaption></figure>
-
-After your project is saved it should appear in Visual Studio.
+After your project is created it should appear in Visual Studio.
 
 <figure><img src="../../../../.gitbook/assets/image (180).png" alt=""><figcaption><p>Gum project in Visual Studio</p></figcaption></figure>
-
-We can add default Forms components to our project. Forms components are premade components for standard UI elements such as Button, TextBox, and ListBox. We'll use these components in later tutorials.
-
-To add Gum Forms components in Gum, select Content -> Add Forms Components
-
-<figure><img src="../../../../.gitbook/assets/AddForms.png" alt=""><figcaption><p>Add Forms Components menu item</p></figcaption></figure>
-
-This tutorial will not use the DemoScreenGum, so leave this option unchecked and press OK.
-
-<figure><img src="../../../../.gitbook/assets/image (7) (1).png" alt=""><figcaption><p>Leave Include DemoScreenGum unchecked</p></figcaption></figure>
-
-If asked, click **Yes** when asked about overwriting the default standards.
-
-<figure><img src="../../../../.gitbook/assets/image (10).png" alt=""><figcaption><p>Click, Yes to modify standards with the default Forms styling</p></figcaption></figure>
 
 Your project now includes Forms components.
 

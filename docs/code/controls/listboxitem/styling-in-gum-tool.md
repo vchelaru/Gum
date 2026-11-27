@@ -32,3 +32,14 @@ Two more states are recognized at runtime, but the behavior does not create them
 
 To add either one, select `ListBoxItemCategory` in the **States** tab and add a state with the matching name. For more information see the [Categories](../../../gum-tool/gum-elements/states/categories.md) page.
 
+
+## Using Your Component in One ListBox
+
+To use your component for one ListBox only, set that ListBox's `VisualTemplate` in code:
+
+```csharp
+// Initialize
+ShopListBox.VisualTemplate = new Gum.Forms.VisualTemplate(() => new ShopItemRuntime(tryCreateFormsObject: false));
+```
+
+For more information see the [Customizing with VisualTemplate](../listbox.md#customizing-with-visualtemplate) section. Making your component the `ListBoxItemBehavior`'s [Default Implementation](../../../gum-tool/gum-elements/behaviors/default-implementation.md) instead changes the items of every ListBox and ComboBox.
