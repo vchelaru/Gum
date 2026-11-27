@@ -125,7 +125,7 @@ All binding features work with indexed paths: modes, converters, StringFormat, F
 
 ## Non-Obvious Behaviors
 
-**A string path that misses a member reports once, never throws.** Both systems build the message with `BinderHelpers.GetMissingPathMessage` and send it through `ElementSaveExtensions.ReportDiagnostic` (the `[Gum]` `PropertyAssignmentError` channel), once per binding, when a non-null context is attached. The check walks declared member types and stays quiet once it reaches `object` or an interface.
+**A string path that misses a member reports once, never throws.** Both systems build the message with `BinderHelpers.GetMissingPathMessage` and send it through `ElementSaveExtensions.ReportDiagnostic` (the `[Gum]` `PropertyAssignmentError` channel), once per binding, when a non-null context is attached. The check walks declared member types; past the root, a member the declared type lacks is judged on the object held there, and when that object is null it reports only for a sealed declared type.
 
 **BindableGue is deprecated.** `GraphicalUiElement` now owns all binding logic. `BindableGue` exists only as a legacy alias.
 
@@ -141,4 +141,4 @@ All binding features work with indexed paths: modes, converters, StringFormat, F
 
 **`UpdateSourceTrigger.Default` is project-configurable.** `Binding.DefaultUpdateTriggers` lets a project register a default trigger per control type + property, resolved in `NpcBindingExpression.HookUpdateSource` before falling back to `PropertyChanged`. See [Default Update Triggers](../../../docs/code/binding-viewmodels/advanced-binding-options.md#default-update-triggers).
 
-**Forms getters tell a null leaf from a broken path.** `BinderHelpers.BuildGetter` returns null for a null leaf (the target shows `TargetNullValue`) and `GumProperty.UnsetValue` for a null intermediate or a missing member (`FallbackValue`). Past the root, a segment the declared type lacks (an intermediate typed `object` or a base class) is resolved on the held object's runtime type at every read and write (`GetOnRuntimeType`/`SetOnRuntimeType`); GUE bindings already walk runtime types through `PropertyPathObserver`.
+**Forms getters tell a null leaf from a broken path.** `BinderHelpers.BuildGetter` returns null for a null leaf (the target shows `TargetNullValue`) and `GumProperty.UnsetValue` for a null intermediate or a missing member (`FallbackValue`, also for a missing root member). Past the root, a segment the declared type lacks (an intermediate typed `object` or a base class) is resolved on the held object's runtime type at every read and write (`GetOnRuntimeType`/`SetOnRuntimeType`); GUE bindings already walk runtime types through `PropertyPathObserver`.

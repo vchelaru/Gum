@@ -104,8 +104,9 @@ internal static class BinderHelpers
     /// <summary>
     /// Returns the message reporting that <paramref name="path"/> names a member that the type of
     /// <paramref name="bindingContext"/> (or of an intermediate segment) does not have, or null when every
-    /// segment resolves. Segments are checked on declared member types; a walk that reaches <c>object</c> or an
-    /// interface stops without a message, since the runtime value there may still have the member.
+    /// segment resolves. Segments are checked on declared member types. Past the root, a segment the declared type
+    /// lacks is judged on the object the path holds there at the time of the call; when that object is null, the
+    /// message is reported only if the declared type is sealed, since a derived value could still have the member.
     /// </summary>
     [RequiresUnreferencedCode(
         "Walks the path on bindingContext's own type by name (GetProperty/GetField/GetEvent). Those members " +
@@ -120,24 +121,33 @@ internal static class BinderHelpers
 
         PathSegment[] segments = ParseSegments(path);
         Type contextType = bindingContext.GetType();
-        string missingName;
-        if (TryWalkToLeafOwner(contextType, segments, out Type owner, out int failedIndex))
+        int missingIndex = TryWalkToLeafOwner(contextType, segments, out Type owner, out int failedIndex)
+            ? segments.Length - 1
+            : failedIndex;
+        bool allowEvent = allowEventLeaf && missingIndex == segments.Length - 1;
+        if (HasMember(owner, segments[missingIndex], allowEvent))
         {
-            PathSegment leaf = segments[^1];
-            bool leafExists = TryGetMember(owner, leaf.Name, out _, out _) ||
-                (allowEventLeaf && !leaf.Index.HasValue && owner.GetEvent(leaf.Name) != null);
-            if (leafExists)
+            return null;
+        }
+
+        if (missingIndex > 0)
+        {
+            if (TryWalkRuntime(bindingContext, segments, missingIndex, out object? runtimeOwner))
+            {
+                if (HasMember(runtimeOwner!.GetType(), segments[missingIndex], allowEvent))
+                {
+                    return null;
+                }
+                owner = runtimeOwner.GetType();
+            }
+            else if (!owner.IsSealed && !owner.IsValueType)
             {
                 return null;
             }
-            missingName = leaf.Name;
-        }
-        else
-        {
-            missingName = segments[failedIndex].Name;
         }
 
-        if (string.IsNullOrEmpty(missingName) || owner == typeof(object) || owner.IsInterface)
+        string missingName = segments[missingIndex].Name;
+        if (string.IsNullOrEmpty(missingName))
         {
             return null;
         }
@@ -200,8 +210,8 @@ internal static class BinderHelpers
             }
 
             PathSegment segment = segments[i];
-            // The root is cast to its runtime type, so a miss there is a real miss and throws below.
-            if (i > 0 && !TryGetMember(current.Type, segment.Name, out _, out _))
+            // At the root (already its runtime type) this reads as a broken path, so the target shows FallbackValue.
+            if (!TryGetMember(current.Type, segment.Name, out _, out _))
             {
                 result = Expression.Call(GetOnRuntimeTypeMethod,
                     Expression.Convert(current, typeof(object)), Expression.Constant(segments), Expression.Constant(i));
@@ -324,6 +334,26 @@ internal static class BinderHelpers
                 field.SetValue(owner, value);
                 break;
         }
+    }
+
+    [RequiresUnreferencedCode("Looks up members by name on runtime types.")]
+    private static bool HasMember(Type owner, PathSegment segment, bool allowEvent) =>
+        TryGetMember(owner, segment.Name, out _, out _) ||
+        (allowEvent && !segment.Index.HasValue && owner.GetEvent(segment.Name) != null);
+
+    // Walks segments[0..count) on runtime values. False when a value along the way is null or lacks the member.
+    [RequiresUnreferencedCode("Looks up members by name on runtime types.")]
+    private static bool TryWalkRuntime(object root, PathSegment[] segments, int count, out object? holder)
+    {
+        holder = root;
+        for (int i = 0; i < count; i++)
+        {
+            if (holder == null || !TryGetRuntimeValue(holder, segments[i], out holder))
+            {
+                return false;
+            }
+        }
+        return holder != null;
     }
 
     [RequiresUnreferencedCode("Looks up members by name on runtime types.")]
