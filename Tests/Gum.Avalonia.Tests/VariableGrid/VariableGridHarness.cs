@@ -240,11 +240,15 @@ internal sealed class VariableGridHarness : IDisposable
         Row(memberName).Displayer as T
         ?? throw new InvalidOperationException($"The {memberName} row shows a {Row(memberName).Displayer?.GetType().Name ?? "nothing"}, not a {typeof(T).Name}.");
 
-    /// <summary>The text field of a text-box row.</summary>
+    /// <summary>The text field of a text-box row, or the typed field of a slider, angle or file row, or a color row's hex field.</summary>
     public TextBox TextField(string memberName) => Row(memberName).Displayer switch
     {
         TextBoxDisplay single => single.TextBox,
         MultiLineTextBoxDisplay multi => multi.EditorTextBox,
+        SliderDisplay slider => slider.TextBox,
+        AngleSelectorDisplay angle => angle.TextBox,
+        FileSelectionDisplay file => file.TextBox,
+        ColorDisplay color => color.HexTextBox,
         _ => Editor<TextBoxDisplay>(memberName).TextBox,
     };
 

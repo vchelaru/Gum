@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.VisualTree;
+using AvaloniaDataUi;
 using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Plugins.VariableGrid;
 using Gum.DataTypes;
@@ -82,6 +83,122 @@ public class VariableFocusLossScenarioTests
         {
             localization.Clear();
         }
+    }
+
+    /// <summary>
+    /// For each editor the grid has: edit through it, keep or put focus back in it, undo, then leave by Tab
+    /// or by clicking another field. Leaving writes nothing, so the undo stands and history keeps the one
+    /// entry with its redo. Then the same for redo.
+    /// </summary>
+    [AvaloniaTheory]
+    [InlineData("TextBox", "Tab")]
+    [InlineData("TextBox", "Click")]
+    [InlineData("MultiLineText", "Tab")]
+    [InlineData("MultiLineText", "Click")]
+    [InlineData("EditableCombo", "Tab")]
+    [InlineData("EditableCombo", "Click")]
+    [InlineData("Combo", "Tab")]
+    [InlineData("Combo", "Click")]
+    [InlineData("CheckBox", "Tab")]
+    [InlineData("CheckBox", "Click")]
+    [InlineData("Toggle", "Tab")]
+    [InlineData("Toggle", "Click")]
+    [InlineData("Slider", "Tab")]
+    [InlineData("Slider", "Click")]
+    [InlineData("Angle", "Tab")]
+    [InlineData("Angle", "Click")]
+    [InlineData("ColorHex", "Tab")]
+    [InlineData("ColorHex", "Click")]
+    [InlineData("FileBox", "Tab")]
+    [InlineData("FileBox", "Click")]
+    public void UndoAndRedo_WhileTheEditorKeepsFocus_ThenLeaving_WriteNothingBack(string editor, string leaveBy)
+    {
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave button = grid.Project.AddComponent("Button");
+        grid.Project.AddInstance(button, "Box", "Container");
+        string itemType = editor is "MultiLineText" or "FileBox" ? "Text" : "Sprite";
+        InstanceSave item = grid.Project.AddInstance(button, "Item", itemType);
+        if (editor == "FileBox")
+        {
+            button.GetDefaultStateOrThrow().SetValue("Item.UseCustomFont", true, "bool");
+        }
+        grid.Select(button);
+        grid.Select(item);
+
+        (string Member, Func<Control> FocusTarget, Action Edit) arm = editor switch
+        {
+            "TextBox" => ("X", () => grid.TextField("X"), () => grid.TypeAndEnter("X", "33")),
+            "MultiLineText" => ("Text", () => grid.TextField("Text"), () => grid.TypeAndLeave("Text", "Typed words")),
+            "EditableCombo" => ("Parent", () => ComboField(grid, "Parent"), () => grid.PickComboItem("Parent", "Box")),
+            "Combo" => ("Blend", () => grid.Combo("Blend"), () => grid.PickComboItem("Blend", "Additive")),
+            "CheckBox" => ("Visible", () => grid.Editor<CheckBoxDisplay>("Visible").CheckBox, () => grid.Input.Click(grid.Editor<CheckBoxDisplay>("Visible").CheckBox)),
+            "Toggle" => ("XUnits", () => grid.Toggles("XUnits")[0], () => grid.Input.Click(grid.Toggles("XUnits")[1])),
+            "Slider" => ("Alpha", () => grid.TextField("Alpha"), () => grid.TypeAndEnter("Alpha", "100")),
+            "Angle" => ("Rotation", () => grid.TextField("Rotation"), () => grid.TypeAndEnter("Rotation", "45")),
+            "ColorHex" => ("Red", () => grid.TextField("Color"), () => grid.TypeAndEnter("Color", "0A141E")),
+            "FileBox" => ("CustomFontFile", () => ShownField(grid, "CustomFontFile"), () => grid.Input.TypeAndEnter(ShownField(grid, "CustomFontFile"), "Typed.fnt")),
+            _ => throw new ArgumentOutOfRangeException(nameof(editor)),
+        };
+        (string member, Func<Control> focusTarget, Action edit) = arm;
+        string variableName = "Item." + member;
+        object? before = Stored(grid, variableName);
+        int historyCount = grid.UndoManager.CurrentElementHistory?.Actions.Count ?? 0;
+
+        edit();
+        object? edited = Stored(grid, variableName);
+        edited.ShouldNotBe(before, $"the {editor} edit should store a value");
+        grid.UndoManager.CurrentElementHistory!.Actions.Count.ShouldBe(historyCount + 1, "the edit records one history entry");
+
+        Focus(grid, focusTarget());
+        grid.Undo();
+        Leave(grid, leaveBy);
+        Stored(grid, variableName).ShouldBe(before, "leaving the field after the undo should not write its text back");
+        grid.UndoManager.CurrentElementHistory!.Actions.Count.ShouldBe(historyCount + 1, "leaving records no history entry");
+        grid.UndoManager.CanRedo().ShouldBeTrue("leaving should not discard the redo");
+
+        Focus(grid, focusTarget());
+        grid.Redo();
+        Leave(grid, leaveBy);
+        Stored(grid, variableName).ShouldBe(edited, "leaving the field after the redo should not write its text back");
+        grid.UndoManager.CurrentElementHistory!.Actions.Count.ShouldBe(historyCount + 1, "leaving records no history entry");
+    }
+
+    private static object? Stored(VariableGridHarness grid, string variableName) =>
+        VariableGridHarness.StoredValue(grid.SelectedState.SelectedElement!, variableName);
+
+    private static TextBox ComboField(VariableGridHarness grid, string member) =>
+        grid.Combo(member).GetVisualDescendants().OfType<TextBox>().Single();
+
+    private static TextBox ShownField(VariableGridHarness grid, string member)
+    {
+        SingleDataUiContainer row = grid.Row(member);
+        row.BringIntoView();
+        grid.Settle();
+        return row.GetVisualDescendants().OfType<TextBox>().FirstOrDefault(box => box.IsEffectivelyVisible)
+            ?? throw new InvalidOperationException($"The {member} row ({row.Displayer?.GetType().Name}) shows no text field.");
+    }
+
+    private static void Focus(VariableGridHarness grid, Control target)
+    {
+        if (!target.IsFocused)
+        {
+            target.Focus();
+            grid.Settle();
+        }
+        target.IsFocused.ShouldBeTrue("the editor should hold focus when the undo or redo runs");
+    }
+
+    private static void Leave(VariableGridHarness grid, string leaveBy)
+    {
+        if (leaveBy == "Tab")
+        {
+            grid.Input.Press(Key.Tab, PhysicalKey.Tab);
+        }
+        else
+        {
+            grid.Input.Click(grid.TextField("Y"));
+        }
+        grid.Settle();
     }
 
     private static void SelectNewInstance(VariableGridHarness grid, string type)
