@@ -321,8 +321,9 @@ public class DialogScenarioTests
     {
         using ProjectTreeHarness tree = new ProjectTreeHarness();
         AvaloniaTabManager tabs = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
-        tree.PickMainMenu("View", "View Animations");
-        AvaloniaPluginTab animations = tabs.AllTabs.Single(tab => tab.Title == "Animations" && tab.IsVisible);
+        // Shown directly, so the test does not depend on which way the View menu entry reads.
+        AvaloniaPluginTab animations = tabs.AllTabs.Single(tab => tab.Title == "Animations");
+        animations.Show();
         tree.Dialogs.AnswerNextSettingsPage<PluginsDialogViewModel>(SettingsPageIds.Plugins, dialog =>
         {
             PluginItemViewModel stateAnimation = dialog.Plugins.Single(plugin => plugin.DisplayText.StartsWith("State Animation Plugin", StringComparison.Ordinal));

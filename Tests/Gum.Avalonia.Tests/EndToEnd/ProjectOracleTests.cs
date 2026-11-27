@@ -49,6 +49,36 @@ public class ProjectOracleTests
     }
 
     [AvaloniaFact]
+    public void ATabATestLeftShowingWithoutTheTreeHarness_IsHiddenWhenTheNextHarnessStarts()
+    {
+        ToolStartup.EnsureInitialized();
+        AvaloniaTabManager tabs = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
+        AvaloniaPluginTab animations = tabs.AllTabs.Single(tab => tab.Title == "Animations");
+        try
+        {
+            // A test on the bare fixture selects an element with an animation file, which shows the tab.
+            using (ToolProjectFixture fixture = new ToolProjectFixture("GumProjectOracles"))
+            {
+                ComponentSave button = fixture.AddComponent("Button");
+                fixture.SelectedState.SelectedElement = null;
+                File.WriteAllText(Path.Combine(fixture.ProjectFolder, "Components", "ButtonAnimations.ganx"),
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<ElementAnimationsSave>\r\n  <Animations />\r\n</ElementAnimationsSave>");
+                fixture.SelectedState.SelectedElement = button;
+                animations.IsVisible.ShouldBeTrue("selecting an element with an animation file shows the tab");
+            }
+
+            using ProjectTreeHarness tree = new ProjectTreeHarness();
+            animations.IsVisible.ShouldBeFalse("every harness starts with the head's tabs as the tool starts them");
+            tree.PickMainMenu("View", "View Animations");
+            animations.IsVisible.ShouldBeTrue();
+        }
+        finally
+        {
+            animations.Hide();
+        }
+    }
+
+    [AvaloniaFact]
     [Trait("Feature", "FILE-001")]
     public void NewProject_ReloadResavesUnchanged()
     {

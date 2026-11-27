@@ -19,6 +19,7 @@ internal static class ToolStartup
 {
     private static bool _initialized;
     private static AvaloniaPluginTab? _variablesTab;
+    private static Dictionary<AvaloniaPluginTab, bool>? _tabVisibilityAtStartup;
 
     /// <summary>The Variables tab the singleton grid manager owns, as in the running tool.</summary>
     internal static AvaloniaPluginTab VariablesTab
@@ -70,5 +71,25 @@ internal static class ToolStartup
         // The standard-state refresh goes through the plugins, so they load first.
         StandardElementsManager.Self.Initialize();
         services.GetRequiredService<IStandardElementsManagerGumTool>().Initialize();
+
+        _tabVisibilityAtStartup = tabManager.AllTabs.ToDictionary(tab => tab, tab => tab.IsVisible);
+    }
+
+    /// <summary>
+    /// Puts each of the head's tabs back to its visibility right after startup. The tabs outlive
+    /// every test, and selecting an element with an animation file shows the Animations tab, so a
+    /// fixture starts and ends with the tabs as the tool starts them, whatever an earlier test left.
+    /// Does nothing before <see cref="EnsureInitialized"/> has run.
+    /// </summary>
+    internal static void ResetTabVisibility()
+    {
+        if (_tabVisibilityAtStartup == null)
+        {
+            return;
+        }
+        foreach (KeyValuePair<AvaloniaPluginTab, bool> tab in _tabVisibilityAtStartup)
+        {
+            tab.Key.IsVisible = tab.Value;
+        }
     }
 }
