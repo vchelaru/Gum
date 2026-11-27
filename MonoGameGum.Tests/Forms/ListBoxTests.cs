@@ -34,6 +34,49 @@ public class ListBoxTests : BaseTestClass
             listBox.ScrollIntoView("not in the list");
         });
         listBox.ListBoxItems.Count.ShouldBe(1);
+        listBox.Items.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Items_AssignNull_ShouldClearRowsAndLeaveEmptyCollection()
+    {
+        ListBox listBox = new();
+        listBox.Items.Add("A");
+        listBox.Items.Add("B");
+
+        listBox.Items = null;
+
+        listBox.Items.ShouldNotBeNull();
+        listBox.Items.Count.ShouldBe(0);
+        listBox.ListBoxItems.Count.ShouldBe(0);
+        listBox.Items.Add("C");
+        listBox.ListBoxItems.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Items_BoundToNullCollection_ShouldBeEmptyNotNull()
+    {
+        NullableItemsViewModel vm = new() { Items = new ObservableCollection<string> { "A", "B" } };
+        ListBox listBox = new();
+        listBox.SetBinding(nameof(ListBox.Items), nameof(NullableItemsViewModel.Items));
+        listBox.BindingContext = vm;
+        listBox.ListBoxItems.Count.ShouldBe(2);
+
+        vm.Items = null;
+
+        listBox.Items.ShouldNotBeNull();
+        listBox.Items.Count.ShouldBe(0);
+        listBox.ListBoxItems.Count.ShouldBe(0);
+        vm.Items.ShouldBeNull("because a null view-model collection is not replaced by the control's empty one");
+    }
+
+    private class NullableItemsViewModel : Gum.Mvvm.ViewModel
+    {
+        public ObservableCollection<string>? Items
+        {
+            get => Get<ObservableCollection<string>?>();
+            set => Set(value);
+        }
     }
 
     [Fact]
@@ -48,6 +91,7 @@ public class ListBoxTests : BaseTestClass
         listBox.Items = null;
 
         Should.NotThrow(() => listBox.Visual = visualWithItem);
+        listBox.Items.ShouldNotBeNull();
 
     }
 

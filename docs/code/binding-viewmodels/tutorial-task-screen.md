@@ -92,7 +92,7 @@ public class TaskScreen : FrameworkElement
     Button RemoveTaskButton;
     TextBox TaskNameTextBox;
 
-    TaskScreenViewModel ViewModel => (TaskScreenViewModel)BindingContext;
+    TaskScreenViewModel ViewModel => (TaskScreenViewModel)BindingContext!;
 
     public TaskScreen() : base(new ContainerRuntime())
     {
@@ -153,7 +153,7 @@ public class TaskScreen : FrameworkElement
 ```csharp
 class TaskScreen
 {
-    TaskScreenViewModel ViewModel => (TaskScreenViewModel)BindingContext;
+    TaskScreenViewModel ViewModel => (TaskScreenViewModel)BindingContext!;
     
     private void CustomInitialize()
     {

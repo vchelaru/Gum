@@ -173,7 +173,7 @@ Creating a local property for the ViewModel can also help simplify the code slig
 
 ```csharp
 
-SettingsViewModel ViewModel => (SettingsViewModel)BindingContext;
+SettingsViewModel ViewModel => (SettingsViewModel)BindingContext!;
 
 // this could be used to set up binding:
 

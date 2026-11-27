@@ -48,7 +48,7 @@ public class ItemsControl : ScrollViewer
         set;
     } = string.Empty;
 
-    IList? items = new ObservableCollection<object>();
+    IList items = new ObservableCollection<object>();
 
     // Set once Items is assigned, so the collection is the caller's rather than the control's own
     // default. Never cleared: the default is not reachable again by assignment.
@@ -76,8 +76,12 @@ public class ItemsControl : ScrollViewer
     /// the view model's collection whatever the binding mode. Moving a child directly within the
     /// InnerPanel's Children never reorders an item that is backed by other data (such as a view model);
     /// the caller owns that collection, and code that bypasses the ItemsControl does not write back to it.
+    ///
+    /// Items is never null. Assigning null (directly or through a binding to a null view model
+    /// collection) clears the rows and assigns a new empty collection.
     /// </remarks>
-    public IList? Items
+    [AllowNull]
+    public IList Items
     {
         get => items;
         set
@@ -86,27 +90,24 @@ public class ItemsControl : ScrollViewer
             {
                 RunWithAllLayoutSuspended(() =>
                 {
-                    if (items != null)
+                    ClearVisualsInternal();
+                    // The old collection is going away, so this Reset must not rebuild its rows.
+                    _isReplacingItemsCollection = true;
+                    try
                     {
-                        ClearVisualsInternal();
-                        // The old collection is going away, so this Reset must not rebuild its rows.
-                        _isReplacingItemsCollection = true;
-                        try
-                        {
-                            HandleItemsCollectionChanged(this,
-                                new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-                        }
-                        finally
-                        {
-                            _isReplacingItemsCollection = false;
-                        }
+                        HandleItemsCollectionChanged(this,
+                            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    }
+                    finally
+                    {
+                        _isReplacingItemsCollection = false;
                     }
 
                     if (items is INotifyCollectionChanged notifyCollectionChanged)
                     {
                         notifyCollectionChanged.CollectionChanged -= HandleItemsCollectionChanged;
                     }
-                    items = value;
+                    items = value ?? new ObservableCollection<object>();
                     _isItemsAssigned = true;
                     _visualAuthoredItems.Clear();
                     ForceUpdateToItems();
@@ -133,7 +134,7 @@ public class ItemsControl : ScrollViewer
             newNotifyCollectionChanged.CollectionChanged += HandleItemsCollectionChanged;
         }
 
-        if (items?.Count > 0)
+        if (items.Count > 0)
         {
             // refresh!
             var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
@@ -166,10 +167,7 @@ public class ItemsControl : ScrollViewer
             {
                 visualTemplate = value;
 
-                if (items != null)
-                {
-                    RebuildRowsForTemplateChange();
-                }
+                RebuildRowsForTemplateChange();
             }
         }
     }
@@ -182,7 +180,7 @@ public class ItemsControl : ScrollViewer
     {
         ClearVisualsInternal();
 
-        if (items?.Count > 0)
+        if (items.Count > 0)
         {
             // refresh!
             var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
@@ -273,7 +271,7 @@ public class ItemsControl : ScrollViewer
         {
             List<(GraphicalUiElement Visual, FrameworkElement Row)> authoredRows = FindAuthoredRows();
 
-            if (items != null && _isItemsAssigned)
+            if (_isItemsAssigned)
             {
                 // Before subscribing, so the panel handler does not read the removal as an item removal.
                 DetachAuthoredRows(authoredRows);
@@ -283,7 +281,7 @@ public class ItemsControl : ScrollViewer
 
             // Items added in code are control data, not template, so they follow the control to the
             // new Visual's panel. Items the previous Visual authored were dropped when it was removed.
-            List<object>? codeAddedItems = items?.Count > 0 ? items.Cast<object>().ToList() : null;
+            List<object>? codeAddedItems = items.Count > 0 ? items.Cast<object>().ToList() : null;
 
             if (CanAdoptVisualAuthoredItems)
             {
@@ -322,12 +320,12 @@ public class ItemsControl : ScrollViewer
     /// not write its template content into data it does not own, and a typed collection could not
     /// hold the authored controls at all.
     /// </summary>
-    protected bool CanAdoptVisualAuthoredItems => items != null && !_isItemsAssigned;
+    protected bool CanAdoptVisualAuthoredItems => !_isItemsAssigned;
 
     private List<(GraphicalUiElement Visual, FrameworkElement Row)> FindAuthoredRows()
     {
         List<(GraphicalUiElement Visual, FrameworkElement Row)> rows = new();
-        if (InnerPanel == null || items == null)
+        if (InnerPanel == null)
         {
             return rows;
         }
@@ -381,11 +379,6 @@ public class ItemsControl : ScrollViewer
     /// <param name="itemsIndex">The index in Items to insert at, or -1 to append.</param>
     protected void AdoptVisualAuthoredItem(object item, int itemsIndex = -1)
     {
-        if (items == null)
-        {
-            return;
-        }
-
         _visualAuthoredItems.Add(item);
         _isSyncingVisualAuthoredItems = true;
         try
@@ -429,11 +422,6 @@ public class ItemsControl : ScrollViewer
 
         List<object> authored = _visualAuthoredItems.ToList();
         _visualAuthoredItems.Clear();
-
-        if (items == null)
-        {
-            return;
-        }
 
         // The panel is no longer observed, so only the Items entries are removed; the old Visual
         // keeps its own content.
@@ -657,7 +645,7 @@ public class ItemsControl : ScrollViewer
     /// </summary>
     public void AddDecoration(GraphicalUiElement visual)
     {
-        object? anchor = items != null && items.Count > 0 ? items[items.Count - 1] : null;
+        object? anchor = items.Count > 0 ? items[items.Count - 1] : null;
         AddDecorationInternal(visual, anchor, after: true);
     }
 
@@ -667,7 +655,7 @@ public class ItemsControl : ScrollViewer
     /// </summary>
     public void InsertDecorationAfter(object item, GraphicalUiElement visual)
     {
-        if (items == null || !items.Contains(item))
+        if (!items.Contains(item))
         {
             throw new ArgumentException("The anchor item is not in the Items collection.", nameof(item));
         }
@@ -680,7 +668,7 @@ public class ItemsControl : ScrollViewer
     /// </summary>
     public void InsertDecorationBefore(object item, GraphicalUiElement visual)
     {
-        if (items == null || !items.Contains(item))
+        if (!items.Contains(item))
         {
             throw new ArgumentException("The anchor item is not in the Items collection.", nameof(item));
         }
@@ -865,7 +853,7 @@ public class ItemsControl : ScrollViewer
             {
                 var decoration = _decorations[i];
                 bool anchorMissing = decoration.Anchor != null &&
-                    (items == null || !items.Contains(decoration.Anchor));
+                    !items.Contains(decoration.Anchor);
                 if (anchorMissing)
                 {
                     if (decoration.Visual.Parent == InnerPanel)
@@ -917,7 +905,7 @@ public class ItemsControl : ScrollViewer
             return decoration.After ? children.Count : 0;
         }
 
-        int anchorItemIndex = items?.IndexOf(decoration.Anchor) ?? -1;
+        int anchorItemIndex = items.IndexOf(decoration.Anchor);
         if (anchorItemIndex < 0)
         {
             return children.Count;
@@ -982,7 +970,7 @@ public class ItemsControl : ScrollViewer
                 RunWithAllLayoutSuspended(() =>
                 {
                     ClearVisualsInternal();
-                    if (!_isReplacingItemsCollection && items?.Count > 0)
+                    if (!_isReplacingItemsCollection && items.Count > 0)
                     {
                         InsertItemVisuals(items, 0);
                     }

@@ -367,7 +367,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// </summary>
     internal void SetSelectedIndex(int value, bool deferIfPastEnd)
     {
-        int count = Items?.Count ?? 0;
+        int count = Items.Count;
         if (value == -1 || (value > -1 && value < count) || deferIfPastEnd)
         {
             // A real change of the selection, or a newer held value, replaces whatever was held.
@@ -408,7 +408,7 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 
         int deferred = _deferredSelectedIndex;
-        if (deferred >= 0 && deferred < (Items?.Count ?? 0))
+        if (deferred >= 0 && deferred < Items.Count)
         {
             _deferredSelectedIndex = -1;
             SetSelectedIndex(deferred, deferIfPastEnd: false);
@@ -1153,7 +1153,7 @@ public class ListBox : ItemsControl, IInputReceiver
                         (visual.Parent.Children[newIndex] as InteractiveGue)?.FormsControlAsObject as ListBoxItem;
 
                     // Dropping onto a decoration (or any non-row visual) is not a reorder; ignore it.
-                    if (draggedListBoxItem == null || targetListBoxItem == null || Items == null)
+                    if (draggedListBoxItem == null || targetListBoxItem == null)
                     {
                         return;
                     }
@@ -1561,7 +1561,6 @@ public class ListBox : ItemsControl, IInputReceiver
         if ((InnerPanel?.Children[newPanelIndex] as InteractiveGue)?.FormsControlAsObject
                 is not ListBoxItem moved
             || !ReferenceEquals(moved.DataObject, moved)
-            || Items == null
             || !Items.Contains(moved))
         {
             return;
@@ -1614,7 +1613,7 @@ public class ListBox : ItemsControl, IInputReceiver
                 newItem.UpdateState();
             }
 
-            if (!_isAddingFromItemsCollection && Items != null && !Items.Contains(listBoxItem))
+            if (!_isAddingFromItemsCollection && !Items.Contains(listBoxItem))
             {
                 // Directly-added ListBoxItem is its own backing object in Items (issue #556).
                 listBoxItem.DataObject = listBoxItem;
@@ -1707,7 +1706,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// <param name="scrollIntoViewStyle">The desired location of the item after scrolling.</param>
     public void ScrollIntoView(object item, ScrollIntoViewStyle scrollIntoViewStyle = ScrollIntoViewStyle.BringIntoView)
     {
-        var itemIndex = Items?.IndexOf(item) ?? -1;
+        var itemIndex = Items.IndexOf(item);
 
         ScrollIndexIntoView(itemIndex, scrollIntoViewStyle);
     }

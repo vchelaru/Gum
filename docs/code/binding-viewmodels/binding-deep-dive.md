@@ -94,17 +94,15 @@ partial class GameScreenHud
         }
     }
 
-    GameScreenViewModel ViewModel => (GameScreenViewModel)BindingContext;
-
     partial void CustomInitialize()
     {
         this.SetBinding(
             nameof(this.CurrentHealth),
-            nameof(ViewModel.Health));
+            nameof(GameScreenViewModel.Health));
 
         this.SetBinding(
             nameof(this.IsLowHealth),
-            nameof(ViewModel.IsLowHealth));
+            nameof(GameScreenViewModel.IsLowHealth));
     }
 }
 
