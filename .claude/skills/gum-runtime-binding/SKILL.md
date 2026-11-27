@@ -27,7 +27,7 @@ Subscribes to `INotifyPropertyChanged` and updates bound UI properties on change
 
 ## GraphicalUiElement Binding (Visuals)
 
-Simple string-only binding. No converters, no modes, no path traversal:
+String-path binding (plus a `SetBinding<TVm>` lambda overload that extracts the path). No converters or modes; dotted and indexed paths go through `PropertyPathObserver`:
 
 ```csharp
 element.SetBinding("X", nameof(vm.Position));           // basic
@@ -103,9 +103,9 @@ All binding features work with indexed paths: modes, converters, StringFormat, F
 |---|---|---|
 | String binding | ✓ | ✓ |
 | Explicit Binding object | ✗ | ✓ |
-| Lambda binding | ✗ | ✓ |
-| Nested paths (`A.B.C`) | ✗ | ✓ |
-| Index paths (`Items[0].Text`) | ✗ | ✓ |
+| Lambda binding | `SetBinding<TVm>` only | ✓ |
+| Nested paths (`A.B.C`) | ✓ | ✓ |
+| Index paths (`Items[0].Text`) | ✓ | ✓ |
 | Binding modes | Implicit TwoWay | Configurable |
 | Converters | ✗ | ✓ |
 | FallbackValue / TargetNullValue | ✗ | ✓ |
@@ -118,12 +118,14 @@ All binding features work with indexed paths: modes, converters, StringFormat, F
 | `GumRuntime/GraphicalUiElement.Binding.cs` | GUE binding — BindingContext, SetBinding, PushValueToViewModel |
 | `MonoGameGum/Forms/Data/Binding.cs` | Binding config class + BindingMode + UpdateSourceTrigger + IValueConverter |
 | `MonoGameGum/Forms/Data/NpcBindingExpression.cs` | Forms binding engine — UpdateTarget, UpdateSource |
-| `MonoGameGum/Forms/Data/PropertyPathObserver.cs` | Watches dotted paths, re-hooks on intermediate changes, weak listeners |
+| `GumCommon/Mvvm/PropertyPathObserver.cs` | Watches dotted paths, re-hooks on intermediate changes, weak listeners |
 | `MonoGameGum/Forms/Data/BinderHelpers.cs` | Lambda path extraction, compiled getter/setter delegates |
 | `MonoGameGum/Forms/Controls/FrameworkElementExt.cs` | Lambda SetBinding extension methods |
 | `GumRuntime/BindableGue.cs` | Deprecated alias for GraphicalUiElement — do not use |
 
 ## Non-Obvious Behaviors
+
+**A string path that misses a member reports once, never throws.** Both systems build the message with `BinderHelpers.GetMissingPathMessage` and send it through `ElementSaveExtensions.ReportDiagnostic` (the `[Gum]` `PropertyAssignmentError` channel), once per binding, when a non-null context is attached. The check walks declared member types and stays quiet once it reaches `object` or an interface.
 
 **BindableGue is deprecated.** `GraphicalUiElement` now owns all binding logic. `BindableGue` exists only as a legacy alias.
 

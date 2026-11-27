@@ -1580,24 +1580,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         ReportError(issue.Message);
     }
 
-    private static void ReportError(string message)
-    {
-        try
-        {
-            if (ElementSaveExtensions.ReportPropertyAssignmentError != null)
-            {
-                ElementSaveExtensions.ReportPropertyAssignmentError(message);
-            }
-            else
-            {
-                Console.Error.WriteLine($"[Gum] {message}");
-            }
-        }
-        catch (Exception exception) when (exception is not OutOfMemoryException)
-        {
-            Console.Error.WriteLine($"[Gum] A PropertyAssignmentError subscriber threw while reporting a hot reload failure: {exception}");
-        }
-    }
+    private static void ReportError(string message) => ElementSaveExtensions.ReportDiagnostic(message);
 
     /// <summary>
     /// Applies a structural + variable diff from <paramref name="newProject"/> onto the live

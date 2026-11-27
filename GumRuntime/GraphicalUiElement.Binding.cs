@@ -46,6 +46,8 @@ public partial class GraphicalUiElement
         /// </summary>
         public Action? PathObserverValueChangedHandler;
 
+        public bool HasReportedMissingPath;
+
         // Treat any path containing '.' (multi-segment) or '[' (indexed segment) as a
         // dotted path. Both require the PropertyPathObserver walk; only a bare property
         // name takes the flat-binding fast path.
@@ -97,6 +99,7 @@ public partial class GraphicalUiElement
         mBindingContext = null;
         mInheritedBindingContext = null;
         BindingContextBinding = null;
+        _hasReportedBindingContextBindingPath = false;
         BindingContextBindingPropertyOwner = null;
         BindingContextChanged = null;
         InheritedBindingContextChanged = null;
@@ -232,6 +235,7 @@ public partial class GraphicalUiElement
     }
 
     bool _isSubscribedToViewModelPropertyChanged = false;
+    bool _hasReportedBindingContextBindingPath;
     [RequiresUnreferencedCode(
         "Unsubscribes VM events and resolves each bound VM property/field/event by name on the new " +
         "context's own type. Those members may be removed under PublishTrimmed if nothing else in the " +
@@ -418,6 +422,7 @@ public partial class GraphicalUiElement
         if (uiProperty == nameof(BindingContext))
         {
             BindingContextBinding = vmProperty;
+            _hasReportedBindingContextBindingPath = false;
 
             BindingContextBindingPropertyOwner = (this.Parent as GraphicalUiElement)?.BindingContext;
 
@@ -529,6 +534,8 @@ public partial class GraphicalUiElement
                             $"Dotted binding paths are not supported for event bindings. Got '{vmPropertyName}'.");
                     }
 
+                    ReportMissingPathOnce(maybeDotted, bindingContextObjectToUse);
+
                     if (!ReferenceEquals(observer.CurrentRoot, bindingContextObjectToUse))
                     {
                         observer.Detach();
@@ -556,7 +563,21 @@ public partial class GraphicalUiElement
 
             if (vmProperty == null && vmField == null && foundEvent == null)
             {
-                System.Diagnostics.Debug.WriteLine($"Could not find field, property, or event {vmPropertyName} in {bindingContextObjectToUse?.GetType()}");
+                if (bindingContextObjectToUse != null)
+                {
+                    if (vmPropertyName == BindingContextBinding)
+                    {
+                        if (!_hasReportedBindingContextBindingPath)
+                        {
+                            _hasReportedBindingContextBindingPath = true;
+                            ReportMissingPath(bindingContextObjectToUse, vmPropertyName, nameof(BindingContext));
+                        }
+                    }
+                    else
+                    {
+                        ReportMissingPathOnce(vmPropsToUiProps[vmPropertyName], bindingContextObjectToUse);
+                    }
+                }
             }
             else if (foundEvent != null)
             {
@@ -584,6 +605,28 @@ public partial class GraphicalUiElement
         TryPushBindingContextChangeToChildren(vmPropertyName);
 
         return updated;
+    }
+
+    [RequiresUnreferencedCode("Calls " + nameof(ReportMissingPath) + ".")]
+    private void ReportMissingPathOnce(VmToUiProperty binding, object bindingContext)
+    {
+        if (!binding.HasReportedMissingPath)
+        {
+            binding.HasReportedMissingPath = ReportMissingPath(bindingContext, binding.VmProperty, binding.UiProperty);
+        }
+    }
+
+    [RequiresUnreferencedCode("Calls " + nameof(BinderHelpers.GetMissingPathMessage) + ".")]
+    private bool ReportMissingPath(object bindingContext, string vmPath, string uiProperty)
+    {
+        string? message = BinderHelpers.GetMissingPathMessage(bindingContext, vmPath, allowEventLeaf: true,
+            GetType().Name, uiProperty);
+        if (message == null)
+        {
+            return false;
+        }
+        GumRuntime.ElementSaveExtensions.ReportDiagnostic(message);
+        return true;
     }
 
     private void ApplyVmValueToUi(VmToUiProperty binding, object? vmValue)

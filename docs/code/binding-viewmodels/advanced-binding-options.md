@@ -45,8 +45,10 @@ label.SetBinding(
 ```
 
 {% hint style="warning" %}
-This string-path overload resolves `LabelText` by reflection when the binding is applied. Under `PublishTrimmed`, a VM member reached *only* through a string-path binding can be removed by the trimmer if nothing else in your code references it directly -- the binding then silently stops updating instead of throwing. The lambda overloads above avoid this: writing `vm => vm.LabelText` gives the compiler a direct reference to the property, which keeps the trimmer from removing it. Prefer lambda binding for any project that publishes with `PublishTrimmed` enabled.
+This string-path overload resolves `LabelText` by reflection when the binding is applied. Under `PublishTrimmed`, a VM member reached *only* through a string-path binding can be removed by the trimmer if nothing else in your code references it directly. The binding then stops updating, and Gum writes a `[Gum]` warning that the path does not resolve. The lambda overloads above avoid this: writing `vm => vm.LabelText` gives the compiler a direct reference to the property, which keeps the trimmer from removing it. Prefer lambda binding for any project that publishes with `PublishTrimmed` enabled.
 {% endhint %}
+
+A string path that names a property the `BindingContext` does not have, such as a misspelled name, does not throw. Gum writes one `[Gum]` warning for that binding naming the missing property, the `BindingContext` type and the bound property, and the UI property keeps its current value.
 
 The SetBinding call shown above is a shortcut for creating a `Binding` object. The following code is functionally identical:
 

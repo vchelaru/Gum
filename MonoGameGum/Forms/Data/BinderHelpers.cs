@@ -46,23 +46,9 @@ internal static class BinderHelpers
         }
 
         PathSegment[] segments = ParseSegments(path);
-        Type currentType = targetType;
-
-        for (int i = 0; i < segments.Length - 1; i++)
+        if (!TryWalkToLeafOwner(targetType, segments, out Type currentType, out _))
         {
-            if (!TryGetMember(currentType, segments[i].Name, out _, out Type? memberType))
-            {
-                return false;
-            }
-
-            if (segments[i].Index.HasValue)
-            {
-                currentType = GetElementType(memberType);
-            }
-            else
-            {
-                currentType = memberType;
-            }
+            return false;
         }
 
         PathSegment leaf = segments[^1];
@@ -90,6 +76,72 @@ internal static class BinderHelpers
             FieldInfo fieldInfo => !fieldInfo.IsInitOnly && !fieldInfo.IsLiteral,
             _ => false
         };
+    }
+
+    // Walks every segment but the leaf along declared member types. On success, owner is the type the leaf is
+    // looked up on. On failure, owner is the type that lacks segments[failedIndex].
+    [RequiresUnreferencedCode("Calls " + nameof(TryGetMember) + ".")]
+    private static bool TryWalkToLeafOwner(Type rootType, PathSegment[] segments, out Type owner, out int failedIndex)
+    {
+        owner = rootType;
+        for (int i = 0; i < segments.Length - 1; i++)
+        {
+            if (!TryGetMember(owner, segments[i].Name, out _, out Type memberType))
+            {
+                failedIndex = i;
+                return false;
+            }
+
+            owner = segments[i].Index.HasValue ? GetElementType(memberType) : memberType;
+        }
+
+        failedIndex = -1;
+        return true;
+    }
+
+    /// <summary>
+    /// Returns the message reporting that <paramref name="path"/> names a member that the type of
+    /// <paramref name="bindingContext"/> (or of an intermediate segment) does not have, or null when every
+    /// segment resolves. Segments are checked on declared member types; a walk that reaches <c>object</c> or an
+    /// interface stops without a message, since the runtime value there may still have the member.
+    /// </summary>
+    [RequiresUnreferencedCode(
+        "Walks the path on bindingContext's own type by name (GetProperty/GetField/GetEvent). Those members " +
+        "may be removed under PublishTrimmed if nothing else in the app references them.")]
+    public static string? GetMissingPathMessage(object bindingContext, string path, bool allowEventLeaf,
+        string targetTypeName, string targetPropertyName)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        PathSegment[] segments = ParseSegments(path);
+        Type contextType = bindingContext.GetType();
+        string missingName;
+        if (TryWalkToLeafOwner(contextType, segments, out Type owner, out int failedIndex))
+        {
+            PathSegment leaf = segments[^1];
+            bool leafExists = TryGetMember(owner, leaf.Name, out _, out _) ||
+                (allowEventLeaf && !leaf.Index.HasValue && owner.GetEvent(leaf.Name) != null);
+            if (leafExists)
+            {
+                return null;
+            }
+            missingName = leaf.Name;
+        }
+        else
+        {
+            missingName = segments[failedIndex].Name;
+        }
+
+        if (string.IsNullOrEmpty(missingName) || owner == typeof(object) || owner.IsInterface)
+        {
+            return null;
+        }
+
+        return $"Binding path '{path}' for {targetTypeName}.{targetPropertyName} does not resolve: " +
+            $"{owner.Name} has no property '{missingName}' (BindingContext: {contextType.Name}).";
     }
 
     [RequiresUnreferencedCode(
