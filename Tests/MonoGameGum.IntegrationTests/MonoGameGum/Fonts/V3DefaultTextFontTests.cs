@@ -104,8 +104,8 @@ public class V3DefaultTextFontTests : BaseTestClass
             Button button = new Button { Text = "Fight monster" };
             ListBox listBox = new ListBox();
             listBox.Height = 80;
-            listBox.Items.Add("Sword");
-            listBox.Items.Add("Shield");
+            listBox.Items!.Add("Sword");
+            listBox.Items!.Add("Shield");
             TextBox textBox = new TextBox { Text = "Name" };
             FrameworkElement[] controls = { label, button, listBox, textBox };
             foreach (FrameworkElement control in controls)
