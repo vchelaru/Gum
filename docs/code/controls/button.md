@@ -72,7 +72,13 @@ A button whose `HeightUnits` is `RelativeToChildren` grows with a label that wra
 
 ## Clicking Programmatically
 
-Clicking can be performed programmatically by calling `PerformClick`. The following example shows how to click a button when the Enter key is pressed. The Click handler updates the button text with the current time:
+Clicking can be performed programmatically by calling `PerformClick`. `PerformClick` raises `Click` like a user click and does nothing while the button is disabled.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
+The following example shows how to click a button when the Enter key is pressed. The Click handler updates the button text with the current time:
 
 ```csharp
 // Initialize

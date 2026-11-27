@@ -195,9 +195,19 @@ public class ButtonBase :
 
     protected virtual void OnClick() { }
 
+    /// <summary>
+    /// Raises <see cref="Click"/> as if the user clicked this button. Does nothing while the button
+    /// or one of its parents is disabled.
+    /// </summary>
+    /// <param name="inputDevice">The device reported as the click's source in the event args, or null for none.</param>
     public void PerformClick(object? inputDevice = null)
     {
-        var args = inputDevice != null 
+        if (!Visual.IsEnabledRecursively)
+        {
+            return;
+        }
+
+        var args = inputDevice != null
             ? new InputEventArgs() { InputDevice = inputDevice } 
             : EventArgs.Empty;
         HandleClick(this, args);
