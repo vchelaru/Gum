@@ -56,6 +56,43 @@ public class CodeTabSetupPromptScenarioTests
     }
 
     [AvaloniaFact]
+    public void SwitchingFromSetUpProjectToNewProject_OffersSetupAgain()
+    {
+        using CodeTabHarness code = new CodeTabHarness(
+            folder => File.WriteAllText(Path.Combine(folder, "SetupGame.csproj"), GameCsproj),
+            openProjectSettingsPage: false);
+        ScreenSave screen = code.Project.AddScreen("MainScreen");
+        code.Tree.SaveAll();
+        code.Select(screen);
+        code.ClickButton("Auto");
+        code.ShowsButton("Auto").ShouldBeFalse();
+
+        ProjectTreeHarness tree = code.Tree;
+        string game = Path.Combine(code.Project.ProjectFolder, "OtherGame");
+        string content = Path.Combine(game, "Content");
+        Directory.CreateDirectory(content);
+        File.WriteAllText(Path.Combine(game, "OtherGame.csproj"), GameCsproj);
+        tree.Dialogs.AnswerNextInWindow<NewProjectDialogViewModel>(window =>
+        {
+            NewProjectDialogDriver dialog = new NewProjectDialogDriver(window);
+            dialog.TypeName("OtherUi");
+            dialog.TypeLocation(content);
+            dialog.SetChecked(NewProjectDialogText.CreateCodeProject, false);
+            dialog.ClickOk();
+        });
+        tree.PickMainMenu("File", "New Project");
+        tree.WaitUntil(() => tree.SelectedState.SelectedScreen != null
+            && TestAppBuilder.Services.GetRequiredService<IProjectManager>().GumProjectSave?.FullFileName?.Contains("OtherUi") == true,
+            TimeSpan.FromSeconds(90), "the new project");
+        code.Select(tree.SelectedState.SelectedScreen!);
+
+        string newFolder = Path.GetDirectoryName(TestAppBuilder.Services.GetRequiredService<IProjectManager>().GumProjectSave!.FullFileName)!;
+        File.Exists(SettingsFile(newFolder)).ShouldBeFalse();
+        code.ShowsButton("Auto").ShouldBeTrue("the newly opened project has no code settings");
+        code.View.SettingsGrid.IsVisible.ShouldBeFalse();
+    }
+
+    [AvaloniaFact]
     public void NewProjectInsideAGamesContentFolder_OffersAutoSetup()
     {
         using CodeTabHarness code = new CodeTabHarness(openProjectSettingsPage: false);
