@@ -123,9 +123,9 @@ We can enable automatic saving of generated code in Gum by specifying the locati
 
 <figure><img src="../../../../.gitbook/assets/image (112).png" alt=""><figcaption><p>.csproj location as Code Project Root</p></figcaption></figure>
 
-We can force code generation once by clicking the Generate Code button.
+We can force code generation once by clicking the **Generate** button.
 
-<figure><img src="../../../../.gitbook/assets/image (113).png" alt=""><figcaption><p>Generate Code creates the new code files</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (113).png" alt=""><figcaption><p>Generate creates the new code files</p></figcaption></figure>
 
 This creates two code files - a generated code file and a custom code file:
 
@@ -172,10 +172,10 @@ As the name suggests, the Generated code (ending in .Generated.cs) contains the 
   * If using Object Instantiation Type of FullyInCode, then the items are instantiated on the spot and properties are assigned matching the variables assigned in Gum
 * RegisterRuntimeType method which associates this Runtime class with its matching Gum Screen or Component
 
-Generated code is re-generated whenever a change is made in Gum or whenever you press the **Generate Code** button.
+Generated code is re-generated whenever a change is made in Gum or whenever you press the **Generate** button.
 
 {% hint style="danger" %}
-Generated code is completely rewritten whenever a change is made or when pressing the **Generate Code** button. If you make any modifications to generated code, those will be lost the next time code is generated.
+Generated code is completely rewritten whenever a change is made or when pressing the **Generate** button. If you make any modifications to generated code, those will be lost the next time code is generated.
 
 Feel free to make changes if you would like to quickly test changes, but any permanent changes should be made in Gum or in custom code.
 
@@ -226,9 +226,9 @@ Notice that initially Gum may be generating additonal statements which are not n
 
 ## Screen Runtimes
 
-We can also create runtimes for screens. Once properties have been set up, adding additional runtimes is much easier. Just click the Generate Code button!
+We can also create runtimes for screens. Once properties have been set up, adding additional runtimes is much easier. Just click the **Generate** button!
 
-<figure><img src="../../../../.gitbook/assets/image (116).png" alt=""><figcaption><p>Generate code button creates runtime classes for the selected Screen</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (116).png" alt=""><figcaption><p>Generate button creates runtime classes for the selected Screen</p></figcaption></figure>
 
 <figure><img src="../../../../.gitbook/assets/image (117).png" alt=""><figcaption><p>TitleScreenRuntime code in Visual Studio</p></figcaption></figure>
 

@@ -42,7 +42,7 @@ Make sure you have already setup code generation for your project. You can verif
 
 <figure><img src="../../../../.gitbook/assets/10_06 20 11.png" alt=""><figcaption><p>Gum referencing .csproj folder</p></figcaption></figure>
 
-You can also click the Generate Code button on each screen file to make sure that code has been properly generated.
+You can also click the **Generate** button on each screen file to make sure that code has been properly generated.
 
 By generating code for both screens, you can access each screen as a strongly-typed class in your project: `Screen1` and `Screen2` .
 
