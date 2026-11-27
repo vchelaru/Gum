@@ -71,7 +71,7 @@ Available in December 2026, or now if building Gum from source.
 { "op": "duplicateComponent", "name": "Controls/Counter", "newName": "Controls/CounterCopy" }
 ```
 
-Copies a Component like the tool's **Duplicate**: the copy has the same instances, states, categories, behaviors and variables, plus a copy of the component's animations and code settings. `newName` includes the folder. The op fails if `name` is not a Component or `newName` is already taken.
+Copies a Component like the tool's **Duplicate**: the copy has the same instances, states, categories, behaviors and variables, plus a copy of the component's animations and code settings. `newName` includes the folder. The op fails if `name` is not a Component or `newName` is already taken. An animation file already at the new name is replaced; the tool asks first.
 
 ### addInstance
 
