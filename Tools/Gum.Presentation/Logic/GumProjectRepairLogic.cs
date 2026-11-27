@@ -238,9 +238,7 @@ public class GumProjectRepairLogic : IGumProjectRepairLogic
                         File.Exists(path) &&
                         FileManager.IsRelativeTo(path, projectDirectory))
                     {
-                        variable.Value = FileManager
-                            .MakeRelative(path, projectDirectory, preserveCase: true)
-                            .Replace('\\', '/');
+                        variable.Value = FileManager.ToStoredFilePath(path, projectDirectory);
                         didChange = true;
                     }
                 }

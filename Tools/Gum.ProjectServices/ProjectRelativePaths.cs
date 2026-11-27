@@ -10,18 +10,11 @@ namespace Gum.ProjectServices;
 public static class ProjectRelativePaths
 {
     /// <summary>
-    /// <paramref name="path"/> relative to <paramref name="projectDirectory"/>, or as given when it is already
-    /// relative, empty, or the project has no folder yet (an unsaved project).
+    /// <paramref name="path"/> relative to <paramref name="projectDirectory"/> with forward slashes, or absolute
+    /// when the project has no folder yet (an unsaved project). See <see cref="FileManager.ToStoredFilePath"/>.
     /// </summary>
-    public static string ToProjectRelative(string path, string? projectDirectory)
-    {
-        if (projectDirectory != null && !string.IsNullOrEmpty(path) && !FileManager.IsRelative(path))
-        {
-            return FileManager.MakeRelative(path, projectDirectory, preserveCase: true);
-        }
-
-        return path;
-    }
+    public static string ToProjectRelative(string path, string? projectDirectory) =>
+        FileManager.ToStoredFilePath(path, projectDirectory);
 
     /// <summary>
     /// The engine profile reference as the project stores it: relative to <paramref name="projectDirectory"/> with forward

@@ -723,6 +723,33 @@ public class CanvasScenarioTests
 
     [Fact]
     [Trait("Feature", "DRAG-013")]
+    public void TextureFileDrop_FromASubfolder_SavesForwardSlashes()
+    {
+        OnCanvas(canvas =>
+        {
+            ComponentSave button = canvas.Project.AddComponent("Button");
+            InstanceSave existing = canvas.AddInstance(button, "Existing", "Sprite", x: 300, y: 300, width: 64, height: 64);
+            canvas.Tree.Click(canvas.Tree.NodeFor(button));
+            string texture = Path.Combine(canvas.Project.ProjectFolder, "Images", "Hero.png");
+            Directory.CreateDirectory(Path.GetDirectoryName(texture)!);
+            File.Copy(Path.Combine(AppContext.BaseDirectory, "Content", "ExampleSpriteFrame.png"), texture);
+
+            canvas.DropOnCanvas(canvas.WindowPointOf(60, 70), FileDrop(texture));
+            InstanceSave added = button.Instances.Except(new[] { existing }).ShouldHaveSingleItem();
+            canvas.SavedValue(button, $"{added.Name}.SourceFile").ShouldBe("Images/Hero.png");
+
+            canvas.Project.Dialogs.AnswerNext<ChoiceDialogViewModel>(dialog =>
+            {
+                dialog.SelectedValue = dialog.OptionValues.Single(option => option.StartsWith("Set source file on Existing", StringComparison.Ordinal));
+                return true;
+            });
+            canvas.DropOnCanvas(canvas.WindowPointOf(330, 330), FileDrop(texture));
+            canvas.SavedValue(button, "Existing.SourceFile").ShouldBe("Images/Hero.png");
+        });
+    }
+
+    [Fact]
+    [Trait("Feature", "DRAG-013")]
     public void TextureFileDrop_FileNameWithDotsAndSpaces_AddsASpriteWithAValidName()
     {
         OnCanvas(canvas =>

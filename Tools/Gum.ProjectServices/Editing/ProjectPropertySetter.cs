@@ -104,10 +104,8 @@ internal static class ProjectPropertySetter
         }
     }
 
-    // Relative to the project like the tool stores it, with forward slashes so the file is the same on every OS
-    // (the tool writes the separators of the OS it runs on; every reader accepts both).
     private static string ToStoredPath(string path, GumProjectSave project) =>
-        ProjectRelativePaths.ToProjectRelative(path, ProjectDirectory(project)).Replace('\\', '/');
+        ProjectRelativePaths.ToProjectRelative(path, ProjectDirectory(project));
 
     private static string? ProjectDirectory(GumProjectSave project) =>
         string.IsNullOrEmpty(project.FullFileName) ? null : FileManager.GetDirectory(project.FullFileName);
