@@ -62,7 +62,7 @@ public record ScreenshotVariableOverride(string Name, string Value)
         string type = converter.ResolveType(writer, owner, owner.GetDefaultStateOrThrow(), variableName)
             ?? throw new EditException($"The type of {Name} could not be found.");
 
-        object? value = ConvertText(converter, type);
+        object? value = ConvertText(converter, owner, variableName, type);
         ElementSave typeElement = instance == null ? owner : ObjectFinder.Self.GetElementSave(instance.BaseType)!;
         ThrowIfUnknownState(typeElement, variableDefinedByType, VariableSave.GetRootName(variableName), value);
         return value;
@@ -70,12 +70,12 @@ public record ScreenshotVariableOverride(string Name, string Value)
 
     // Text that reads as JSON (300, true, null) converts as that value; anything else, or a JSON value the type
     // rejects (123 for a string), converts as a string.
-    private object? ConvertText(VariableValueConverter converter, string type)
+    private object? ConvertText(VariableValueConverter converter, ElementSave owner, string variableName, string type)
     {
         try
         {
             using JsonDocument document = JsonDocument.Parse(Value);
-            return converter.ConvertValue(document.RootElement, type, Name);
+            return converter.ConvertVariableValue(document.RootElement, owner, variableName, type, Name);
         }
         catch (JsonException)
         {
@@ -83,7 +83,7 @@ public record ScreenshotVariableOverride(string Name, string Value)
         catch (EditException)
         {
         }
-        return converter.ConvertValue(JsonSerializer.SerializeToElement(Value), type, Name);
+        return converter.ConvertVariableValue(JsonSerializer.SerializeToElement(Value), owner, variableName, type, Name);
     }
 
     // A state name that does not exist would render nothing different, which is easy to miss in a screenshot.

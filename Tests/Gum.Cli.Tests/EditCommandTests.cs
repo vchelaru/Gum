@@ -686,6 +686,39 @@ public class EditCommandTests : BaseTestClass
         game.GetVariableSave("Play.ButtonCategoryState").ShouldBeNull();
     }
 
+    // A category named like a GumCommon enum (InputDevice, Orientation) types its selector with that name, which
+    // must still take the category's state names, on the element, an instance of it and a derived element.
+    [Theory]
+    [InlineData("InputDevice")]
+    [InlineData("Orientation")]
+    [InlineData("Foo")]
+    public void Edit_SetCategoryStateNamedLikeAType_StoresTheStateName(string categoryName)
+    {
+        string projectPath = CreateEmptyProject();
+        string operations = WriteOperations($$"""
+            { "version": 1, "operations": [
+              { "op": "addComponent", "name": "C" },
+              { "op": "addCategory", "element": "C", "name": "{{categoryName}}" },
+              { "op": "addState", "element": "C", "category": "{{categoryName}}", "name": "Keyboard" },
+              { "op": "setVariable", "element": "C", "name": "{{categoryName}}State", "value": "Keyboard" },
+              { "op": "addComponent", "name": "Derived", "baseType": "C" },
+              { "op": "setVariable", "element": "Derived", "name": "{{categoryName}}State", "value": "Keyboard" },
+              { "op": "addScreen", "name": "Game" },
+              { "op": "addInstance", "element": "Game", "name": "CInstance", "type": "C" },
+              { "op": "setVariable", "element": "Game", "name": "CInstance.{{categoryName}}State", "value": "Keyboard" }
+            ] }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("edit", projectPath, operations);
+
+        result.ExitCode.ShouldBe(0, result.StandardOutput + result.StandardError);
+        GumProjectSave project = new ProjectLoader().Load(projectPath).Project!;
+        ObjectFinder.Self.GumProjectSave = project;
+        project.Components.Single(item => item.Name == "C").DefaultState.GetValue(categoryName + "State").ShouldBe("Keyboard");
+        project.Components.Single(item => item.Name == "Derived").DefaultState.GetValue(categoryName + "State").ShouldBe("Keyboard");
+        project.Screens.Single().DefaultState.GetValue("CInstance." + categoryName + "State").ShouldBe("Keyboard");
+    }
+
     [Fact]
     public void Edit_VariableTheTypeDoesNotDefine_FailsAndWritesNothing()
     {
@@ -806,6 +839,7 @@ public class EditCommandTests : BaseTestClass
     [InlineData("""{ "op": "addVariable", "element": "Hud", "name": "Width", "type": "float" }""", "Hud already has a variable named Width; use setVariable to set it.")]
     [InlineData("""{ "op": "addVariable", "element": "Hud", "name": "Speed", "type": "Vector2" }""", "Vector2")]
     [InlineData("""{ "op": "setVariable", "element": "Hud", "name": "Label.Widht", "value": 1 }""", "Label.Widht")]
+    [InlineData("""{ "op": "setVariable", "element": "Hud", "name": "State", "value": 5 }""", "5 is not a state name")]
     [InlineData("""{ "op": "removeInstance", "element": "Hud", "name": "Nope" }""", "Nope")]
     [InlineData("""{ "op": "removeScreen", "name": "Hud" }""", "no Screen named Hud")]
     [InlineData("""{ "op": "removeComponent", "name": "Nope" }""", "no Component named Nope")]

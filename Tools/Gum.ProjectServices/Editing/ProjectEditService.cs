@@ -499,7 +499,7 @@ public partial class ProjectEditService : IProjectEditService
 
         string type = _values.ResolveType(_variableWriter, element, state, variableName)
             ?? throw new EditException($"The type of {requestedName} could not be found.");
-        object? value = _values.ConvertValue(operation.GetProperty("value"), type, requestedName);
+        object? value = _values.ConvertVariableValue(operation.GetProperty("value"), element, variableName, type, requestedName);
 
         Dictionary<string, object?> valuesBefore = VariableReferenceCascade.SnapshotValues(state);
         _variableWriter.SetVariable(element, state, variableName, value, instance, fallbackType: type);
