@@ -490,7 +490,7 @@ namespace GumRuntime
         private static HashSet<ElementSave> _elementsBeingBuilt =>
             _elementsBeingBuiltOfThread ??= new HashSet<ElementSave>();
 
-        // Takes the report of a skipped circular instance in place of RaiseReferenceError while set: the hot
+        // Takes the report of a skipped circular instance in place of ReportDiagnostic while set: the hot
         // reload adds it to the reload's result, which prints it. Per thread, like the set it reports on.
         [ThreadStatic]
         private static Action<InstanceSave, string>? _circularInstanceReporterOfThread;
@@ -558,7 +558,7 @@ namespace GumRuntime
             }
             else
             {
-                RaiseReferenceError(message);
+                ReportDiagnostic(message);
             }
             return true;
         }
@@ -1230,7 +1230,7 @@ namespace GumRuntime
                     }
                 }
 
-                RaiseReferenceError($"Circular variable reference in {owner.Name} ({state.Name}): {string.Join("; ", rows)}. " +
+                ReportDiagnostic($"Circular variable reference in {owner.Name} ({state.Name}): {string.Join("; ", rows)}. " +
                     "These rows are not evaluated and keep their stored values; remove one of them to break the loop.");
             }
         }
@@ -2046,7 +2046,7 @@ namespace GumRuntime
                     }
                 }
             }
-            RaiseReferenceError(message);
+            ReportDiagnostic(message);
         }
 
         private static string TypeNameOf(object value)
@@ -2220,7 +2220,9 @@ namespace GumRuntime
             }
         }
 
-        private static void RaiseReferenceError(string message)
+        // The [Gum] diagnostic channel for code below the platform dispatcher: variable references, circular
+        // instances, hot reload and binding paths all report through it.
+        internal static void ReportDiagnostic(string message)
         {
             try
             {
@@ -2233,10 +2235,10 @@ namespace GumRuntime
                     Console.Error.WriteLine($"[Gum] {message}");
                 }
             }
-            catch (Exception exception)
+            catch (Exception exception) when (exception is not OutOfMemoryException)
             {
-                // A subscriber that throws must not break the screen being created.
-                Console.Error.WriteLine($"[Gum] A PropertyAssignmentError subscriber threw while reporting a variable reference: {exception}");
+                // A subscriber that throws must not break the caller that is reporting.
+                Console.Error.WriteLine($"[Gum] A PropertyAssignmentError subscriber threw while reporting '{message}': {exception}");
             }
         }
 #nullable restore

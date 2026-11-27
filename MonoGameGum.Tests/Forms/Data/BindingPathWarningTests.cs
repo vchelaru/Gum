@@ -1,0 +1,226 @@
+using Gum.Forms.Controls;
+using Gum.Forms.Data;
+using Gum.GueDeriving;
+using Gum.Mvvm;
+using GumRuntime;
+using Shouldly;
+using System;
+using System.Collections.Generic;
+using Xunit;
+
+namespace MonoGameGum.Tests.Forms.Data;
+
+/// <summary>
+/// A string binding path that names a member the BindingContext's type does not have is reported once per
+/// binding through the [Gum] PropertyAssignmentError channel.
+/// </summary>
+public class BindingPathWarningTests : BaseTestClass
+{
+    private readonly Action<string>? _previousReporter;
+    private readonly List<string> _reports;
+
+    public BindingPathWarningTests()
+    {
+        _previousReporter = ElementSaveExtensions.ReportPropertyAssignmentError;
+        _reports = new List<string>();
+        ElementSaveExtensions.ReportPropertyAssignmentError = _reports.Add;
+    }
+
+    public override void Dispose()
+    {
+        ElementSaveExtensions.ReportPropertyAssignmentError = _previousReporter;
+        base.Dispose();
+    }
+
+    [Fact]
+    public void FrameworkElementSetBinding_MisspelledPath_ReportsOnce()
+    {
+        Label label = new Label();
+        GameViewModel viewModel = new GameViewModel();
+        label.BindingContext = viewModel;
+
+        label.SetBinding(nameof(Label.Text), "GoldDisplayy");
+        viewModel.Gold = 5;
+        viewModel.Gold = 6;
+        label.BindingContext = new GameViewModel();
+
+        _reports.ShouldBe(new[]
+        {
+            "Binding path 'GoldDisplayy' for Label.Text does not resolve: GameViewModel has no property 'GoldDisplayy' (BindingContext: GameViewModel)."
+        });
+    }
+
+    [Fact]
+    public void FrameworkElementSetBinding_MissingNestedSegment_ReportsSegmentAndItsType()
+    {
+        Label label = new Label();
+        label.BindingContext = new GameViewModel();
+
+        label.SetBinding(nameof(Label.Text), new Binding("Player.Nmae"));
+
+        _reports.ShouldBe(new[]
+        {
+            "Binding path 'Player.Nmae' for Label.Text does not resolve: PlayerViewModel has no property 'Nmae' (BindingContext: GameViewModel)."
+        });
+    }
+
+    [Fact]
+    public void FrameworkElementSetBinding_NullContext_WaitsAndReportsWhenContextArrives()
+    {
+        Label label = new Label();
+
+        label.SetBinding(nameof(Label.Text), "GoldDisplayy");
+        int reportsWithoutContext = _reports.Count;
+        label.BindingContext = new GameViewModel();
+
+        reportsWithoutContext.ShouldBe(0);
+        _reports.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void FrameworkElementSetBinding_ValidPaths_NeverReport()
+    {
+        Label flat = new Label();
+        Label nested = new Label();
+        Label indexed = new Label();
+        Label untyped = new Label();
+        GameViewModel viewModel = new GameViewModel();
+        flat.BindingContext = viewModel;
+        nested.BindingContext = viewModel;
+        indexed.BindingContext = viewModel;
+        untyped.BindingContext = viewModel;
+
+        flat.SetBinding(nameof(Label.Text), nameof(GameViewModel.GoldDisplay));
+        nested.SetBinding(nameof(Label.Text), new Binding("Player.Name"));
+        indexed.SetBinding(nameof(Label.Text), new Binding("Players[0].Name"));
+        untyped.SetBinding(nameof(Label.Text), new Binding("Untyped.Name"));
+        viewModel.Gold = 5;
+        viewModel.Player = null;
+
+        _reports.ShouldBeEmpty();
+        flat.Text.ShouldBe("5 gold");
+    }
+
+    [Fact]
+    public void GraphicalUiElementSetBinding_MisspelledPath_ReportsOnce()
+    {
+        TextRuntime text = new TextRuntime();
+        GameViewModel viewModel = new GameViewModel();
+        text.BindingContext = viewModel;
+
+        text.SetBinding(nameof(TextRuntime.Text), "GoldDisplayy");
+        viewModel.Gold = 5;
+        text.BindingContext = null;
+        text.BindingContext = viewModel;
+
+        _reports.ShouldBe(new[]
+        {
+            "Binding path 'GoldDisplayy' for TextRuntime.Text does not resolve: GameViewModel has no property 'GoldDisplayy' (BindingContext: GameViewModel)."
+        });
+    }
+
+    [Fact]
+    public void GraphicalUiElementSetBinding_MissingNestedSegment_ReportsSegmentAndItsType()
+    {
+        TextRuntime text = new TextRuntime();
+        text.BindingContext = new GameViewModel();
+
+        text.SetBinding(nameof(TextRuntime.Text), "Player.Nmae");
+
+        _reports.ShouldBe(new[]
+        {
+            "Binding path 'Player.Nmae' for TextRuntime.Text does not resolve: PlayerViewModel has no property 'Nmae' (BindingContext: GameViewModel)."
+        });
+    }
+
+    [Fact]
+    public void GraphicalUiElementSetBinding_MisspelledBindingContextPath_ReportsOnce()
+    {
+        ContainerRuntime parent = new ContainerRuntime();
+        ContainerRuntime child = new ContainerRuntime();
+        parent.AddChild(child);
+        GameViewModel viewModel = new GameViewModel();
+        parent.BindingContext = viewModel;
+
+        child.SetBinding(nameof(ContainerRuntime.BindingContext), "Playr");
+        parent.BindingContext = new GameViewModel();
+
+        _reports.ShouldBe(new[]
+        {
+            "Binding path 'Playr' for ContainerRuntime.BindingContext does not resolve: GameViewModel has no property 'Playr' (BindingContext: GameViewModel)."
+        });
+    }
+
+    [Fact]
+    public void GraphicalUiElementSetBinding_NullContext_WaitsAndReportsWhenContextArrives()
+    {
+        TextRuntime text = new TextRuntime();
+
+        text.SetBinding(nameof(TextRuntime.Text), "GoldDisplayy");
+        int reportsWithoutContext = _reports.Count;
+        text.BindingContext = new GameViewModel();
+
+        reportsWithoutContext.ShouldBe(0);
+        _reports.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void GraphicalUiElementSetBinding_ValidPaths_NeverReport()
+    {
+        TextRuntime flat = new TextRuntime();
+        TextRuntime nested = new TextRuntime();
+        TextRuntime indexed = new TextRuntime();
+        TextRuntime untyped = new TextRuntime();
+        GameViewModel viewModel = new GameViewModel();
+        flat.BindingContext = viewModel;
+        nested.BindingContext = viewModel;
+        indexed.BindingContext = viewModel;
+        untyped.BindingContext = viewModel;
+
+        flat.SetBinding(nameof(TextRuntime.Text), nameof(GameViewModel.GoldDisplay));
+        nested.SetBinding(nameof(TextRuntime.Text), "Player.Name");
+        indexed.SetBinding(nameof(TextRuntime.Text), "Players[0].Name");
+        untyped.SetBinding(nameof(TextRuntime.Text), "Untyped.Name");
+        viewModel.Gold = 5;
+        viewModel.Player = null;
+
+        _reports.ShouldBeEmpty();
+        flat.Text.ShouldBe("5 gold");
+    }
+
+    private class GameViewModel : ViewModel
+    {
+        public int Gold
+        {
+            get => Get<int>();
+            set => Set(value);
+        }
+
+        [DependsOn(nameof(Gold))]
+        public string GoldDisplay => $"{Gold} gold";
+
+        public PlayerViewModel? Player
+        {
+            get => Get<PlayerViewModel?>();
+            set => Set(value);
+        }
+
+        public List<PlayerViewModel> Players { get; } = new List<PlayerViewModel> { new PlayerViewModel() };
+
+        public object Untyped { get; } = new PlayerViewModel();
+
+        public GameViewModel()
+        {
+            Player = new PlayerViewModel();
+        }
+    }
+
+    private class PlayerViewModel : ViewModel
+    {
+        public string Name
+        {
+            get => Get<string>();
+            set => Set(value);
+        }
+    }
+}

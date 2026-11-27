@@ -30,7 +30,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
     public NpcBindingExpression(
         FrameworkElement target,
         string targetPropertyName,
-        Binding binding) : base(target, binding)
+        Binding binding) : base(target, targetPropertyName, binding)
     {
         TargetProperty = target.GetType()
             .GetProperty(targetPropertyName)

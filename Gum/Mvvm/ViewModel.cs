@@ -672,22 +672,7 @@ namespace Gum.Mvvm
 
             string message = $"[DependsOn(\"{dependency.Path}\")] on {GetType().Name}.{string.Join(", ", dependency.Dependents)} " +
                 $"never updates: {ownerType.Name} has no property named {segmentName}.";
-            // Swap for ElementSaveExtensions.ReportDiagnostic once that shared reporter is on main.
-            try
-            {
-                if (ElementSaveExtensions.ReportPropertyAssignmentError != null)
-                {
-                    ElementSaveExtensions.ReportPropertyAssignmentError(message);
-                }
-                else
-                {
-                    Console.Error.WriteLine($"[Gum] {message}");
-                }
-            }
-            catch (Exception exception) when (exception is not OutOfMemoryException)
-            {
-                Console.Error.WriteLine($"[Gum] A PropertyAssignmentError subscriber threw while reporting a DependsOn path: {exception}");
-            }
+            ElementSaveExtensions.ReportDiagnostic(message);
         }
 
         #endregion

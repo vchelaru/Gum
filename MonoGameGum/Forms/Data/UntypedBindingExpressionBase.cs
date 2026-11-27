@@ -27,9 +27,13 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     private Func<object, object?>? SourceGetter { get; set; }
     private Action<object, object?>? SourceSetter { get; set; }
     private PropertyPathObserver PathObserver { get; }
+    private readonly string _targetPropertyName;
+    private bool _hasReportedMissingPath;
 
-    protected UntypedBindingExpression(FrameworkElement targetElement, Binding binding)
+    protected UntypedBindingExpression(FrameworkElement targetElement, string targetPropertyName, Binding binding)
     {
+        _targetPropertyName = targetPropertyName;
+        _hasReportedMissingPath = false;
         TargetElement = targetElement;
         TargetElement.BindingContextChanged += OnTargetBindingContextChanged;
 
@@ -90,6 +94,8 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
             return;
         }
 
+        ReportMissingPathOnce(newSource);
+
         PathObserver.Attach(newSource);
 
         bool shouldBuildSourceSetter =
@@ -119,6 +125,23 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         }
 
         UpdateTarget();
+    }
+
+    [RequiresUnreferencedCode("Calls " + nameof(BinderHelpers.GetMissingPathMessage) + ".")]
+    private void ReportMissingPathOnce(object source)
+    {
+        if (_hasReportedMissingPath)
+        {
+            return;
+        }
+
+        string? message = BinderHelpers.GetMissingPathMessage(source, Binding.Path, allowEventLeaf: false,
+            TargetElement.GetType().Name, _targetPropertyName);
+        if (message != null)
+        {
+            _hasReportedMissingPath = true;
+            GumRuntime.ElementSaveExtensions.ReportDiagnostic(message);
+        }
     }
 
     protected object? GetSourceValue()
