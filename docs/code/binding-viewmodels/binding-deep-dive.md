@@ -32,7 +32,7 @@ buttonVisual.SetBinding(
 ```
 
 {% hint style="warning" %}
-The string-path overload resolves `ButtonWidth` by reflection when the binding is applied. Under `PublishTrimmed`, a VM member reached *only* through a string-path binding can be removed by the trimmer if nothing else in your code references it directly. The binding then stops updating, and Gum writes a `[Gum]` warning that the path does not resolve. The lambda overload above avoids this: writing `vm => vm.ButtonWidth` gives the compiler a direct reference to the property, which keeps the trimmer from removing it. Prefer lambda binding for any project that publishes with `PublishTrimmed` enabled.
+The string-path overload resolves `ButtonWidth` by reflection when the binding is applied. Under `PublishTrimmed`, a VM member reached *only* through a string-path binding can be removed by the trimmer if nothing else in your code references it directly. The binding then stops updating instead of throwing. The lambda overload above avoids this: writing `vm => vm.ButtonWidth` gives the compiler a direct reference to the property, which keeps the trimmer from removing it. Prefer lambda binding for any project that publishes with `PublishTrimmed` enabled.
 {% endhint %}
 
 If the property requires a specific type, then the Visual can be casted to access type-specific properties, as shown in the following code block:
