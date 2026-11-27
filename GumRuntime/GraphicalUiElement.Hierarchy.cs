@@ -82,7 +82,9 @@ public partial class GraphicalUiElement
 
     /// <summary>
     /// Removes this element from its parent, effectively removing it from the visual tree.
-    /// This reverses a previous <see cref="AddToRoot"/> call.
+    /// This reverses a previous <see cref="AddToRoot"/> call. Leaving the root sets this
+    /// element's own <see cref="BindingContext"/> to null, so children that inherit it lose it too;
+    /// set it again when re-adding this element.
     /// </summary>
     public void RemoveFromRoot()
     {

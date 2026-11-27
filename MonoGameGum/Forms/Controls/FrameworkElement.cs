@@ -387,6 +387,12 @@ public class FrameworkElement : INotifyPropertyChanged
 
     internal PropertyRegistry PropertyRegistry { get; }
 
+    /// <summary>
+    /// The object this control's bindings read from and write to, stored on its
+    /// <see cref="Visual"/>. Children inherit it unless they are given their own. Leaving the root,
+    /// by any path, sets this control's own BindingContext to null, so children that inherit it lose it
+    /// too; a child given its own keeps it. Moving between other parents keeps it.
+    /// </summary>
     public object? BindingContext
     {
         get => Visual?.BindingContext;

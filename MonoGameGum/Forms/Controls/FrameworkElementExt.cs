@@ -108,6 +108,11 @@ public static class FrameworkElementExt
 #endif
     }
 
+    /// <summary>
+    /// Removes this Forms control's visual from its parent, reversing <see cref="AddToRoot"/>.
+    /// Leaving the root sets this control's own <see cref="FrameworkElement.BindingContext"/> to null,
+    /// so children that inherit it lose it too; set it again when re-adding this control.
+    /// </summary>
     public static void RemoveFromRoot(this FrameworkElement element)
     {
         // suppress layouts when removing from root, this improves performance
