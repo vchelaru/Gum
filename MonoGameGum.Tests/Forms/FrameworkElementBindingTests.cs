@@ -1748,6 +1748,104 @@ public class FrameworkElementBindingTests : BaseTestClass
         textBox.Text.ShouldBe("Bob");
     }
 
+    [Fact]
+    public void SetBinding_WriteOnlyTarget_AppliesInitialAndLaterSourceValues()
+    {
+        // Arrange
+        TestViewModel vm = new() { IsChecked = true };
+        WriteOnlyTargetElement sut = new() { BindingContext = vm };
+
+        // Act
+        sut.SetBinding(nameof(WriteOnlyTargetElement.IsLarge), nameof(TestViewModel.IsChecked));
+        bool? initial = sut.LastWritten;
+        vm.IsChecked = false;
+
+        // Assert
+        initial.ShouldBe(true);
+        sut.LastWritten.ShouldBe(false);
+    }
+
+    [Fact]
+    public void SetBinding_WriteOnlyTarget_InListBoxItemTemplate_AppliesItemValue()
+    {
+        // Arrange
+        ListBox listBox = new();
+        listBox.FrameworkElementTemplate = new Gum.Forms.FrameworkElementTemplate(typeof(WriteOnlyBoundListBoxItem));
+        TestViewModel item = new() { IsChecked = true };
+
+        // Act
+        listBox.Items.Add(item);
+        WriteOnlyBoundListBoxItem sut = (WriteOnlyBoundListBoxItem)listBox.ListBoxItems[0];
+        bool? initial = sut.LastWritten;
+        item.IsChecked = false;
+
+        // Assert
+        initial.ShouldBe(true);
+        sut.LastWritten.ShouldBe(false);
+    }
+
+    [Fact]
+    public void SetBinding_WriteOnlyTarget_TargetChangeNotification_LeavesSourceAlone()
+    {
+        // Arrange
+        TestViewModel vm = new() { IsChecked = true };
+        WriteOnlyTargetElement sut = new() { BindingContext = vm };
+        sut.SetBinding(nameof(WriteOnlyTargetElement.IsLarge), nameof(TestViewModel.IsChecked));
+
+        // Act
+        sut.RaiseIsLargeChanged();
+
+        // Assert
+        vm.IsChecked.ShouldBe(true);
+    }
+
+    [Fact]
+    public void SetBinding_WriteOnlyTarget_OneWayToSource_ThrowsNamingProperty()
+    {
+        // Arrange
+        WriteOnlyTargetElement sut = new() { BindingContext = new TestViewModel() };
+        Binding binding = new(nameof(TestViewModel.IsChecked)) { Mode = BindingMode.OneWayToSource };
+
+        // Act
+        InvalidOperationException exception = Should.Throw<InvalidOperationException>(
+            () => sut.SetBinding(nameof(WriteOnlyTargetElement.IsLarge), binding));
+
+        // Assert
+        exception.Message.ShouldContain(nameof(WriteOnlyTargetElement.IsLarge));
+    }
+
+    private class WriteOnlyTargetElement : FrameworkElement
+    {
+        public WriteOnlyTargetElement() : base(new Gum.Wireframe.InteractiveGue())
+        {
+        }
+
+        public bool? LastWritten { get; private set; }
+
+        public bool IsLarge
+        {
+            set => LastWritten = value;
+        }
+
+        public void RaiseIsLargeChanged() => PushValueToViewModel(nameof(IsLarge));
+    }
+
+    private class WriteOnlyBoundListBoxItem : ListBoxItem
+    {
+        public bool? LastWritten { get; private set; }
+
+        public bool CanAfford
+        {
+            set => LastWritten = value;
+        }
+
+        protected override void ReactToVisualChanged()
+        {
+            base.ReactToVisualChanged();
+            this.SetBinding<TestViewModel>(nameof(CanAfford), vm => vm.IsChecked);
+        }
+    }
+
     private class TestStringBoolConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter)

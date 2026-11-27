@@ -41,7 +41,21 @@ internal class NpcBindingExpression : UntypedBindingExpression
             ? Activator.CreateInstance(TargetProperty.PropertyType)
             : null;
 
-        LastTargetValue = TargetProperty.GetValue(target);
+        // A write-only target has no value to send back, so it binds OneWay even when the mode is
+        // TwoWay (the default). OneWayToSource would never do anything, so it is refused.
+        if (!TargetProperty.CanRead)
+        {
+            if (binding.Mode is BindingMode.OneWayToSource)
+            {
+                throw new InvalidOperationException(
+                    $"Property '{targetPropertyName}' on {target.GetType().Name} has no getter, so it cannot be " +
+                    $"the target of a {nameof(BindingMode.OneWayToSource)} binding.");
+            }
+        }
+        else
+        {
+            LastTargetValue = TargetProperty.GetValue(target);
+        }
 
         if (binding.Mode is BindingMode.TwoWay or BindingMode.OneWayToSource)
         {
@@ -56,6 +70,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
     
     private bool ShouldUpdateSource =>
         Binding.Mode is not BindingMode.OneWay &&
+        TargetProperty.CanRead &&
         TargetProperty.Name is not nameof(FrameworkElement.BindingContext);
 
     [UnconditionalSuppressMessage("Trimming", "IL2026",

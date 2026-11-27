@@ -129,6 +129,8 @@ All binding features work with indexed paths: modes, converters, StringFormat, F
 
 **Weak listeners in PropertyPathObserver.** Forms binding uses weak references to avoid memory leaks on deep paths. GUE binding does not — callers should unsubscribe when disposing.
 
+**A setter-only target property binds OneWay on both systems.** Nothing may read the target without checking `CanRead` (`NpcBindingExpression.ShouldUpdateSource`, `GraphicalUiElement.PushValueToViewModel`); a default TwoWay binding only pushes source values, and `OneWayToSource` on a setter-only target throws.
+
 **Lambda extracts path at call time, not at update time.** `vm => vm.Child.Text` becomes the static path `"Child.Text"`. If `Child` is replaced, `PropertyPathObserver` re-hooks the listener chain automatically.
 
 **ListBox `Items` is bindable.** `listBox.SetBinding(nameof(ListBox.Items), nameof(vm.Items))` works and keeps the list in sync with an `ObservableCollection` on the VM.
