@@ -46,11 +46,13 @@ You can also click the Generate Code button on each screen file to make sure tha
 
 By generating code for both screens, you can access each screen as a strongly-typed class in your project: `Screen1` and `Screen2` .
 
-You can load Screen1 by adding the following code to your game.
+You can load Screen1 by adding the following code to your game. The screens are in your project's `Screens` namespace, so replace `MyGame` with your project's name.
 
 {% tabs %}
 {% tab title="Full Code" %}
 ```csharp
+using MyGame.Screens;
+
 // Initialize
 var screen = new Screen1();
 screen.AddToRoot();
@@ -59,6 +61,8 @@ screen.AddToRoot();
 
 {% tab title="Diff" %}
 ```diff
++using MyGame.Screens;
++
 // Initialize
 +var screen = new Screen1();
 +screen.AddToRoot();
@@ -76,23 +80,29 @@ When we generated our screens earlier, Gum created code files for each, includin
 
 We can modify Screen1.cs and Screen2.cs to include code to move from one screen to the other.
 
-Add a Click handler to our button which removes the existing screen and creates the new screen so your two screens look like the code shown in the following blocks.
+Add a Click handler to our button which removes the existing screen and creates the new screen so your two screens look like the code shown in the following blocks. Each custom code file declares `GumUI` in its class, the same way your game class does.
 
 {% tabs %}
 {% tab title="Full Code" %}
 ```csharp
 using Gum;
+using Gum.Forms.Controls;
 
-partial class Screen1
+namespace MyGame.Screens
 {
-    partial void CustomInitialize()
+    partial class Screen1
     {
-        ButtonStandardInstance.Click += (_, _) =>
+        GumService GumUI => GumService.Default;
+
+        partial void CustomInitialize()
         {
-            GumUI.Root.Children.Clear();
-            var screen = new Screen2();
-            screen.AddToRoot();
-        };
+            ButtonStandardInstance.Click += (_, _) =>
+            {
+                GumUI.Root.Children.Clear();
+                var screen = new Screen2();
+                screen.AddToRoot();
+            };
+        }
     }
 }
 ```
@@ -101,17 +111,23 @@ partial class Screen1
 {% tab title="Diff" %}
 ```diff
 using Gum;
+using Gum.Forms.Controls;
 
-partial class Screen1
+namespace MyGame.Screens
 {
-    partial void CustomInitialize()
+    partial class Screen1
     {
-+       ButtonStandardInstance.Click += (_, _) =>
-+       {
-+           GumUI.Root.Children.Clear();
-+           var screen = new Screen2();
-+           screen.AddToRoot();
-+       };
+        GumService GumUI => GumService.Default;
+
+        partial void CustomInitialize()
+        {
++           ButtonStandardInstance.Click += (_, _) =>
++           {
++               GumUI.Root.Children.Clear();
++               var screen = new Screen2();
++               screen.AddToRoot();
++           };
+        }
     }
 }
 ```
@@ -122,40 +138,57 @@ partial class Screen1
 {% tab title="Full Code" %}
 ```csharp
 using Gum;
+using Gum.Forms.Controls;
 
-partial class Screen2
+namespace MyGame.Screens
 {
-    partial void CustomInitialize()
+    partial class Screen2
     {
-        ButtonStandardInstance.Click += (_, _) =>
+        GumService GumUI => GumService.Default;
+
+        partial void CustomInitialize()
         {
-            GumUI.Root.Children.Clear();
-            var screen = new Screen1();
-            screen.AddToRoot();
-        };
+            ButtonStandardInstance.Click += (_, _) =>
+            {
+                GumUI.Root.Children.Clear();
+                var screen = new Screen1();
+                screen.AddToRoot();
+            };
+        }
     }
 }
 ```
 {% endtab %}
 
 {% tab title="Diff" %}
-<pre class="language-diff"><code class="lang-diff">using Gum;
+```diff
+using Gum;
+using Gum.Forms.Controls;
 
-partial class Screen2
+namespace MyGame.Screens
 {
-    partial void CustomInitialize()
+    partial class Screen2
     {
-<strong>+       ButtonStandardInstance.Click += (_, _) =>
-</strong>+       {
-+           GumUI.Root.Children.Clear();
-+           var screen = new Screen1();
-+           screen.AddToRoot();
-+       };
+        GumService GumUI => GumService.Default;
+
+        partial void CustomInitialize()
+        {
++           ButtonStandardInstance.Click += (_, _) =>
++           {
++               GumUI.Root.Children.Clear();
++               var screen = new Screen1();
++               screen.AddToRoot();
++           };
+        }
     }
 }
-</code></pre>
+```
 {% endtab %}
 {% endtabs %}
+
+{% hint style="info" %}
+Gum adds the `GumUI` line and both `using` lines to new custom code files in December 2026, or now if building Gum from source. A custom code file created before then needs them added by hand.
+{% endhint %}
 
 Each screen clears the root (removing everything under it) when its button is clicked, then creates and adds the next screen to the root.
 

@@ -120,6 +120,51 @@ public class CustomCodeStubDetectorTests : BaseTestClass
     }
 
     [Fact]
+    public void IsUntouchedStub_ReturnsTrue_ForStubWithGumUIProperty()
+    {
+        string contents = """
+            using Gum;
+            using Gum.Forms.Controls;
+
+            namespace MyGame.Screens
+            {
+                partial class Screen1
+                {
+                    GumService GumUI => GumService.Default;
+
+                    partial void CustomInitialize()
+                    {
+
+                    }
+                }
+            }
+            """;
+
+        _detector.IsUntouchedStub(contents).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsUntouchedStub_ReturnsFalse_WhenGumUIPropertyIsChanged()
+    {
+        string contents = """
+            namespace MyGame.Screens
+            {
+                partial class Screen1
+                {
+                    GumService GumUI => CreateMyOwnService();
+
+                    partial void CustomInitialize()
+                    {
+
+                    }
+                }
+            }
+            """;
+
+        _detector.IsUntouchedStub(contents).ShouldBeFalse();
+    }
+
+    [Fact]
     public void IsUntouchedStub_ReturnsTrue_ForEmptyFile()
     {
         _detector.IsUntouchedStub("   \r\n  ").ShouldBeTrue();

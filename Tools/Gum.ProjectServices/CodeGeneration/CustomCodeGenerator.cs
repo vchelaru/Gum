@@ -40,6 +40,21 @@ namespace Gum.ProjectServices.CodeGeneration
                 stringBuilder.AppendLine(CodeGenerator.TranslateLegacyUsingStatements(
                     elementSettings.UsingStatements, resolvedSyntaxVersion));
             }
+
+            bool declaresGumUI = HasGumService(projectSettings.OutputLibrary);
+            if (declaresGumUI)
+            {
+                bool addedUsing = AppendUsingIfMissing(stringBuilder, CodeGenerator.GetGumServiceNamespace(resolvedSyntaxVersion));
+                if (projectSettings.OutputLibrary == OutputLibrary.GumForms)
+                {
+                    // AddToRoot on a Forms control is an extension method in this namespace.
+                    addedUsing |= AppendUsingIfMissing(stringBuilder, "Gum.Forms.Controls");
+                }
+                if (addedUsing)
+                {
+                    stringBuilder.AppendLine();
+                }
+            }
             #endregion
 
             #region Namespace Header/Opening {
@@ -65,6 +80,13 @@ namespace Gum.ProjectServices.CodeGeneration
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
             #endregion
+
+            if (declaresGumUI)
+            {
+                // Lets custom code use GumUI the way the docs do; otherwise only Game1 declares it.
+                stringBuilder.AppendLine(ToTabs(tabCount) + GumUIPropertyLine);
+                stringBuilder.AppendLine();
+            }
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "partial void CustomInitialize()");
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
@@ -118,6 +140,29 @@ namespace Gum.ProjectServices.CodeGeneration
         public string? GetBaseClass(ElementSave element, CodeOutputProjectSettings projectSettings) =>
             CodeGenerator.GetInheritance(element, projectSettings, _codeGenerator.ResolveSyntaxVersion(projectSettings), _nameVerifier,
                 _codeGenerator.AreBehaviorsDisabledByEngineProfile);
+
+        /// <summary>
+        /// The property a new custom code stub declares when its output library's runtimes have a
+        /// <c>GumService</c>. <see cref="CustomCodeStubDetector"/> treats it as part of the stub.
+        /// </summary>
+        public const string GumUIPropertyLine = "GumService GumUI => GumService.Default;";
+
+        // The legacy Skia, Xamarin.Forms, WPF and MAUI outputs target hosts that may have no GumService.
+        private static bool HasGumService(OutputLibrary outputLibrary) =>
+            outputLibrary == OutputLibrary.GumForms || CodeGenerator.UsesUnifiedGumRuntime(outputLibrary);
+
+        private static bool AppendUsingIfMissing(StringBuilder stringBuilder, string namespaceName)
+        {
+            string usingLine = $"using {namespaceName};";
+            bool alreadyPresent = stringBuilder.ToString()
+                .Split('\n')
+                .Any(line => line.Trim() == usingLine);
+            if (!alreadyPresent)
+            {
+                stringBuilder.AppendLine(usingLine);
+            }
+            return !alreadyPresent;
+        }
 
         private static string ToTabs(int tabCount) => new string(' ', tabCount * 4);
 

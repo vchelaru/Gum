@@ -9,7 +9,7 @@ public interface ICustomCodeStubDetector
 {
     /// <summary>
     /// Returns true when <paramref name="customCodeFileContents"/> holds no user-authored code -
-    /// only usings, a namespace, a class header and an empty-bodied <c>CustomInitialize</c>.
+    /// only usings, a namespace, a class header, the stub's <c>GumUI</c> property and an empty-bodied <c>CustomInitialize</c>.
     /// </summary>
     bool IsUntouchedStub(string customCodeFileContents);
 }
@@ -42,6 +42,9 @@ public class CustomCodeStubDetector : ICustomCodeStubDetector
     private const string ClassModifiers = @"(?:(?:public|internal|private|protected|sealed|abstract|static|partial)\s+)*";
     private static readonly Regex ClassHeaderRegex = new(
         $@"^{ClassModifiers}class\s+@?\w+\s*(?::\s*[^{{}}]+)?\{{\s*");
+
+    private static readonly Regex GumUIPropertyRegex = new(
+        @"^(?:(?:public|internal|private|protected)\s+)*GumService\s+GumUI\s*=>\s*GumService\s*\.\s*Default\s*;\s*");
 
     private const string MethodModifiers = @"(?:(?:public|internal|private|protected|partial)\s+)*";
     private static readonly Regex EmptyCustomInitializeRegex = new(
@@ -85,6 +88,12 @@ public class CustomCodeStubDetector : ICustomCodeStubDetector
             return false;
         }
         remaining = remaining.Substring(0, remaining.Length - expectedClosing.Length).TrimEnd();
+
+        // Stubs declare the GumUI property ahead of CustomInitialize (CustomCodeGenerator.GumUIPropertyLine).
+        if (GumUIPropertyRegex.Match(remaining) is { Success: true } gumUIProperty)
+        {
+            remaining = remaining.Substring(gumUIProperty.Length);
+        }
 
         return EmptyCustomInitializeRegex.IsMatch(remaining);
     }

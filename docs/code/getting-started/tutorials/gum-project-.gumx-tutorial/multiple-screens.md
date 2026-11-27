@@ -102,6 +102,8 @@ Now we can modify both Screen1Runtime.cs and Screen2Runtime.cs to include code t
 ```csharp
 partial class Screen1Runtime : Gum.Wireframe.GraphicalUiElement
 {
+    GumService GumUI => GumService.Default;
+
     partial void CustomInitialize()
     {
         this.GetFrameworkElementByName<Button>("ButtonStandardInstance").Click += (_, _) =>
@@ -119,6 +121,8 @@ partial class Screen1Runtime : Gum.Wireframe.GraphicalUiElement
 ```csharp
 partial class Screen2Runtime : Gum.Wireframe.GraphicalUiElement
 {
+    GumService GumUI => GumService.Default;
+
     partial void CustomInitialize()
     {
         this.GetFrameworkElementByName<Button>("ButtonStandardInstance").Click += (_, _) =>
