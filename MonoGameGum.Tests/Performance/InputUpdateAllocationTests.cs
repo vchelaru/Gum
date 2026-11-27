@@ -81,8 +81,8 @@ public class InputUpdateAllocationTests : BaseTestClass
 
     private void PlaceCursor(GraphicalUiElement over, bool leftDown = false)
     {
-        int x = (int)(over.AbsoluteLeft + over.GetAbsoluteWidth() / 2);
-        int y = (int)(over.AbsoluteTop + over.GetAbsoluteHeight() / 2);
+        int x = (int)(over.AbsoluteLeft + over.AbsoluteWidth / 2);
+        int y = (int)(over.AbsoluteTop + over.AbsoluteHeight / 2);
         _cursor.Next = new MouseState(x, y, 0, leftDown ? ButtonState.Pressed : ButtonState.Released,
             ButtonState.Released, ButtonState.Released, ButtonState.Released, ButtonState.Released);
     }
@@ -205,6 +205,30 @@ public class InputUpdateAllocationTests : BaseTestClass
     }
 
     [Fact]
+    public void Update_FocusedButtonWithHotReloadEnabled_AllocatesNothing()
+    {
+        string folder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "GumHotReloadAlloc_" + Guid.NewGuid().ToString("N"));
+        System.IO.Directory.CreateDirectory(folder);
+        Gum.GumService service = Gum.GumService.Default;
+        try
+        {
+            service.EnableHotReload(System.IO.Path.Combine(folder, "Project.gumx"));
+            Button button = new Button();
+            button.AddToRoot();
+            PlaceCursorAway();
+            button.IsFocused = true;
+
+            MeasureIdleFrames("focused Button, hot reload enabled").ShouldBe(0);
+        }
+        finally
+        {
+            service._hotReloadManager?.Stop();
+            service._hotReloadManager = null;
+            System.IO.Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Update_HeldPressOnButton_AllocatesNothing()
     {
         Button button = new Button();
@@ -212,7 +236,7 @@ public class InputUpdateAllocationTests : BaseTestClass
         PlaceCursor(button.Visual, leftDown: true);
 
         MeasureIdleFrames("held press on Button").ShouldBe(0);
-        _cursor.WindowPushed.ShouldBe(button.Visual);
+        _cursor.VisualPushed.ShouldBe(button.Visual);
     }
 
     [Fact]
