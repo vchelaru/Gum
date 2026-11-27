@@ -94,14 +94,60 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
         }
     }
 
-    IEnumerable<Gum.Forms.Input.Keys> IInputReceiverKeyboard.KeysTyped
+    // Returns one reused sequence: enumerate it once, right away, and do not keep it past the next read.
+    IEnumerable<Gum.Forms.Input.Keys> IInputReceiverKeyboard.KeysTyped => _gumKeysTyped ??= new GumKeysTypedSequence(this);
+
+    private GumKeysTypedSequence? _gumKeysTyped;
+
+    /// <summary>
+    /// The keys typed this frame as one object this keyboard keeps instead of a new iterator per read (#8472):
+    /// every focused control reads it every frame. It is its own enumerator over a snapshot it owns, so a read
+    /// made while another is still being enumerated gets a fresh snapshot instead.
+    /// </summary>
+    private sealed class GumKeysTypedSequence : IEnumerable<Gum.Forms.Input.Keys>, IEnumerator<Gum.Forms.Input.Keys>
     {
-        get
+        private readonly Keyboard _keyboard;
+        private readonly List<Gum.Forms.Input.Keys> _snapshot = new List<Gum.Forms.Input.Keys>();
+        private int _index;
+        private bool _inUse;
+
+        public GumKeysTypedSequence(Keyboard keyboard)
         {
-            foreach (var item in KeysTyped)
+            _keyboard = keyboard;
+        }
+
+        public Gum.Forms.Input.Keys Current => _snapshot[_index];
+
+        object System.Collections.IEnumerator.Current => Current;
+
+        public IEnumerator<Gum.Forms.Input.Keys> GetEnumerator()
+        {
+            if (_inUse)
             {
-                yield return (Gum.Forms.Input.Keys)(int)item;
+                return _keyboard.KeysTyped.Select(key => (Gum.Forms.Input.Keys)(int)key).ToList().GetEnumerator();
             }
+
+            _inUse = true;
+            _snapshot.Clear();
+            // KeysTyped refills keysTypedInternal; walking the List itself avoids a boxed enumerator.
+            _ = _keyboard.KeysTyped;
+            foreach (Keys key in _keyboard.keysTypedInternal)
+            {
+                _snapshot.Add((Gum.Forms.Input.Keys)(int)key);
+            }
+            _index = -1;
+            return this;
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public bool MoveNext() => ++_index < _snapshot.Count;
+
+        public void Reset() => _index = -1;
+
+        public void Dispose()
+        {
+            _inUse = false;
         }
     }
 

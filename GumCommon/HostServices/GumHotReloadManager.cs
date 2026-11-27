@@ -242,7 +242,8 @@ public class GumHotReloadManager : IGumHotReloadManager
     {
         DateTime now = _utcNow();
         bool reload;
-        List<string> otherFiles = new List<string>();
+        // Created only past the early out, so an idle frame allocates nothing (#8472).
+        List<string> otherFiles;
         lock (_pendingReloadLock)
         {
             TimeSpan debounce = TimeSpan.FromMilliseconds(200);
@@ -260,6 +261,10 @@ public class GumHotReloadManager : IGumHotReloadManager
             {
                 otherFiles = _changedOtherFiles.ToList();
                 _changedOtherFiles.Clear();
+            }
+            else
+            {
+                otherFiles = new List<string>();
             }
         }
 

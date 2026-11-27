@@ -39,6 +39,31 @@ public class RoutedEventArgs : EventArgs
     public bool Handled { get; set; }
 }
 
+/// <summary>
+/// One <see cref="RoutedEventArgs"/> per nesting depth, so per-frame raises allocate nothing (#8472) while a
+/// raise made from inside a handler still gets its own args. Every <see cref="Rent"/> is paired with a
+/// <see cref="Return"/> in a finally.
+/// </summary>
+internal static class RoutedEventArgsPool
+{
+    static readonly List<RoutedEventArgs> byDepth = new();
+    static int depth;
+
+    public static RoutedEventArgs Rent()
+    {
+        if (depth == byDepth.Count)
+        {
+            byDepth.Add(new RoutedEventArgs());
+        }
+        RoutedEventArgs args = byDepth[depth];
+        depth++;
+        args.Handled = false;
+        return args;
+    }
+
+    public static void Return() => depth--;
+}
+
 public class InputEventArgs : RoutedEventArgs
 {
     /// <summary>
@@ -737,16 +762,12 @@ public partial class InteractiveGue : GraphicalUiElement
                 {
                     if (handledActions.HandledRollOver == false && (cursor.XChange != 0 || cursor.YChange != 0))
                     {
-                        var args = new RoutedEventArgs();
-                        asInteractive.RollOverBubbling?.Invoke(asInteractive, args);
-                        handledActions.HandledRollOver = args.Handled;
+                        handledActions.HandledRollOver = RaiseBubbling(asInteractive.RollOverBubbling, asInteractive);
                     }
 
                     if (cursor.ScrollWheelChange != 0 && handledActions.HandledMouseWheel == false)
                     {
-                        var args = new RoutedEventArgs();
-                        asInteractive.MouseWheelScroll?.Invoke(asInteractive, args);
-                        handledActions.HandledMouseWheel = args.Handled;
+                        handledActions.HandledMouseWheel = RaiseBubbling(asInteractive.MouseWheelScroll, asInteractive);
                     }
 
                     // ClickBubbling is raised child-first as the recursion unwinds. DidClickOccur
@@ -754,9 +775,7 @@ public partial class InteractiveGue : GraphicalUiElement
                     // setting Handled stops it from reaching further ancestors.
                     if (handledActions.DidClickOccur && handledActions.HandledClick == false)
                     {
-                        var args = new RoutedEventArgs();
-                        asInteractive.ClickBubbling?.Invoke(asInteractive, args);
-                        handledActions.HandledClick = args.Handled;
+                        handledActions.HandledClick = RaiseBubbling(asInteractive.ClickBubbling, asInteractive);
                     }
                 }
 
@@ -764,6 +783,25 @@ public partial class InteractiveGue : GraphicalUiElement
         }
 
         return handledByThis || handledByChild;
+    }
+
+    // Raises a bubbling event (RollOverBubbling, MouseWheelScroll, ClickBubbling) with pooled args and returns Handled.
+    static bool RaiseBubbling(Action<object, RoutedEventArgs>? handler, InteractiveGue sender)
+    {
+        if (handler == null)
+        {
+            return false;
+        }
+        RoutedEventArgs args = RoutedEventArgsPool.Rent();
+        try
+        {
+            handler(sender, args);
+            return args.Handled;
+        }
+        finally
+        {
+            RoutedEventArgsPool.Return();
+        }
     }
 
     protected override bool IsOutsideOfBoundsHitTestingEnabled =>
@@ -1869,16 +1907,20 @@ public static class GueInteractiveExtensionMethods
             bool wasCancelled = false;
             foreach(var toPreview in previewList)
             {
-                var args = new RoutedEventArgs();
-                if(!wasCancelled)
+                var args = RoutedEventArgsPool.Rent();
+                try
                 {
                     toPreview.OnFocusUpdatePreview(args);
                     wasCancelled = args.Handled;
+                }
+                finally
+                {
+                    RoutedEventArgsPool.Return();
+                }
 
-                    if(wasCancelled)
-                    {
-                        break;
-                    }    
+                if(wasCancelled)
+                {
+                    break;
                 }
             }
             // Shared by every service; left filled it would keep the focused control alive after its service uninitializes (#8473).

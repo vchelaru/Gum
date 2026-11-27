@@ -352,6 +352,27 @@ public class FormsUtilities
         innerRootList.Clear();
     }
 
+    // Moves a popup or modal root's renderable to the end of every layer that holds it, so it draws on top.
+    // Indexed: foreach over a ReadOnlyCollection boxes an enumerator every frame (#8472).
+    static void MoveToTopOfItsLayers(GraphicalUiElement root)
+    {
+        if (root.RenderableComponent is not IRenderableIpso renderable)
+        {
+            return;
+        }
+        var layers = SystemManagers.Default.Renderer.Layers;
+        for (int i = 0; i < layers.Count; i++)
+        {
+            var layer = layers[i];
+            var renderables = layer.Renderables;
+            if (renderables.Contains(renderable) && renderables[renderables.Count - 1] != renderable)
+            {
+                layer.Remove(renderable);
+                layer.Add(renderable);
+            }
+        }
+    }
+
 #if XNALIKE
     public static void Update(Game? game, GameTime gameTime, IEnumerable<GraphicalUiElement>? roots)
 #else
@@ -437,16 +458,7 @@ public class FormsUtilities
                     throw new InvalidOperationException("The ModalRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
                 }
 #endif
-                // make sure this is the last:
-                foreach (var layer in SystemManagers.Default.Renderer.Layers)
-                {
-                    if (modalRoot.RenderableComponent is IRenderableIpso modalRenderable &&
-                        layer.Renderables.Contains(modalRenderable) && layer.Renderables.Last() != modalRenderable)
-                    {
-                        layer.Remove(modalRenderable);
-                        layer.Add(modalRenderable);
-                    }
-                }
+                MoveToTopOfItsLayers(modalRoot);
             }
         }
 
@@ -480,21 +492,13 @@ public class FormsUtilities
                     }
 #endif
 
-                    // make sure this is the last:
-                    foreach (var layer in SystemManagers.Default.Renderer.Layers)
-                    {
-                        if (popupRoot.RenderableComponent is IRenderableIpso popupRenderable &&
-                            layer.Renderables.Contains(popupRenderable) &&
-                            layer.Renderables.Last() != popupRenderable)
-                        {
-                            layer.Remove(popupRenderable);
-                            layer.Add(popupRenderable);
-                        }
-                    }
+                    MoveToTopOfItsLayers(popupRoot);
 
-                    foreach (var item in popupRoot.Children)
+                    // Indexed: foreach over the ObservableCollection boxes an enumerator every frame (#8472).
+                    var popupChildren = popupRoot.Children;
+                    for (int i = 0; i < popupChildren.Count; i++)
                     {
-                        innerList.Add(item);
+                        innerList.Add(popupChildren[i]);
                     }
                 }
             }

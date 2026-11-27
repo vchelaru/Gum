@@ -335,6 +335,8 @@ public class HotReloadResultTests : BaseTestClass
         {
             service.HotReloadFinished -= received.Add;
             service._hotReloadManager?.Stop();
+            // Left set, every later test's Update would still run this stopped manager.
+            service._hotReloadManager = null;
         }
 
         received.Count.ShouldBeGreaterThan(0);

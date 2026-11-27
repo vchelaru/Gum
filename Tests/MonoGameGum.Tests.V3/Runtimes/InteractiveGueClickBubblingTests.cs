@@ -135,6 +135,62 @@ public class InteractiveGueClickBubblingTests : BaseTestClass
         parentBubbled.ShouldBeFalse();
     }
 
+    [Fact]
+    public void ClickBubbling_ShouldStartUnhandled_AfterAnEarlierClickWasHandled()
+    {
+        (ContainerRuntime parent, ContainerRuntime child) = CreateParentChild();
+
+        bool handleNext = true;
+        int parentBubbled = 0;
+        child.ClickBubbling += (_, args) =>
+        {
+            args.Handled.ShouldBeFalse();
+            if (handleNext)
+            {
+                args.Handled = true;
+                handleNext = false;
+            }
+        };
+        parent.ClickBubbling += (_, _) => parentBubbled++;
+
+        Mock<ICursor> cursor = CreateCursorOver(child);
+        PushAndClick(cursor);
+        PushAndClick(cursor);
+
+        // The args object is reused between raises (#8472); the second click must not see the first one's Handled.
+        parentBubbled.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ClickBubbling_ShouldReachParent_WhenANestedRaiseInsideTheHandlerWasHandled()
+    {
+        (ContainerRuntime parent, ContainerRuntime child) = CreateParentChild();
+
+        int depth = 0;
+        int parentBubbled = 0;
+        child.ClickBubbling += (_, args) =>
+        {
+            depth++;
+            if (depth == 1)
+            {
+                // The outer raise leaves Handled false but runs a nested raise of the same event.
+                Gum.GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+            }
+            else
+            {
+                args.Handled = true;
+            }
+        };
+        parent.ClickBubbling += (_, _) => parentBubbled++;
+
+        Mock<ICursor> cursor = CreateCursorOver(child);
+        PushAndClick(cursor);
+
+        depth.ShouldBe(2);
+        // The nested raise was handled, so only the outer one reaches the parent.
+        parentBubbled.ShouldBe(1);
+    }
+
     private static (ContainerRuntime parent, ContainerRuntime child) CreateParentChild()
     {
         ContainerRuntime parent = new ContainerRuntime();
