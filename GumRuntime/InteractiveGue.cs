@@ -1703,6 +1703,7 @@ public static class GueInteractiveExtensionMethods
         internalList.Add(gue);
 
         DoUiActivityRecursively(internalList, cursor, keyboard, currentGameTimeInSeconds);
+        internalList.Clear();
     }
 
     static List<IInputReceiver> previewList = new();
@@ -1880,6 +1881,8 @@ public static class GueInteractiveExtensionMethods
                     }    
                 }
             }
+            // Shared by every service; left filled it would keep the focused control alive after its service uninitializes (#8473).
+            previewList.Clear();
 
             if(!wasCancelled)
             {

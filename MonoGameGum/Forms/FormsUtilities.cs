@@ -320,7 +320,10 @@ public class FormsUtilities
     /// where elements are not added to managers.
     /// </summary>
     public static IReadOnlyList<GraphicalUiElement> LastEventRoots => _lastEventRoots;
-    static List<GraphicalUiElement> _lastEventRoots = new List<GraphicalUiElement>();
+
+    // Per service (#8473): read after Update for diagnostics, so it must answer for the service asking.
+    static List<GraphicalUiElement> _lastEventRoots => GumContext.Own?.LastEventRoots ?? _processWideLastEventRoots;
+    static readonly List<GraphicalUiElement> _processWideLastEventRoots = new List<GraphicalUiElement>();
 
 #if XNALIKE
     [Obsolete("Use the overload which takes a Game as the first argument, and pass the game instance.")]
@@ -346,6 +349,7 @@ public class FormsUtilities
 #else
         Update(gameTime, innerRootList);
 #endif
+        innerRootList.Clear();
     }
 
 #if XNALIKE
@@ -507,8 +511,14 @@ public class FormsUtilities
             gameTimeSeconds,
             dispatchToFocusedReceiver: inputBlocker.CanDispatchToFocusedReceiver(InteractiveGue.CurrentInputReceiver, keyboard));
 
-        _lastEventRoots.Clear();
-        _lastEventRoots.AddRange(innerList);
+        List<GraphicalUiElement> lastEventRoots = _lastEventRoots;
+        lastEventRoots.Clear();
+        lastEventRoots.AddRange(innerList);
+
+        // Scratch for this call only. Shared by every service, so left filled it would keep this service's
+        // visuals alive after it uninitializes (#8473).
+        innerList.Clear();
+        popupModalRootPairs.Clear();
 
         var frameworkElementOver =
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
@@ -602,6 +612,8 @@ public class FormsUtilities
         FrameworkElement.MainCursor = null!;
         FrameworkElement.MainKeyboard = null!;
         Gamepads = new Gum.Input.GamePad[4];
+        _lastEventRoots.Clear();
+        ToolTipService.Release();
 
         // Null the backing field (not just leave the instance) so ActiveStyle's lazy getter
         // (_activeStyle ??= new Styling(null)) rebuilds against the live LoaderManager cache
