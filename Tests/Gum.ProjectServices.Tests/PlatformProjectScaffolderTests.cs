@@ -106,7 +106,7 @@ public class PlatformProjectScaffolderTests : IDisposable
     [InlineData(HostPlatform.SilkNet)]
     [InlineData(HostPlatform.Stride)]
     [InlineData(HostPlatform.Brutal)]
-    public void Create_ShouldEnableNullableLikeTheDotnetTemplates(HostPlatform platform)
+    public void Create_ShouldEnableNullableAndImplicitUsingsLikeTheDotnetTemplates(HostPlatform platform)
     {
         string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
 
@@ -115,6 +115,7 @@ public class PlatformProjectScaffolderTests : IDisposable
         result.Success.ShouldBeTrue(result.ErrorMessage);
         XDocument csproj = XDocument.Load(result.CsprojPath);
         csproj.Descendants("Nullable").Select(element => element.Value).ShouldBe(new[] { "enable" });
+        csproj.Descendants("ImplicitUsings").Select(element => element.Value).ShouldBe(new[] { "enable" });
     }
 
     [Theory]
