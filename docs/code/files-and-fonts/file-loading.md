@@ -146,7 +146,7 @@ sprite.Texture = bitmap;
 bitmap.Erase(SkiaSharp.SKColors.Blue);
 sprite.RefreshTextures(bitmap);
 // or refresh everything under the roots:
-GumService.Default.RefreshTextures();
+GumUI.RefreshTextures();
 ```
 
 ### Customizing How Content Loads

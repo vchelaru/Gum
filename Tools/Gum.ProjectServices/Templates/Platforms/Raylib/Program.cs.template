@@ -11,8 +11,6 @@ const int screenHeight = 450;
 Raylib.InitWindow(screenWidth, screenHeight, "{{ProjectName}}");
 Raylib.SetTargetFPS(60);
 
-GumService GumUI = GumService.Default;
-
 GumUI.Initialize("Content/GumProject/{{GumProjectFile}}");
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
@@ -30,3 +28,9 @@ while (!Raylib.WindowShouldClose())
 }
 
 Raylib.CloseWindow();
+
+// A property rather than a top-level local, which would hide the GumUI that generated code gives every other file.
+partial class Program
+{
+    static GumService GumUI => GumService.Default;
+}

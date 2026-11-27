@@ -82,8 +82,6 @@ const int screenHeight = 450;
 Raylib.InitWindow(screenWidth, screenHeight, "My Game");
 Raylib.SetTargetFPS(60);
 
-GumService GumUI = GumService.Default;
-
 GumUI.Initialize();
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
@@ -106,6 +104,11 @@ while (!Raylib.WindowShouldClose())
 }
 
 Raylib.CloseWindow();
+
+partial class Program
+{
+    static GumService GumUI => GumService.Default;
+}
 ```
 
 The button in the center of the window confirms Gum works. Delete it once you start building your game.

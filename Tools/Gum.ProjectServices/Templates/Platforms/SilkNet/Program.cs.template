@@ -28,8 +28,6 @@ window.Initialize();
 
 GL gl = GL.GetApi(window);
 
-GumService GumUI = GumService.Default;
-
 GumUI.Initialize(window, "Content/GumProject/{{GumProjectFile}}");
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
@@ -54,3 +52,9 @@ while (!window.IsClosing)
 }
 
 window.Dispose();
+
+// A property rather than a top-level local, which would hide the GumUI that generated code gives every other file.
+partial class Program
+{
+    static GumService GumUI => GumService.Default;
+}

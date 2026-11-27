@@ -46,11 +46,13 @@ You can also click the Generate Code button on each screen file to make sure tha
 
 By generating code for both screens, you can access each screen as a strongly-typed class in your project: `Screen1` and `Screen2` .
 
-You can load Screen1 by adding the following code to your game.
+You can load Screen1 by adding the following code to your game. The screens are in your project's `Screens` namespace, so replace `MyGame` with your project's name.
 
 {% tabs %}
 {% tab title="Full Code" %}
 ```csharp
+using MyGame.Screens;
+
 // Initialize
 var screen = new Screen1();
 screen.AddToRoot();
@@ -59,6 +61,8 @@ screen.AddToRoot();
 
 {% tab title="Diff" %}
 ```diff
++using MyGame.Screens;
+
 // Initialize
 +var screen = new Screen1();
 +screen.AddToRoot();
@@ -156,6 +160,10 @@ partial class Screen2
 </code></pre>
 {% endtab %}
 {% endtabs %}
+
+{% hint style="info" %}
+Generated code makes `GumUI` and `AddToRoot` available in custom code files in December 2026, or now if building Gum from source. Before that, add `GumService GumUI => GumService.Default;` inside the class and `using Gum.Forms.Controls;` at the top of each custom code file.
+{% endhint %}
 
 Each screen clears the root (removing everything under it) when its button is clicked, then creates and adds the next screen to the root.
 

@@ -5,6 +5,9 @@
 // (e.g. NineSlice.ColorCategoryState) work in code-only games that never load a .gumx.
 // Do not delete this file: without it those assignments silently do nothing.
 
+// Lets every file in the project write GumUI (and, for Gum Forms, call AddToRoot) as the docs do.
+global using static global::CodeGen_Raylib_ByReference.GumUIAccess;
+
 using Gum.DataTypes;
 using Gum.Managers;
 using System.Collections.Generic;
@@ -987,4 +990,9 @@ internal static class StandardElementsCodeGenRegistration
         }
         ObjectFinder.Self.RegisterFallbackStandardElements(standards);
     }
+}
+
+internal static class GumUIAccess
+{
+    internal static global::Gum.GumService GumUI => global::Gum.GumService.Default;
 }

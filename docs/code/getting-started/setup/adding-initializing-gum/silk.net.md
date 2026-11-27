@@ -115,8 +115,6 @@ window.Initialize();
 
 GL gl = GL.GetApi(window);
 
-GumService GumUI = GumService.Default;
-
 GumUI.Initialize(window);
 GumUI.UseKeyboardDefaults();
 GumUI.UseGamepadDefaults();
@@ -145,6 +143,11 @@ while (!window.IsClosing)
 }
 
 window.Dispose();
+
+partial class Program
+{
+    static GumService GumUI => GumService.Default;
+}
 ```
 
 The button in the center of the window confirms Gum works. Delete it once you start building your game.

@@ -40,6 +40,14 @@ namespace Gum.ProjectServices.CodeGeneration
                 stringBuilder.AppendLine(CodeGenerator.TranslateLegacyUsingStatements(
                     elementSettings.UsingStatements, resolvedSyntaxVersion));
             }
+
+            // Custom code in a Gum Forms element creates and shows Forms controls (new Button(), AddToRoot).
+            const string formsControlsUsing = "using Gum.Forms.Controls;";
+            if (projectSettings.OutputLibrary == OutputLibrary.GumForms &&
+                !stringBuilder.ToString().Contains(formsControlsUsing))
+            {
+                stringBuilder.AppendLine(formsControlsUsing);
+            }
             #endregion
 
             #region Namespace Header/Opening {

@@ -477,7 +477,10 @@ public class CodeGenerator
     /// <summary>
     /// File-scoped namespaces need C# 10. An unknown language version is assumed to be modern.
     /// </summary>
-    internal bool ResolveUseFileScopedNamespace(CodeOutputProjectSettings projectSettings)
+    internal bool ResolveUseFileScopedNamespace(CodeOutputProjectSettings projectSettings) =>
+        ResolveSupportsCSharp10(projectSettings);
+
+    private bool ResolveSupportsCSharp10(CodeOutputProjectSettings projectSettings)
     {
         int? languageVersion = _cSharpVersionDetectionService?.Detect(
             projectSettings, _projectDirectoryProvider.ProjectDirectory);
@@ -4521,6 +4524,22 @@ public class CodeGenerator
         stringBuilder.AppendLine("// (e.g. NineSlice.ColorCategoryState) work in code-only games that never load a .gumx.");
         stringBuilder.AppendLine("// Do not delete this file: without it those assignments silently do nothing.");
         stringBuilder.AppendLine();
+
+        bool emitsGumUIAccess = EmitsGumUIAccess(projectSettings);
+        string gumUIAccessClass = string.IsNullOrEmpty(projectSettings.RootNamespace)
+            ? $"global::{GumUIAccessClassName}"
+            : $"global::{projectSettings.RootNamespace}.{GumUIAccessClassName}";
+        if (emitsGumUIAccess)
+        {
+            stringBuilder.AppendLine("// Lets every file in the project write GumUI (and, for Gum Forms, call AddToRoot) as the docs do.");
+            stringBuilder.AppendLine($"global using static {gumUIAccessClass};");
+            if (projectSettings.OutputLibrary == OutputLibrary.GumForms)
+            {
+                stringBuilder.AppendLine("global using static global::Gum.Forms.Controls.FrameworkElementExt;");
+            }
+            stringBuilder.AppendLine();
+        }
+
         stringBuilder.AppendLine("using Gum.DataTypes;");
         stringBuilder.AppendLine("using Gum.Managers;");
         stringBuilder.AppendLine("using System.Collections.Generic;");
@@ -4564,12 +4583,38 @@ public class CodeGenerator
         stringBuilder.AppendLine(indent + "    }");
         stringBuilder.AppendLine(indent + "}");
 
+        if (emitsGumUIAccess)
+        {
+            stringBuilder.AppendLine();
+            stringBuilder.AppendLine(indent + $"internal static class {GumUIAccessClassName}");
+            stringBuilder.AppendLine(indent + "{");
+            stringBuilder.AppendLine(indent + "    internal static global::Gum.GumService GumUI => global::Gum.GumService.Default;");
+            stringBuilder.AppendLine(indent + "}");
+        }
+
         if (hasBlockNamespace)
         {
             stringBuilder.AppendLine("}");
         }
 
         return stringBuilder.ToString();
+    }
+
+    private const string GumUIAccessClassName = "GumUIAccess";
+
+    /// <summary>
+    /// Whether the fallback file imports <c>GumUI</c> project-wide. A class's own <c>GumUI</c> member
+    /// (the host's, or one a user already wrote in a custom file) wins over the import, so existing
+    /// code keeps compiling. Needs <c>Gum.GumService</c> (syntax version 3) and global usings (C# 10).
+    /// </summary>
+    private bool EmitsGumUIAccess(CodeOutputProjectSettings projectSettings)
+    {
+        bool targetsGumService = projectSettings.OutputLibrary == OutputLibrary.GumForms ||
+            UsesUnifiedGumRuntime(projectSettings.OutputLibrary);
+
+        return targetsGumService &&
+            ResolveSyntaxVersion(projectSettings) >= 3 &&
+            ResolveSupportsCSharp10(projectSettings);
     }
 
     // Methods the generator declares on every class it writes; an instance or variable of the same name would collide.

@@ -10,6 +10,8 @@ Many documentation pages create a property named GumUI as shown in the following
 GumService GumUI => GumService.Default;
 ```
 
+A project with generated code can use `GumUI` in every file without declaring it, including the custom code files of generated screens and components.
+
 ## GumService and IGumService
 
 `GumService` is the concrete service for your platform, and it is the most convenient choice for most games.

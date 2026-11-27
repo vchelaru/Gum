@@ -263,6 +263,7 @@ For adding or updating XnaFiddle interactive links, see [xnafiddle.md](xnafiddle
 
 ## Code Sample Rules
 
+- **Snippets reach the service through `GumUI`, never `GumService.Default`.** Generated code makes `GumUI` resolve in every file of a project, custom code files included.
 - **Values a sample reads from outside the code block get a comment showing what they contain.** That covers translation keys, content files, project assets and configuration, so the code block makes sense without reading the prose.
 - **Parallel samples share one design.** When a page shows the same task in two forms (code-only vs. a generated screen, MonoGame vs. raylib), a design change to one sample (where navigation lives, how the classes are split up) gets applied to the others in the same pass, or the page explains why they differ.
 
