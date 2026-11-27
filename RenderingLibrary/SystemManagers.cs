@@ -284,13 +284,13 @@ public partial class SystemManagers : ISystemManagers
             LoaderManager.Self.ContentLoader = new ContentLoader();
 
             // Load the default font, and then the bold, italic, and italic_bold options for bbcode
-            var loadedFont = LoadEmbeddedFont("Font18Arial");
+            var loadedFont = LoadEmbeddedDefaultFont(isItalic: false, isBold: false);
             Text.DefaultBitmapFont = loadedFont;
             Renderer.InternalShapesTexture = loadedFont.Texture!; // the embedded font always has its page
 
-            LoadEmbeddedFont("Font18Arial_Bold");
-            LoadEmbeddedFont("Font18Arial_Italic");
-            LoadEmbeddedFont("Font18Arial_Italic_Bold");
+            LoadEmbeddedDefaultFont(isItalic: false, isBold: true);
+            LoadEmbeddedDefaultFont(isItalic: true, isBold: false);
+            LoadEmbeddedDefaultFont(isItalic: true, isBold: true);
 
             //GraphicalUiElement.CanvasWidth = graphicsDevice.Viewport.Width;
             //GraphicalUiElement.CanvasHeight = graphicsDevice.Viewport.Height;
@@ -338,6 +338,22 @@ public partial class SystemManagers : ISystemManagers
 
 #endif
         }
+    }
+
+    // The embedded default font (Font18Arial*) is rendered from Liberation Sans (#5434), so it is also cached under the
+    // name a Text asking for "Liberation Sans" at 18 looks up: that text resolves with no font creator, and "Arial" still does.
+    private BitmapFont LoadEmbeddedDefaultFont(bool isItalic, bool isBold)
+    {
+        string arialName = System.IO.Path.GetFileNameWithoutExtension(
+            global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(18, "Arial", 0, useFontSmoothing: true, isItalic: isItalic, isBold: isBold));
+        BitmapFont font = LoadEmbeddedFont(arialName);
+
+        string liberationSansFileName = System.IO.Path.GetFileName(
+            global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(18, "Liberation Sans", 0, useFontSmoothing: true, isItalic: isItalic, isBold: isBold));
+        Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{AssemblyPrefix}.{liberationSansFileName}", font,
+            Content.LoaderManager.ExistingContentBehavior.Replace);
+
+        return font;
     }
 
     /// <summary>
