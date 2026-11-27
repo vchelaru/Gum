@@ -55,7 +55,7 @@ For example, consider a screen named `GameScreenHud` which contains a single lab
 
 <figure><img src="../../.gitbook/assets/23_10 58 42.png" alt=""><figcaption></figcaption></figure>
 
-The ViewModel may contain general properties such as `CurrentHealth` and `IsLowHealth`, but the view can process these properties to display the health with a prefix, and to modify the Label property.
+The ViewModel may contain general properties such as `Health` and `IsLowHealth`, but the view can process these properties to display the health with a prefix, and to modify the Label property.
 
 The following code could be added to `GameScreenHud.cs`, which is the custom code file created when the `GameScreenHud` is generated:
 
@@ -100,7 +100,7 @@ partial class GameScreenHud
     {
         this.SetBinding(
             nameof(this.CurrentHealth),
-            nameof(ViewModel.CurrentHealth));
+            nameof(ViewModel.Health));
 
         this.SetBinding(
             nameof(this.IsLowHealth),
