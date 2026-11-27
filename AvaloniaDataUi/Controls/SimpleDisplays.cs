@@ -321,6 +321,9 @@ public class ComboBoxDisplay : DataUiDisplayBase
     private readonly TextBlock _hint;
     private Type? _propertyType;
     private bool _isInSelectionChanged;
+    // The text the row last showed or committed. Leaving an editable combo commits only text typed
+    // since, so a value shown under focus (an undo while the drop-down has focus) is never written back.
+    private string _shownText = string.Empty;
 
     /// <summary>Builds the displayer.</summary>
     public ComboBoxDisplay()
@@ -338,7 +341,7 @@ public class ComboBoxDisplay : DataUiDisplayBase
         };
         _comboBox.LostFocus += (_, _) =>
         {
-            if (IsEditable)
+            if (IsEditable && (_comboBox.Text ?? string.Empty) != _shownText)
             {
                 HandleChange();
             }
@@ -439,6 +442,7 @@ public class ComboBoxDisplay : DataUiDisplayBase
         {
             _comboBox.Text = itemToSelect?.ToString();
         }
+        _shownText = _comboBox.Text ?? string.Empty;
         SuppressSettingProperty = false;
 
         RefreshBackground();
@@ -524,6 +528,8 @@ public class ComboBoxDisplay : DataUiDisplayBase
 
     private void HandleChange()
     {
+        // Before the commit: a commit that refreshes the row shows the stored value, which wins.
+        _shownText = _comboBox.Text ?? string.Empty;
         this.TrySetValueOnInstance();
         RefreshBackground();
     }
