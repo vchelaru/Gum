@@ -29,8 +29,9 @@ public static class CodegenCommand
 
         var pruneOption = new Option<bool>(
             "--prune",
-            "Delete generated (.Generated.cs) files that no element in the project accounts for. " +
-            "Orphaned custom code and per-element .codsj settings files are reported but never deleted.");
+            "Delete generated (.Generated.cs) files that no element in the project accounts for, " +
+            "and their custom code files when still the untouched stub. Edited custom code and " +
+            "per-element .codsj settings files are reported but never deleted.");
 
         var command = new Command("codegen", "Generate C# code for a Gum project.")
         {

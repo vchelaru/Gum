@@ -235,7 +235,7 @@ public class HeadlessCodegenRunner : IHeadlessCodegenRunner
             {
                 error.WriteLine("warning: " + OrphanCodeFileScanService.GetTruncatedMessage(scanResult.CodeRoot));
             }
-            Prune(scanResult.Orphans, output, error);
+            Prune(scanResult.Orphans, new CustomCodeStubDetector(), output, error);
         }
 
         if (runResult.BlockedCount > 0)
@@ -280,16 +280,23 @@ public class HeadlessCodegenRunner : IHeadlessCodegenRunner
     }
 
     /// <summary>
-    /// Deletes orphaned generated files — derived data, so removing them is lossless — and reports
-    /// everything else the scan found without touching it. Custom code is user-authored and
-    /// unrecoverable through Gum, and a .codsj carries hand-set per-element settings, so both are
-    /// left for the user to remove deliberately.
+    /// Deletes orphaned generated files — derived data, so removing them is lossless — plus orphaned
+    /// custom files that are still the untouched stub, which hold nothing to lose and would break the
+    /// build without their generated half (CS0759). The tool's delete removes an untouched stub by the
+    /// same <see cref="ICustomCodeStubDetector"/> rule. Everything else the scan found is reported
+    /// without touching it: edited custom code is user-authored and unrecoverable through Gum, and a
+    /// .codsj carries hand-set per-element settings, so both are left for the user to remove deliberately.
     /// </summary>
-    private static void Prune(IReadOnlyList<OrphanCodeFile> orphans, TextWriter output, TextWriter error)
+    private static void Prune(IReadOnlyList<OrphanCodeFile> orphans, ICustomCodeStubDetector stubDetector,
+        TextWriter output, TextWriter error)
     {
         int prunedCount = 0;
+        List<OrphanCodeFile> toDelete = orphans
+            .Where(item => item.Kind == OrphanCodeFileKind.Generated
+                || (item.Kind == OrphanCodeFileKind.CustomCode && IsUntouchedStub(item.FilePath.FullPath, stubDetector)))
+            .ToList();
 
-        foreach (OrphanCodeFile orphan in orphans.Where(item => item.Kind == OrphanCodeFileKind.Generated))
+        foreach (OrphanCodeFile orphan in toDelete)
         {
             try
             {
@@ -303,10 +310,10 @@ public class HeadlessCodegenRunner : IHeadlessCodegenRunner
             }
         }
 
-        output.WriteLine($"Pruned {prunedCount} orphaned generated file(s).");
+        output.WriteLine($"Pruned {prunedCount} orphaned file(s).");
 
         List<OrphanCodeFile> reportOnly = orphans
-            .Where(item => item.Kind != OrphanCodeFileKind.Generated)
+            .Where(item => !toDelete.Contains(item))
             .ToList();
 
         foreach (OrphanCodeFile orphan in reportOnly)
@@ -315,6 +322,23 @@ public class HeadlessCodegenRunner : IHeadlessCodegenRunner
                 ? "custom code file"
                 : "element code settings file";
             output.WriteLine($"Orphaned {description} (not removed): {orphan.FilePath.FullPath}");
+        }
+    }
+
+    // A file that can't be read is treated as edited, so it is reported rather than deleted.
+    private static bool IsUntouchedStub(string path, ICustomCodeStubDetector stubDetector)
+    {
+        try
+        {
+            return stubDetector.IsUntouchedStub(File.ReadAllText(path));
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
         }
     }
 

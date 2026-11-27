@@ -189,7 +189,7 @@ public class GumCliScenarioTests : IDisposable
 
         pruned.ExitCode.ShouldBe(0, pruned.Transcript);
         File.Exists(demoScreen).ShouldBeFalse("--prune removes the generated file of an element the project no longer has");
-        File.Exists(Path.Combine(gameFolder, "Screens", "DemoScreenGum.cs")).ShouldBeTrue("custom code is only listed, never deleted");
+        File.Exists(Path.Combine(gameFolder, "Screens", "DemoScreenGum.cs")).ShouldBeFalse("an untouched custom stub goes with its generated file");
         pruned.StandardOutput.ShouldContain("DemoScreenGum.cs");
         File.Exists(Path.Combine(gameFolder, "Components", "Controls", "ButtonStandard.Generated.cs")).ShouldBeTrue();
     }
