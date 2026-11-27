@@ -43,6 +43,8 @@ Once you have the tool downloaded, run it and select **File** > **New Project**.
 6. Leave **Create C# project** unchecked, since you are adding Gum to an existing game.
 7. Click **OK**.
 
+<figure><img src="../../../../.gitbook/assets/27_07 56 59.png" alt=""><figcaption><p>New Project dialog set up for this tutorial</p></figcaption></figure>
+
 After your project is created it should appear in Visual Studio.
 
 <figure><img src="../../../../.gitbook/assets/image (180).png" alt=""><figcaption><p>Gum project in Visual Studio</p></figcaption></figure>
