@@ -92,6 +92,8 @@ public class TaskScreen : FrameworkElement
     Button RemoveTaskButton;
     TextBox TaskNameTextBox;
 
+    TaskScreenViewModel ViewModel => (TaskScreenViewModel)BindingContext!;
+
     public TaskScreen() : base(new ContainerRuntime())
     {
         CreateLayout();
@@ -127,32 +129,20 @@ public class TaskScreen : FrameworkElement
     {
         TaskListBox.SetBinding(
             nameof(TaskListBox.Items), 
-            nameof(TaskScreenViewModel.Tasks));
+            nameof(ViewModel.Tasks));
 
         TaskListBox.SetBinding(
             nameof(TaskListBox.SelectedObject), 
-            nameof(TaskScreenViewModel.SelectedTask));
+            nameof(ViewModel.SelectedTask));
 
         TaskListBox.DisplayMemberPath = nameof(TaskItemViewModel.Name);
 
         TaskNameTextBox.SetBinding(
             nameof(TaskNameTextBox.Text), 
-            nameof(TaskScreenViewModel.NewTaskName));
+            nameof(ViewModel.NewTaskName));
 
-        AddTaskButton.Click += (_,_) =>
-        {
-            if (BindingContext is TaskScreenViewModel viewModel)
-            {
-                viewModel.HandleAddTask();
-            }
-        };
-        RemoveTaskButton.Click += (_,_) =>
-        {
-            if (BindingContext is TaskScreenViewModel viewModel)
-            {
-                viewModel.HandleRemoveTask();
-            }
-        };
+        AddTaskButton.Click += (_,_) => ViewModel.HandleAddTask();
+        RemoveTaskButton.Click += (_,_) => ViewModel.HandleRemoveTask();
     }
 }
 ```
@@ -163,36 +153,26 @@ public class TaskScreen : FrameworkElement
 ```csharp
 class TaskScreen
 {
+    TaskScreenViewModel ViewModel => (TaskScreenViewModel)BindingContext!;
+    
     private void CustomInitialize()
     {
         TaskListBox.SetBinding(
             nameof(TaskListBox.Items), 
-            nameof(TaskScreenViewModel.Tasks));
+            nameof(ViewModel.Tasks));
     
         TaskListBox.SetBinding(
             nameof(TaskListBox.SelectedObject), 
-            nameof(TaskScreenViewModel.SelectedTask));
+            nameof(ViewModel.SelectedTask));
     
         TaskListBox.DisplayMemberPath = nameof(TaskItemViewModel.Name);
     
         TaskNameTextBox.SetBinding(
             nameof(TaskNameTextBox.Text), 
-            nameof(TaskScreenViewModel.NewTaskName));
+            nameof(ViewModel.NewTaskName));
     
-        AddTaskButton.Click += (_,_) =>
-        {
-            if (BindingContext is TaskScreenViewModel viewModel)
-            {
-                viewModel.HandleAddTask();
-            }
-        };
-        RemoveTaskButton.Click += (_,_) =>
-        {
-            if (BindingContext is TaskScreenViewModel viewModel)
-            {
-                viewModel.HandleRemoveTask();
-            }
-        };
+        AddTaskButton.Click += (_,_) => ViewModel.HandleAddTask();
+        RemoveTaskButton.Click += (_,_) => ViewModel.HandleRemoveTask();
     }
 }
 ```
