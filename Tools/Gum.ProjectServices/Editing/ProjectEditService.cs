@@ -57,6 +57,8 @@ public enum EditFieldType
     Any,
     /// <summary>A JSON array of strings.</summary>
     StringArray,
+    /// <summary>A JSON whole number.</summary>
+    Integer,
 }
 
 /// <summary>
@@ -72,6 +74,7 @@ public record EditField(string Name, EditFieldType Type)
         EditFieldType.String => "string",
         EditFieldType.Bool => "bool",
         EditFieldType.StringArray => "string[]",
+        EditFieldType.Integer => "int",
         _ => "any",
     };
 }
@@ -227,11 +230,13 @@ public partial class ProjectEditService : IProjectEditService
             ["exposeVariable"] = new(Strings("element", "instance", "variable", "name"), None, ExposeVariable),
             ["unexposeVariable"] = new(Strings("element", "name"), None, UnexposeVariable),
             ["moveInstance"] = new(Strings("element", "name"), Fields(Str("before"), Str("after"),
-                new EditField("toFront", EditFieldType.Bool), new EditField("toBack", EditFieldType.Bool)), _reorder.MoveInstance),
+                new EditField("toFront", EditFieldType.Bool), new EditField("toBack", EditFieldType.Bool),
+                new EditField("index", EditFieldType.Integer)), _reorder.MoveInstance),
             ["moveState"] = new(Strings("element", "name"), Fields(Str("category"), Str("toCategory"), Str("before"), Str("after"),
                 new EditField("toStart", EditFieldType.Bool), new EditField("toEnd", EditFieldType.Bool)), _reorder.MoveState),
             ["removeScreen"] = new(Strings("name"), None, RemoveScreen),
             ["removeComponent"] = new(Strings("name"), None, RemoveComponent),
+            ["duplicateComponent"] = new(Strings("name", "newName"), None, DuplicateComponent),
             ["addBehavior"] = new(Strings("element", "behavior"), None, AddBehavior),
             ["removeBehavior"] = new(Strings("element", "behavior"), None, RemoveBehavior),
             ["removeInstance"] = new(Strings("element", "name"), None, RemoveInstance),
@@ -407,6 +412,11 @@ public partial class ProjectEditService : IProjectEditService
             if (field.Type == EditFieldType.String && property.Value.ValueKind != JsonValueKind.String)
             {
                 return $"{op}'s \"{property.Name}\" must be a string.";
+            }
+            if (field.Type == EditFieldType.Integer
+                && (property.Value.ValueKind != JsonValueKind.Number || !property.Value.TryGetInt32(out _)))
+            {
+                return $"{op}'s \"{property.Name}\" must be a whole number.";
             }
             if (field.Type == EditFieldType.StringArray && (property.Value.ValueKind != JsonValueKind.Array
                 || property.Value.EnumerateArray().Any(item => item.ValueKind != JsonValueKind.String)))
@@ -610,6 +620,24 @@ public partial class ProjectEditService : IProjectEditService
         ComponentSave component = project.Components.FirstOrDefault(item => item.Name == name)
             ?? throw MissingElement(project, name, "Component");
         _elementRemoval.RemoveElement(project, component);
+    }
+
+    // The tool's Duplicate: a full copy under the new name, with the source's animation and code settings files.
+    private void DuplicateComponent(GumProjectSave project, JsonElement operation)
+    {
+        string name = GetString(operation, "name");
+        string newName = GetString(operation, "newName");
+        if (project.StandardElements.Any(item => item.Name == name))
+        {
+            throw new EditException($"{name} is a standard element. Standard elements cannot be duplicated.");
+        }
+        ComponentSave source = project.Components.FirstOrDefault(item => item.Name == name)
+            ?? throw new EditException($"The project has no Component named {name}.");
+        ValidateNewElementName(newName);
+
+        ComponentSave copy = ElementDuplication.CopyComponent(source, newName);
+        _elementCreation.AddComponent(project, copy);
+        _pendingFiles.ElementDuplicated(source, copy);
     }
 
     private void RemoveInstance(GumProjectSave project, JsonElement operation)

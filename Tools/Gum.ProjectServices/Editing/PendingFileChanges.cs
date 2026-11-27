@@ -4,6 +4,7 @@ using System.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Managers;
+using Gum.ProjectServices.CodeGeneration;
 using Gum.StateAnimation.SaveClasses;
 using ToolsUtilities;
 
@@ -25,6 +26,7 @@ public class PendingFileChanges : IElementAnimationsProvider
         new Dictionary<(string, string), ElementAnimationsSave?>();
     private readonly HashSet<(string Subfolder, string Name)> _changedAnimations = new HashSet<(string, string)>();
     private readonly List<(BehaviorSave Behavior, string OldName)> _renamedBehaviors = new List<(BehaviorSave, string)>();
+    private readonly List<(ElementSave Source, ElementSave Copy)> _duplicates = new List<(ElementSave, ElementSave)>();
 
     /// <summary>
     /// Creates the changes for <paramref name="project"/>. A project that was never saved has no folder, so
@@ -40,7 +42,8 @@ public class PendingFileChanges : IElementAnimationsProvider
     }
 
     /// <summary>Whether anything is waiting to be written.</summary>
-    public bool HasChanges => _originalNames.Count > 0 || _changedAnimations.Count > 0 || _renamedBehaviors.Count > 0;
+    public bool HasChanges => _originalNames.Count > 0 || _changedAnimations.Count > 0 || _renamedBehaviors.Count > 0
+        || _duplicates.Count > 0;
 
     /// <inheritdoc/>
     public ElementAnimationsSave? GetAnimationsFor(ElementSave element, GumProjectSave project) => Load(element);
@@ -51,6 +54,21 @@ public class PendingFileChanges : IElementAnimationsProvider
         if (!_originalNames.ContainsKey(element))
         {
             _originalNames[element] = oldName;
+        }
+    }
+
+    /// <summary>
+    /// Records that <paramref name="copy"/> is a duplicate of <paramref name="source"/>, so it gets a copy of the
+    /// source's animations and code settings, as the tool's Duplicate gives it. An animation file already at the
+    /// copy's name is replaced, the answer the tool's prompt defaults to.
+    /// </summary>
+    public void ElementDuplicated(ElementSave source, ElementSave copy)
+    {
+        _duplicates.Add((source, copy));
+        if (Load(source) is { } animations)
+        {
+            _animations[Key(copy)] = FileManager.CloneSaveObject(animations);
+            MarkChanged(copy, true);
         }
     }
 
@@ -185,6 +203,14 @@ public class PendingFileChanges : IElementAnimationsProvider
             {
                 animations.Save(path);
             }
+        }
+
+        // CopySettings drops the Generated File Name override, so the two elements do not generate into one file.
+        CodeOutputElementSettingsManager settings = new CodeOutputElementSettingsManager(
+            new FixedProjectDirectoryProvider(_projectDirectory));
+        foreach ((ElementSave source, ElementSave copy) in _duplicates)
+        {
+            settings.CopySettings(source, copy);
         }
 
         bool useCompact = project.Version >= (int)GumProjectSave.GumxVersions.AttributeVersion;

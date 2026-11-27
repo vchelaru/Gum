@@ -45,12 +45,16 @@ internal sealed class ReorderEditOperations
         }
 
         // Front is drawn last, so it is the end of the list; the same meaning the tool's Bring to Front has.
-        (ReorderPlacement placement, string? anchorName) = ReadPlacement(
-            operation, "moveInstance", allowNone: false,
+        (ReorderPlacement placement, string? anchorName, int? index) = ReadPlacement(
+            operation, "moveInstance", allowNone: false, allowIndex: true,
             ("toFront", ReorderPlacement.ToEnd), ("toBack", ReorderPlacement.ToStart))!.Value;
 
         InstanceSave? anchor = null;
-        if (anchorName != null)
+        if (index is { } position)
+        {
+            (placement, anchor) = GetPlacementForIndex(instance, position);
+        }
+        else if (anchorName != null)
         {
             anchor = element.GetInstance(anchorName)
                 ?? throw new EditException($"{element.Name} has no instance named {anchorName}.");
@@ -69,6 +73,26 @@ internal sealed class ReorderEditOperations
 
         ListMover.Move(element.Instances, instance, placement, anchor);
         _inheritanceSync.ReorderInstance(instance);
+    }
+
+    // An index is the instance's position among its parent's children once it has moved, so it is turned into a
+    // place before or after one of the other children, the moves the tool makes.
+    private static (ReorderPlacement Placement, InstanceSave? Anchor) GetPlacementForIndex(InstanceSave instance, int index)
+    {
+        List<InstanceSave> siblings = instance.GetSiblingsIncludingThis();
+        if (index < 0 || index >= siblings.Count)
+        {
+            throw new EditException(
+                $"index {index} is out of range: {instance.Name} has {siblings.Count} siblings counting itself, so use 0 to {siblings.Count - 1}.");
+        }
+        List<InstanceSave> others = siblings.Where(item => item != instance).ToList();
+        if (others.Count == 0)
+        {
+            return (ReorderPlacement.Before, null);
+        }
+        return index == others.Count
+            ? (ReorderPlacement.After, others[others.Count - 1])
+            : (ReorderPlacement.Before, others[index]);
     }
 
     public void MoveState(GumProjectSave project, JsonElement operation)
@@ -98,10 +122,10 @@ internal sealed class ReorderEditOperations
             ValidateCategoryChange(element, state, from, to!);
         }
 
-        (ReorderPlacement placement, string? anchorName)? read = ReadPlacement(
-            operation, "moveState", allowNone: changesCategory,
+        (ReorderPlacement placement, string? anchorName, int? _)? read = ReadPlacement(
+            operation, "moveState", allowNone: changesCategory, allowIndex: false,
             ("toStart", ReorderPlacement.ToStart), ("toEnd", ReorderPlacement.ToEnd));
-        (ReorderPlacement placement, string? anchorName) = read ?? (ReorderPlacement.ToEnd, null);
+        (ReorderPlacement placement, string? anchorName, _) = read ?? (ReorderPlacement.ToEnd, null, null);
 
         IList<StateSave> toList = to?.States ?? ((IStateContainer)element).UncategorizedStates;
         StateSave? anchor = null;
@@ -154,19 +178,20 @@ internal sealed class ReorderEditOperations
         }
     }
 
-    // Reads the position fields: "before" or "after" naming a sibling, or one keyword. Exactly one is allowed,
-    // so no position is ever guessed; null when none is given and allowNone is set.
-    private static (ReorderPlacement Placement, string? AnchorName)? ReadPlacement(
-        JsonElement operation, string op, bool allowNone, params (string Field, ReorderPlacement Placement)[] keywords)
+    // Reads the position fields: "before" or "after" naming a sibling, one keyword, or (when allowIndex is set) an
+    // "index". Exactly one is allowed, so no position is ever guessed; null when none is given and allowNone is set.
+    private static (ReorderPlacement Placement, string? AnchorName, int? Index)? ReadPlacement(
+        JsonElement operation, string op, bool allowNone, bool allowIndex, params (string Field, ReorderPlacement Placement)[] keywords)
     {
-        List<(string Field, ReorderPlacement Placement, string? Anchor)> given = new List<(string, ReorderPlacement, string?)>();
+        List<(string Field, ReorderPlacement Placement, string? Anchor, int? Index)> given =
+            new List<(string, ReorderPlacement, string?, int?)>();
         if (GetOptionalString(operation, "before") is { } before)
         {
-            given.Add(("before", ReorderPlacement.Before, before));
+            given.Add(("before", ReorderPlacement.Before, before, null));
         }
         if (GetOptionalString(operation, "after") is { } after)
         {
-            given.Add(("after", ReorderPlacement.After, after));
+            given.Add(("after", ReorderPlacement.After, after, null));
         }
         foreach ((string field, ReorderPlacement placement) in keywords)
         {
@@ -176,11 +201,17 @@ internal sealed class ReorderEditOperations
                 {
                     throw new EditException($"{op}'s \"{field}\" must be true; leave it out to not use it.");
                 }
-                given.Add((field, placement, null));
+                given.Add((field, placement, null, null));
             }
         }
+        if (allowIndex && operation.TryGetProperty("index", out JsonElement indexValue))
+        {
+            // The Before placement is a stand-in; the caller turns the index into the real placement.
+            given.Add(("index", ReorderPlacement.Before, null, indexValue.GetInt32()));
+        }
 
-        string choices = string.Join(", ", new[] { "before", "after" }.Concat(keywords.Select(keyword => keyword.Field)));
+        IEnumerable<string> fields = new[] { "before", "after" }.Concat(keywords.Select(keyword => keyword.Field));
+        string choices = string.Join(", ", allowIndex ? fields.Append("index") : fields);
         if (given.Count == 0)
         {
             return allowNone ? null : throw new EditException($"{op} needs one of {choices} to say where it goes.");
@@ -189,7 +220,7 @@ internal sealed class ReorderEditOperations
         {
             throw new EditException($"{op} takes only one of {choices}, but got {string.Join(" and ", given.Select(item => item.Field))}.");
         }
-        return (given[0].Placement, given[0].Anchor);
+        return (given[0].Placement, given[0].Anchor, given[0].Index);
     }
 
     private static ElementSave GetElement(GumProjectSave project, JsonElement operation)

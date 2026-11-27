@@ -157,8 +157,8 @@ public class DescribeCommandTests : BaseTestClass
         CliTestHelper schema = CliTestHelper.Run("edit", "--schema", "--json");
         schema.ExitCode.ShouldBe(0, schema.StandardError);
         using JsonDocument document = JsonDocument.Parse(schema.StandardOutput);
-        Dictionary<string, object?> validValues = new() { ["string"] = "x", ["bool"] = true, ["any"] = null, ["string[]"] = new[] { "x" } };
-        Dictionary<string, object> wrongValues = new() { ["string"] = 5, ["bool"] = "true", ["string[]"] = new[] { 5 } };
+        Dictionary<string, object?> validValues = new() { ["string"] = "x", ["bool"] = true, ["any"] = null, ["string[]"] = new[] { "x" }, ["int"] = 0 };
+        Dictionary<string, object> wrongValues = new() { ["string"] = 5, ["bool"] = "true", ["string[]"] = new[] { 5 }, ["int"] = "0" };
         int checkedFields = 0;
 
         foreach (JsonElement operation in document.RootElement.GetProperty("operations").EnumerateArray())
