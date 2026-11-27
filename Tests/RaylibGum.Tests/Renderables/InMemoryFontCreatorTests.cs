@@ -124,4 +124,38 @@ public class InMemoryFontCreatorTests : BaseTestClass
             CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
         }
     }
+
+    // Every Text using a font nothing can resolve used to run the whole cascade again and report it again, so a
+    // screen of Forms controls printed dozens of identical warnings. It is reported once per font, as on MonoGame.
+    [Fact]
+    public void UpdateToFontValues_WhenSameUnresolvableFontIsRequestedAgain_ShouldReportItOnce()
+    {
+        string uniqueFontName = "GumUnresolvableOnceTest_" + Guid.NewGuid().ToString("N");
+        IRaylibFontCreator? saved = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        int reportsForOurFont = 0;
+        void Handler(string message)
+        {
+            if (message.Contains(uniqueFontName))
+            {
+                reportsForOurFont++;
+            }
+        }
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += Handler;
+        try
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = null;
+
+            TextRuntime first = new TextRuntime();
+            first.Font = uniqueFontName;
+            TextRuntime second = new TextRuntime();
+            second.Font = uniqueFontName;
+
+            reportsForOurFont.ShouldBe(1);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = saved;
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
+        }
+    }
 }

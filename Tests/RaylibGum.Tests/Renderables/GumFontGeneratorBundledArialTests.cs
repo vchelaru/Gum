@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,23 +24,26 @@ namespace RaylibGum.Tests.Renderables;
 public class GumFontGeneratorBundledArialTests : IDisposable
 {
     private const string MissingFamily = "GumBundledArialTestFamily";
+    private const string SecondMissingFamily = "ZzSecondDefaultTestFace";
 
-    private readonly string _previousFamily = BundledArialFont.FamilyName;
+    private readonly string[] _previousFamilies = BundledArialFont.FamilyNames;
     private readonly Action<string, byte[], string?> _previousRegister = BundledArialFont.RegisterFont;
 
     public GumFontGeneratorBundledArialTests()
     {
-        BundledArialFont.FamilyName = MissingFamily;
+        BundledArialFont.FamilyNames = new[] { MissingFamily, SecondMissingFamily };
         BundledArialFont.Reset();
         BmFont.UnregisterFont(MissingFamily);
+        BmFont.UnregisterFont(SecondMissingFamily);
     }
 
     public void Dispose()
     {
-        BundledArialFont.FamilyName = _previousFamily;
+        BundledArialFont.FamilyNames = _previousFamilies;
         BundledArialFont.RegisterFont = _previousRegister;
         BundledArialFont.Reset();
         BmFont.UnregisterFont(MissingFamily);
+        BmFont.UnregisterFont(SecondMissingFamily);
     }
 
     private static BmfcSave Make(string name) =>
@@ -52,6 +55,24 @@ public class GumFontGeneratorBundledArialTests : IDisposable
         BmFontResult result = GumFontGenerator.Generate(Make(MissingFamily));
 
         result.Pages.Count.ShouldBeGreaterThan(0);
+    }
+
+    // Code-only V3 text asks for "Liberation Sans" by name, which most machines do not have installed either.
+    [Fact]
+    public void Generate_WhenEachBundledFamilyIsMissing_BuildsEachFromTheBundledFont()
+    {
+        List<string> registered = new();
+        Action<string, byte[], string?> register = BundledArialFont.RegisterFont;
+        BundledArialFont.RegisterFont = (family, bytes, style) =>
+        {
+            registered.Add(family);
+            register(family, bytes, style);
+        };
+
+        GumFontGenerator.Generate(Make(MissingFamily)).Pages.Count.ShouldBeGreaterThan(0);
+        GumFontGenerator.Generate(Make(SecondMissingFamily)).Pages.Count.ShouldBeGreaterThan(0);
+
+        registered.ShouldBe(new[] { MissingFamily, SecondMissingFamily });
     }
 
     [Fact]

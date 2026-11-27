@@ -474,9 +474,10 @@ public class Icons
 public class Text
 {
 #if XNALIKE
-    public StateSave Normal = CreateFontState("Arial", 18, false, false);
-    public StateSave Strong = CreateFontState("Arial", 18, true, false);
-    public StateSave Emphasis = CreateFontState("Arial", 18, false, true);
+    // Liberation Sans 18 is the embedded default font (SystemManagers), so these resolve with no font creator.
+    public StateSave Normal = CreateFontState("Liberation Sans", 18, false, false);
+    public StateSave Strong = CreateFontState("Liberation Sans", 18, true, false);
+    public StateSave Emphasis = CreateFontState("Liberation Sans", 18, false, true);
     private static StateSave CreateFontState(string fontName, int fontSize, bool isBold, bool isItalic)
     {
         return new()

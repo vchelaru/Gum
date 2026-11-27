@@ -28,7 +28,10 @@
 		     Templates\Default\CliTemplate.gumx needs to load in GumJsonFixtureDifferentialTests. -->
 		<EmbeddedResource Include="Templates\Default\ExampleSpriteFrame.png" />
 		<EmbeddedResource Include="Templates\Default\Fonts\*" />
-		<EmbeddedResource Include="Templates\FormsTemplate\**\*" Exclude="Templates\FormsTemplate\FontCache\**\*" />
+		<!-- Each template's FontCache holds its content's fonts, baked, because a new project has no runtime font
+		     creator unless KernSmith is added; EmbeddedFontCache extracts them. -->
+		<EmbeddedResource Include="Templates\Default\FontCache\*" />
+		<EmbeddedResource Include="Templates\FormsTemplate\**\*" />
 		<!-- WithCulture=false: "Program.cs.template" would otherwise be read as the Czech ("cs") culture
 		     and moved into a satellite assembly. -->
 		<EmbeddedResource Include="Templates\Platforms\**\*.template" WithCulture="false" />

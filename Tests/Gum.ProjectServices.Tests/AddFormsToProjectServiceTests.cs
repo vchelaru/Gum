@@ -36,6 +36,18 @@ public class AddFormsToProjectServiceTests : IDisposable
     }
 
     [Fact]
+    public void AddFormsTo_OnEmptyProject_ShouldLeaveEveryFontItsContentUsesInFontCache()
+    {
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+        new ProjectCreator().Create(filePath);
+
+        AddFormsResult result = _sut.AddFormsTo(filePath);
+
+        result.Success.ShouldBeTrue();
+        MissingCachedFonts.Find(filePath).ShouldBeEmpty();
+    }
+
+    [Fact]
     public void AddFormsTo_OnEmptyProject_ShouldAddProgressBarComponentAndBehavior()
     {
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");

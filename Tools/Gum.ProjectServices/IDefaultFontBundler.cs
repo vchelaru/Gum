@@ -12,7 +12,9 @@ namespace Gum.ProjectServices;
 public interface IDefaultFontBundler
 {
     /// <summary>
-    /// Extracts the bundled font and its license into <paramref name="projectDirectory"/>/Fonts.
+    /// Extracts the bundled font and its license into <paramref name="projectDirectory"/>/Fonts, and the default
+    /// Text font baked as a bitmap font into <paramref name="projectDirectory"/>/FontCache, so a project with no
+    /// runtime font creator still draws it.
     /// </summary>
     void CopyTo(string projectDirectory);
 }

@@ -156,8 +156,12 @@ public class ScreenshotCommandTests : BaseTestClass
 
         if (addText)
         {
-            // No FontCache folder exists in the new project, so this Text's font is missing.
+            // A new project ships its default Text font baked; emptying FontCache makes this Text's font missing.
             screen.Instances.Add(new InstanceSave { Name = "Label", BaseType = "Text", ParentContainer = screen });
+            foreach (string cachedFile in Directory.GetFiles(Path.Combine(TempDirectory, "FontCache")))
+            {
+                File.Delete(cachedFile);
+            }
         }
 
         project.Screens.Add(screen);

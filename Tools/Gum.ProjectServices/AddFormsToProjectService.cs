@@ -11,6 +11,7 @@ namespace Gum.ProjectServices;
 public class AddFormsToProjectService : IAddFormsToProjectService
 {
     private static readonly string[] AdditionalFilesToCopy = { "UISpriteSheet.png" };
+    private static readonly string[] AdditionalFoldersToCopy = { "Fonts", NewProjectLayout.FontCacheFolderName };
 
     /// <inheritdoc/>
     public AddFormsResult AddFormsTo(string projectFilePath)
@@ -178,22 +179,27 @@ public class AddFormsToProjectService : IAddFormsToProjectService
         return added;
     }
 
-    // Fonts and UISpriteSheet.png aren't tracked by any reference list - components/standards just
-    // look them up by relative path at runtime - so copying them is a plain skip-if-exists file
-    // copy rather than anything reference-list driven.
+    // Fonts, the baked FontCache and UISpriteSheet.png aren't tracked by any reference list -
+    // components/standards just look them up by relative path at runtime - so copying them is a plain
+    // skip-if-exists file copy rather than anything reference-list driven.
     private static void CopyAdditionalFilesIfMissing(string tempDirectory, string targetDirectory)
     {
-        string tempFontsDirectory = Path.Combine(tempDirectory, "Fonts");
-        if (Directory.Exists(tempFontsDirectory))
+        foreach (string folder in AdditionalFoldersToCopy)
         {
-            string targetFontsDirectory = Path.Combine(targetDirectory, "Fonts");
-            Directory.CreateDirectory(targetFontsDirectory);
-            foreach (string fontFile in Directory.GetFiles(tempFontsDirectory))
+            string tempFolder = Path.Combine(tempDirectory, folder);
+            if (!Directory.Exists(tempFolder))
             {
-                string destination = Path.Combine(targetFontsDirectory, Path.GetFileName(fontFile));
+                continue;
+            }
+
+            string targetFolder = Path.Combine(targetDirectory, folder);
+            Directory.CreateDirectory(targetFolder);
+            foreach (string file in Directory.GetFiles(tempFolder))
+            {
+                string destination = Path.Combine(targetFolder, Path.GetFileName(file));
                 if (!File.Exists(destination))
                 {
-                    File.Copy(fontFile, destination);
+                    File.Copy(file, destination);
                 }
             }
         }
