@@ -28,6 +28,11 @@ public unsafe class GlCompositingTests : BaseTestClass
     [UnmanagedFunctionPointer(CallingConvention.Winapi)] private delegate void ReadPixelsFn(int x, int y, int w, int h, int format, int type, byte* data);
     [UnmanagedFunctionPointer(CallingConvention.Winapi)] private delegate void GenFramebuffersFn(int n, out int ids);
     [UnmanagedFunctionPointer(CallingConvention.Winapi)] private delegate void GetIntegervFn(int pname, int* values);
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)] private delegate void GenTexturesFn(int n, out int ids);
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)] private delegate void BindTextureFn(int target, int id);
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)] private delegate void TexImage2DFn(int target, int level, int internalFormat, int w, int h, int border, int format, int type, void* data);
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)] private delegate void FramebufferTexture2DFn(int target, int attachment, int texTarget, int texture, int level);
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)] private delegate void ViewportFn(int x, int y, int w, int h);
 
     private static IntPtr GetProc(string name) => Glfw.GetProcAddress(Encoding.ASCII.GetBytes(name + "\0"));
 
@@ -99,9 +104,25 @@ public unsafe class GlCompositingTests : BaseTestClass
         Load<ClearFn>("glClear")(GL_COLOR_BUFFER_BIT);
     }
 
-    private static (byte R, byte G, byte B, byte A) PixelAt(int x, int y)
+    /// <summary>Binds a framebuffer of the game's own, window-sized with an RGBA8 color texture, and sets the viewport to it.</summary>
+    private static int BindGameFramebuffer()
     {
-        Load<BindFramebufferFn>("glBindFramebuffer")(GL_FRAMEBUFFER, 0);
+        const int GL_TEXTURE_2D = 0x0DE1, GL_RGBA8 = 0x8058, GL_COLOR_ATTACHMENT0 = 0x8CE0;
+        Load<GenTexturesFn>("glGenTextures")(1, out int texture);
+        Load<BindTextureFn>("glBindTexture")(GL_TEXTURE_2D, texture);
+        Load<TexImage2DFn>("glTexImage2D")(GL_TEXTURE_2D, 0, GL_RGBA8, Size, Size, 0, GL_RGBA, GL_UNSIGNED_BYTE, null);
+        Load<GenFramebuffersFn>("glGenFramebuffers")(1, out int framebuffer);
+        Load<BindFramebufferFn>("glBindFramebuffer")(GL_FRAMEBUFFER, framebuffer);
+        Load<FramebufferTexture2DFn>("glFramebufferTexture2D")(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+        Load<ViewportFn>("glViewport")(0, 0, Size, Size);
+        return framebuffer;
+    }
+
+    private static (byte R, byte G, byte B, byte A) PixelAt(int x, int y) => PixelAt(0, x, y);
+
+    private static (byte R, byte G, byte B, byte A) PixelAt(int framebuffer, int x, int y)
+    {
+        Load<BindFramebufferFn>("glBindFramebuffer")(GL_FRAMEBUFFER, framebuffer);
         byte[] pixel = new byte[4];
         fixed (byte* p = pixel)
         {
@@ -195,8 +216,7 @@ public unsafe class GlCompositingTests : BaseTestClass
         WithWindow(window =>
         {
             const int GL_FRAMEBUFFER_BINDING = 0x8CA6;
-            Load<GenFramebuffersFn>("glGenFramebuffers")(1, out int gameFramebuffer);
-            Load<BindFramebufferFn>("glBindFramebuffer")(GL_FRAMEBUFFER, gameFramebuffer);
+            int gameFramebuffer = BindGameFramebuffer();
             GumService.Default.Update(0.016);
 
             GumService.Default.Draw();
@@ -204,6 +224,56 @@ public unsafe class GlCompositingTests : BaseTestClass
             int binding;
             Load<GetIntegervFn>("glGetIntegerv")(GL_FRAMEBUFFER_BINDING, &binding);
             binding.ShouldBe(gameFramebuffer);
+        });
+    }
+
+    [SkippableFact]
+    public void Draw_WithTheGamesFramebufferBound_DrawsIntoItAndNotTheWindow()
+    {
+        WithWindow(window =>
+        {
+            GameClear(0f, 0f, 1f);
+            int gameFramebuffer = BindGameFramebuffer();
+            Load<ClearColorFn>("glClearColor")(0f, 1f, 0f, 1f);
+            Load<ClearFn>("glClear")(GL_COLOR_BUFFER_BIT);
+            RectangleRuntime rectangle = new() { X = 0, Y = 0, Width = Size, Height = Size / 2, FillColor = SKColors.Red, IsFilled = true, StrokeWidth = 0 };
+            GumService.Default.Root.AddChild(rectangle);
+
+            GumService.Default.Update(0.016);
+            GumService.Default.Draw();
+
+            // The top of Gum's canvas is the texture's last row, as it is the window's top row.
+            PixelAt(gameFramebuffer, 10, Size - 10).ShouldBe(((byte)255, (byte)0, (byte)0, (byte)255));
+            PixelAt(gameFramebuffer, 10, 10).ShouldBe(((byte)0, (byte)255, (byte)0, (byte)255));
+            PixelAt(10, Size - 10).ShouldBe(((byte)0, (byte)0, (byte)255, (byte)255));
+        });
+    }
+
+    [SkippableFact]
+    public void Draw_AfterAFrameIntoTheGamesFramebuffer_WithNothingBound_DrawsIntoTheWindowAndRestoresViewports()
+    {
+        WithWindow(window =>
+        {
+            const int GL_VIEWPORT = 0x0BA2;
+            RectangleRuntime rectangle = new() { X = 0, Y = 0, Width = Size, Height = Size / 2, FillColor = SKColors.Red, IsFilled = true, StrokeWidth = 0 };
+            GumService.Default.Root.AddChild(rectangle);
+            BindGameFramebuffer();
+            Load<ViewportFn>("glViewport")(3, 4, Size - 8, Size - 9);
+            GumService.Default.Update(0.016);
+            GumService.Default.Draw();
+            int* vp = stackalloc int[4];
+            Load<GetIntegervFn>("glGetIntegerv")(GL_VIEWPORT, vp);
+            (vp[0], vp[1], vp[2], vp[3]).ShouldBe((3, 4, Size - 8, Size - 9));
+
+            GameClear(0f, 0f, 1f);
+            Load<ViewportFn>("glViewport")(1, 2, 5, 6);
+            GumService.Default.Update(0.016);
+            GumService.Default.Draw();
+            Load<GetIntegervFn>("glGetIntegerv")(GL_VIEWPORT, vp);
+            (vp[0], vp[1], vp[2], vp[3]).ShouldBe((1, 2, 5, 6));
+
+            PixelAt(10, Size - 10).ShouldBe(((byte)255, (byte)0, (byte)0, (byte)255));
+            PixelAt(10, 10).ShouldBe(((byte)0, (byte)0, (byte)255, (byte)255));
         });
     }
 }

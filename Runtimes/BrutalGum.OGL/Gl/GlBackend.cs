@@ -10,8 +10,9 @@ using System.Text;
 namespace Gum;
 
 /// <summary>
-/// <see cref="IBrutalTarget"/> that draws straight into the window's default framebuffer through SkiaGameRendering.Brutal.OGL's
-/// <see cref="SkiaDirectCanvas"/>: no intermediate texture and no blit. <see cref="Begin"/> does not clear, so Gum draws over
+/// <see cref="IBrutalTarget"/> that draws straight into the draw framebuffer the game has bound, or the window's default framebuffer
+/// when none is, through SkiaGameRendering.Brutal.OGL's <see cref="SkiaDirectCanvas"/>: no intermediate texture and no blit.
+/// <see cref="Begin"/> does not clear, so Gum draws over
 /// whatever the game already drew.
 /// </summary>
 internal sealed unsafe class GlTarget : IBrutalTarget
@@ -45,15 +46,19 @@ internal sealed unsafe class GlTarget : IBrutalTarget
 
     public void Begin()
     {
-        // The direct canvas takes its size from the viewport and its target from the bound draw framebuffer. End hands the game its own back.
+        // The direct canvas takes its size from the viewport and its target from the bound draw framebuffer, like MonoGame drawing
+        // into the bound render target. A game's framebuffer keeps the game's viewport; the window gets its whole size. End hands the
+        // game its own state back.
         int framebuffer;
         int* viewport = stackalloc int[4];
         _getIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &framebuffer);
         _getIntegerv(GL_VIEWPORT, viewport);
         _gameFramebuffer = framebuffer;
         (_gameX, _gameY, _gameWidth, _gameHeight) = (viewport[0], viewport[1], viewport[2], viewport[3]);
-        _bindFramebuffer(GL_FRAMEBUFFER, 0);
-        _viewport(0, 0, _width, _height);
+        if (framebuffer == 0)
+        {
+            _viewport(0, 0, _width, _height);
+        }
         _direct.Begin();
     }
 
@@ -75,7 +80,7 @@ internal sealed unsafe class GlTarget : IBrutalTarget
     public void Dispose() { }
 }
 
-/// <summary>Owns the SkiaGlContext for the window's current GL context and the SkiaDirectCanvas that draws into its default framebuffer.</summary>
+/// <summary>Owns the SkiaGlContext for the window's current GL context and the SkiaDirectCanvas that draws into the bound framebuffer.</summary>
 internal sealed class GlBackend : IBrutalGpuBackend
 {
     private readonly SkiaGlContext _context;
@@ -92,7 +97,7 @@ internal sealed class GlBackend : IBrutalGpuBackend
 
     public IBrutalTarget CreateTarget(int width, int height) => new GlTarget(_direct, GetProc, width, height);
 
-    // Gum already drew into the default framebuffer; nothing to show.
+    // Gum already drew into the bound framebuffer; nothing to show.
     public void Present(IBrutalTarget target, int width, int height) { }
 
     // Everything is in GL command order; nothing to wait for.

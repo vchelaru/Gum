@@ -179,7 +179,7 @@ GumUI.Draw();
 window.SwapBuffers();
 ```
 
-`Draw` composites Gum's frame over the window's default framebuffer, so call `SwapBuffers` after it. Skia leaves the OpenGL program, vertex array, buffers, viewport, scissor, blend and depth state as it used them, so set your own again if you draw after Gum.
+`Draw` composites Gum's frame over the window's default framebuffer (or [your own framebuffer](#drawing-into-your-own-framebuffer-opengl) when one is bound), so call `SwapBuffers` after it. Skia leaves the OpenGL program, vertex array, buffers, viewport, scissor, blend and depth state as it used them, so set your own again if you draw after Gum.
 {% endtab %}
 
 {% tab title="Vulkan" %}
@@ -235,7 +235,13 @@ Things to know:
 * Read `RenderTargetImage` again after every `Draw`. The image is replaced when the window size changes, and the old one is freed after the GPU finishes the last frame.
 * The image is plain UNORM and holds sRGB bytes. If your pass writes to an sRGB target without decoding the sampled value first, colors are encoded twice and look washed out.
 
-OpenGL has no equivalent switch. `Draw` writes the whole default framebuffer, so anything of yours must be drawn after it.
+### Drawing Into Your Own Framebuffer (OpenGL)
+
+Bind your own framebuffer before `Draw` and Gum draws into its color attachment instead of the window. Give the framebuffer the window's size and set the viewport to cover it, since Gum takes its drawing area from the viewport. With no framebuffer bound, `Draw` writes the window's default framebuffer.
+
+{% hint style="info" %}
+Drawing into your own OpenGL framebuffer is available in December 2026, or now if building Gum from source.
+{% endhint %}
 
 ### Sharing the Queue With Other Threads (Vulkan)
 
