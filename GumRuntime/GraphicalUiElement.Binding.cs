@@ -721,7 +721,8 @@ public partial class GraphicalUiElement
         }
 
         PropertyInfo? uip = GetType().GetProperty(matched.UiProperty);
-        if (uip == null)
+        // A write-only UI property has no value to send back, so its binding is one-way.
+        if (uip is not { CanRead: true })
         {
             return;
         }

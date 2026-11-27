@@ -210,6 +210,23 @@ public class BindableGueTests
         testViewModel.GetPropertyChangeCount().ShouldBe(1);
     }
 
+    [Fact]
+    public void SetBinding_WriteOnlyUiProperty_AppliesSourceValuesWithoutReadingTarget()
+    {
+        // Arrange
+        TestViewModel testViewModel = new() { IntPropertyOnVm = 3 };
+        WriteOnlyGue sut = new() { BindingContext = testViewModel };
+
+        // Act
+        sut.SetBinding(nameof(WriteOnlyGue.WriteOnlyInt), nameof(TestViewModel.IntPropertyOnVm));
+        int initial = sut.LastWritten;
+        testViewModel.IntPropertyOnVm = 7;
+
+        // Assert
+        initial.ShouldBe(3);
+        sut.LastWritten.ShouldBe(7);
+    }
+
 
     #region ViewModels
 
@@ -249,6 +266,20 @@ public class BindableGueTests
             }
         }
 
+    }
+
+    class WriteOnlyGue : GraphicalUiElement
+    {
+        public int LastWritten { get; private set; }
+
+        public int WriteOnlyInt
+        {
+            set
+            {
+                LastWritten = value;
+                PushValueToViewModel();
+            }
+        }
     }
 
     #endregion
