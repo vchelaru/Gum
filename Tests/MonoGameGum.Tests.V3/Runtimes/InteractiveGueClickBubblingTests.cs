@@ -135,6 +135,32 @@ public class InteractiveGueClickBubblingTests : BaseTestClass
         parentBubbled.ShouldBeFalse();
     }
 
+    [Fact]
+    public void ClickBubbling_ShouldStartUnhandled_AfterAnEarlierClickWasHandled()
+    {
+        (ContainerRuntime parent, ContainerRuntime child) = CreateParentChild();
+
+        bool handleNext = true;
+        int parentBubbled = 0;
+        child.ClickBubbling += (_, args) =>
+        {
+            args.Handled.ShouldBeFalse();
+            if (handleNext)
+            {
+                args.Handled = true;
+                handleNext = false;
+            }
+        };
+        parent.ClickBubbling += (_, _) => parentBubbled++;
+
+        Mock<ICursor> cursor = CreateCursorOver(child);
+        PushAndClick(cursor);
+        PushAndClick(cursor);
+
+        // The args object is reused between raises (#8472); the second click must not see the first one's Handled.
+        parentBubbled.ShouldBe(1);
+    }
+
     private static (ContainerRuntime parent, ContainerRuntime child) CreateParentChild()
     {
         ContainerRuntime parent = new ContainerRuntime();

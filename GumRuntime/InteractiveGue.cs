@@ -737,14 +737,14 @@ public partial class InteractiveGue : GraphicalUiElement
                 {
                     if (handledActions.HandledRollOver == false && (cursor.XChange != 0 || cursor.YChange != 0))
                     {
-                        var args = new RoutedEventArgs();
+                        var args = RentBubblingArgs();
                         asInteractive.RollOverBubbling?.Invoke(asInteractive, args);
                         handledActions.HandledRollOver = args.Handled;
                     }
 
                     if (cursor.ScrollWheelChange != 0 && handledActions.HandledMouseWheel == false)
                     {
-                        var args = new RoutedEventArgs();
+                        var args = RentBubblingArgs();
                         asInteractive.MouseWheelScroll?.Invoke(asInteractive, args);
                         handledActions.HandledMouseWheel = args.Handled;
                     }
@@ -754,7 +754,7 @@ public partial class InteractiveGue : GraphicalUiElement
                     // setting Handled stops it from reaching further ancestors.
                     if (handledActions.DidClickOccur && handledActions.HandledClick == false)
                     {
-                        var args = new RoutedEventArgs();
+                        var args = RentBubblingArgs();
                         asInteractive.ClickBubbling?.Invoke(asInteractive, args);
                         handledActions.HandledClick = args.Handled;
                     }
@@ -764,6 +764,16 @@ public partial class InteractiveGue : GraphicalUiElement
         }
 
         return handledByThis || handledByChild;
+    }
+
+    // One args object for every bubbling raise (RollOverBubbling, MouseWheelScroll, ClickBubbling), so moving the
+    // cursor over a tree allocates nothing per element (#8472). Each raise starts with Handled reset.
+    static readonly RoutedEventArgs bubblingArgs = new();
+
+    static RoutedEventArgs RentBubblingArgs()
+    {
+        bubblingArgs.Handled = false;
+        return bubblingArgs;
     }
 
     protected override bool IsOutsideOfBoundsHitTestingEnabled =>
@@ -1707,6 +1717,9 @@ public static class GueInteractiveExtensionMethods
     }
 
     static List<IInputReceiver> previewList = new();
+    // Reused for every OnFocusUpdatePreview raise so a focused control allocates nothing per frame (#8472).
+    // Handled is reset before each raise.
+    static readonly RoutedEventArgs focusUpdatePreviewArgs = new();
 
     // Tests the roots from the topmost down until one takes the cursor.
     static void DoUiActivityOnRoots(IList<GraphicalUiElement> gues, ICursor cursor, ref HandledActions actions)
@@ -1869,7 +1882,8 @@ public static class GueInteractiveExtensionMethods
             bool wasCancelled = false;
             foreach(var toPreview in previewList)
             {
-                var args = new RoutedEventArgs();
+                var args = focusUpdatePreviewArgs;
+                args.Handled = false;
                 if(!wasCancelled)
                 {
                     toPreview.OnFocusUpdatePreview(args);
