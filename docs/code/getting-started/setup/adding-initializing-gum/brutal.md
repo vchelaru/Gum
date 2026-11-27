@@ -306,7 +306,6 @@ while (!window.ShouldClose)
 
 Glfw.Terminate();
 
-// A property rather than a top-level local, which would hide any GumUI that the project's other files declare (CS8801).
 partial class Program
 {
     static GumService GumUI => GumService.Default;
@@ -418,7 +417,6 @@ GumUI.Uninitialize();
 instance.DestroySurfaceKHR(surface, null);
 Glfw.Terminate();
 
-// A property rather than a top-level local, which would hide any GumUI that the project's other files declare (CS8801).
 partial class Program
 {
     static GumService GumUI => GumService.Default;

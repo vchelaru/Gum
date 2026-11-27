@@ -146,7 +146,6 @@ while (!window.IsClosing)
 
 window.Dispose();
 
-// A property rather than a top-level local, which would hide any GumUI that the project's other files declare (CS8801).
 partial class Program
 {
     static GumService GumUI => GumService.Default;
