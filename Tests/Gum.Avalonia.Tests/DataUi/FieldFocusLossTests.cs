@@ -84,6 +84,65 @@ public class FieldFocusLossTests
         fixture.Color.ShouldBe(changedElsewhere);
     }
 
+    [AvaloniaTheory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void EditableComboBoxDisplay_LeavingAfterAPickAndAnOutsideChange_WritesNothing(bool refreshedAfterTheChange)
+    {
+        EditorFixture fixture = new EditorFixture { File = "a" };
+        InstanceMember member = fixture.Member(nameof(EditorFixture.File));
+        member.CustomOptions = new List<object> { "a", "b", "c" };
+        ComboBoxDisplay display = new ComboBoxDisplay { IsEditable = true, InstanceMember = member };
+        int writes = 0;
+        member.AfterSetByUi += (_, _) => writes++;
+        TextBox elsewhere = new TextBox();
+        Window window = Show(display, elsewhere);
+        display.ComboBox.Focus();
+
+        PickItem(display, "b");
+        writes.ShouldBe(1, "the pick commits");
+        fixture.File.ShouldBe("b");
+        writes = 0;
+
+        // An undo while the drop-down has focus: the value changes under it, and the grid may rebuild
+        // the row (the old one keeps its text) or refresh it.
+        fixture.File = "a";
+        if (refreshedAfterTheChange)
+        {
+            display.Refresh();
+        }
+        elsewhere.Focus();
+
+        writes.ShouldBe(0);
+        fixture.File.ShouldBe("a");
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void EditableComboBoxDisplay_LeavingAfterTyping_CommitsTheTypedText()
+    {
+        EditorFixture fixture = new EditorFixture { File = "a" };
+        InstanceMember member = fixture.Member(nameof(EditorFixture.File));
+        member.CustomOptions = new List<object> { "a", "b" };
+        ComboBoxDisplay display = new ComboBoxDisplay { IsEditable = true, InstanceMember = member };
+        TextBox elsewhere = new TextBox();
+        Window window = Show(display, elsewhere);
+        display.ComboBox.Focus();
+
+        display.ComboBox.Text = "typed";
+        elsewhere.Focus();
+
+        fixture.File.ShouldBe("typed");
+        window.Close();
+    }
+
+    private static void PickItem(ComboBoxDisplay display, string item)
+    {
+        display.ComboBox.IsDropDownOpen = true;
+        display.ComboBox.SelectedItem = display.ComboBox.Items.Cast<object?>().First(candidate => candidate?.ToString() == item);
+        display.ComboBox.IsDropDownOpen = false;
+    }
+
     [AvaloniaFact]
     public void CompactColorPicker_Channel_LeavingAfterAnOutsideChange_RaisesNoChange()
     {
