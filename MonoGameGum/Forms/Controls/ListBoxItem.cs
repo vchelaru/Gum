@@ -273,11 +273,12 @@ public class ListBoxItem :
     /// <summary>
     /// Updates the displayed text from the given object's ToString value. This method is data-driven
     /// and intentionally does not apply localization. To localize list items, translate values
-    /// before adding them to the Items collection.
+    /// before adding them to the Items collection. A TextInstance whose Text is data bound keeps
+    /// its bound value.
     /// </summary>
     public virtual void UpdateToObject(object? o)
     {
-        if (coreText != null)
+        if (coreText != null && !IsTextDataBound(text))
         {
             coreText.RawText = o?.ToString();
         }

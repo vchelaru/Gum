@@ -1742,9 +1742,13 @@ public class MenuItem : ItemsControl
 
     #region Update to state/object
 
+    /// <summary>
+    /// Displays the given object's ToString value as the header, unless the header or the
+    /// TextInstance's Text is data bound.
+    /// </summary>
     public virtual void UpdateToObject(object? o)
     {
-        if (coreText != null)
+        if (coreText != null && !IsDataBound(nameof(Header)) && !IsTextDataBound(text))
         {
             coreText.RawText = o?.ToString() ?? string.Empty;
         }

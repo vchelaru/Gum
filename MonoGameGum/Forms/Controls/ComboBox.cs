@@ -96,10 +96,7 @@ public class ComboBox :
                     listBox.DisplayMemberPath = _displayMemberPath;
                 }
 
-                if (!IsDataBound(nameof(Text)))
-                {
-                    UpdateToObject(listBox.SelectedObject);
-                }
+                UpdateToObject(listBox.SelectedObject);
             }
         }
     }
@@ -1272,11 +1269,7 @@ public class ComboBox :
 
     private void RaiseSelectionChanged(object? selectedObject, SelectionChangedEventArgs args)
     {
-        // If we bind the Text, then don't set this here, the binding will take care of it
-        if (!IsDataBound(nameof(Text)))
-        {
-            UpdateToObject(selectedObject);
-        }
+        UpdateToObject(selectedObject);
 
         // OnBindingContextChanged resolves and pushes the selection once every binding re-attached.
         if (!IsRebindingBothSelectionBindings)
@@ -1326,8 +1319,17 @@ public class ComboBox :
     [UnconditionalSuppressMessage("Trimming", "IL2075",
         Justification = "Only reflects when DisplayMemberPath is set, and its setter carries the " +
             "RequiresUnreferencedCode warning that surfaces the risk at the caller.")]
+    /// <summary>
+    /// Displays the given object (or its DisplayMemberPath value) as the text, unless the Text or
+    /// the TextInstance's Text is data bound.
+    /// </summary>
     public virtual void UpdateToObject(object? o)
     {
+        if (IsDataBound(nameof(Text)) || IsTextDataBound(textComponent))
+        {
+            return;
+        }
+
         if(!string.IsNullOrEmpty(DisplayMemberPath ))
         {
             var display = o

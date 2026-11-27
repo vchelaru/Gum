@@ -403,6 +403,13 @@ public partial class GraphicalUiElement
     }
 
     /// <summary>
+    /// Returns whether <paramref name="uiProperty"/> on this element has a binding from
+    /// <see cref="SetBinding(string, string, string?)"/>.
+    /// </summary>
+    public bool IsDataBound(string uiProperty) =>
+        vmPropsToUiProps.Values.Any(item => item.UiProperty == uiProperty);
+
+    /// <summary>
     /// Binds <paramref name="uiProperty"/> to the VM member named by <paramref name="vmProperty"/>,
     /// resolved by reflection at bind time. Under <c>PublishTrimmed</c>, that member survives only if
     /// something else in the app references it directly -- prefer the
