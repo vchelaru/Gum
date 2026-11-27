@@ -40,6 +40,7 @@ public static class UnattendedRun
     /// <param name="error">Where a failure's reason goes.</param>
     /// <param name="describeCanvas">Describes the canvas's frame state; appended to a failure that waited on a frame (#5680).</param>
     /// <param name="settle">Completes once the window's UI has stopped changing (loaded-event work such as icon glyphs done and drawn); awaited just before the capture (#8091).</param>
+    /// <param name="hasShownNotice">True when the tool showed a message nobody confirmed; the run still captures, then exits 1 (#8451).</param>
     public static async Task<int?> RunAsync(
         Task<UnattendedStartupOutcome> startup,
         Task deadline,
@@ -50,7 +51,8 @@ public static class UnattendedRun
         TextWriter output,
         TextWriter error,
         Func<string?>? describeCanvas = null,
-        Func<Task>? settle = null)
+        Func<Task>? settle = null,
+        Func<bool>? hasShownNotice = null)
     {
         if (!await CompletesBefore(startup, deadline))
         {
@@ -90,6 +92,14 @@ public static class UnattendedRun
         StartupTiming.Mark("unattended: UI settled");
 
         capture?.Invoke();
+
+        // A notice such as a load error was dismissed unseen (#8451); the capture shows the state it left.
+        if (hasShownNotice?.Invoke() == true)
+        {
+            error.WriteLine("The run captured, but the tool showed a message (above) that may report an error.");
+            error.Flush();
+            return 1;
+        }
         return 0;
     }
 

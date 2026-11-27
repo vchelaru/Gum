@@ -66,6 +66,20 @@ public class HeadProcessTests
 #endif
     }
 
+    // With nothing to reopen, startup asks for a new project in a modal dialog that nobody answers (#8451).
+    [Fact]
+    public async Task UnattendedRun_WithNoProject_CancelsTheNewProjectDialogAndCaptures()
+    {
+        Assert.SkipUnless(CanRunTheHead, SkipReason);
+        using ScratchProject scratch = ScratchProject.Create();
+
+        HeadRun run = await RunHead("--exit-after", "60", "--screenshot", scratch.Screenshot, "--user-data", scratch.UserData);
+
+        run.ExitCode.ShouldBe(0, run.Diagnosis);
+        run.Errors.ShouldContain("NewProjectDialogViewModel");
+        File.Exists(scratch.Screenshot).ShouldBeTrue();
+    }
+
     [Fact]
     public async Task UnattendedRun_NotReadyByExitAfter_FailsWithoutAScreenshot()
     {

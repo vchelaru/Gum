@@ -251,7 +251,8 @@ public sealed class App : Application
                 Console.Out,
                 Console.Error,
                 describeCanvas: () => messenger.Send(new EditorCanvasStateRequestMessage()).Response,
-                settle: () => UiSettle.SettleAsync(window));
+                settle: () => UiSettle.SettleAsync(window),
+                hasShownNotice: () => _services.GetService<UnattendedDialogService>()?.HasShownNotice == true);
         }
         catch (Exception exception)
         {
