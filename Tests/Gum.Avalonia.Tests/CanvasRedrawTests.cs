@@ -69,8 +69,27 @@ public class CanvasRedrawTests
 
         scheduler.RequestRedraw();
         gate.ShouldDraw(120, 50, hasRenderError: false).ShouldBeTrue("a redraw was requested");
+        gate.MarkDrawn(120, 50);
         time.Advance(CanvasRedrawScheduler.SettleDuration + TimeSpan.FromMilliseconds(1));
         gate.ShouldDraw(120, 50, hasRenderError: false).ShouldBeFalse("the request settled");
+    }
+
+    // An --select Element#Instance run blocked the UI thread for over a second after the
+    // zoom-to-fit request, so no tick saw the settle period and the screenshot never came (#8478).
+    [Fact]
+    public void FrameGate_DrawsAfterARequest_EvenWhenNoFrameTickedBeforeTheSettlePeriodEnded()
+    {
+        ManualTimeProvider time = new ManualTimeProvider();
+        CanvasRedrawScheduler scheduler = new CanvasRedrawScheduler(time);
+        CanvasFrameGate gate = new CanvasFrameGate(scheduler);
+        gate.MarkDrawn(100, 50);
+
+        scheduler.RequestRedraw();
+        time.Advance(CanvasRedrawScheduler.SettleDuration + TimeSpan.FromSeconds(1));
+
+        gate.ShouldDraw(100, 50, hasRenderError: false).ShouldBeTrue("no frame has been drawn since the request");
+        gate.MarkDrawn(100, 50);
+        gate.ShouldDraw(100, 50, hasRenderError: false).ShouldBeFalse("the request was drawn and has settled");
     }
 
     [AvaloniaFact]
