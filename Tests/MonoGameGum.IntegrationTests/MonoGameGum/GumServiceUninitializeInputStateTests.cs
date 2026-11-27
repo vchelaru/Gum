@@ -113,6 +113,37 @@ public class GumServiceUninitializeInputStateTests : BaseTestClass
         return new WeakReference(control.Visual);
     }
 
+    // The cursor is touched only inside these frames: a cursor reference left in a JIT temporary of the
+    // test method would keep the visual it last hovered or pushed alive and fail the collection check.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void Hold(Rig rig, bool sideA)
+    {
+        ScriptedCursor cursor = (sideA ? rig.CursorA : rig.CursorB)!;
+        Gum.GumService service = sideA ? rig.Game.ServiceA : rig.Game.ServiceB;
+        cursor.Place(OverX, OverY, leftDown: false);
+        Tick(service);
+        cursor.Place(OverX, OverY, leftDown: true);
+        Tick(service);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void Hover(Rig rig)
+    {
+        rig.CursorA!.Place(OverX, OverY, leftDown: false);
+        Tick(rig.Game.ServiceA);
+        Tick(rig.Game.ServiceA);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void ClickA(Rig rig) => Click(rig.Game.ServiceA, rig.CursorA!, OverX, OverY);
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static bool HasFocus(Gum.GumService service)
+    {
+        IGumService.Default = service;
+        return InteractiveGue.CurrentInputReceiver != null;
+    }
+
     private static bool IsCollected(WeakReference reference)
     {
         for (int i = 0; i < 3 && reference.IsAlive; i++)
@@ -138,10 +169,7 @@ public class GumServiceUninitializeInputStateTests : BaseTestClass
         int clicksB = 0;
         WeakReference buttonA = AddControl<Button>(rig.Game.ServiceA);
         AddControl<Button>(rig.Game.ServiceB, b => b.Click += (_, _) => clicksB++);
-        rig.CursorA!.Place(OverX, OverY, leftDown: false);
-        Tick(rig.Game.ServiceA);
-        rig.CursorA.Place(OverX, OverY, leftDown: true);
-        Tick(rig.Game.ServiceA);
+        Hold(rig, sideA: true);
 
         rig.Game.ServiceA.Uninitialize();
         rig.CursorA = null;
@@ -158,10 +186,7 @@ public class GumServiceUninitializeInputStateTests : BaseTestClass
         int clicksA = 0;
         AddControl<Button>(rig.Game.ServiceA, b => b.Click += (_, _) => clicksA++);
         WeakReference buttonB = AddControl<Button>(rig.Game.ServiceB);
-        rig.CursorB!.Place(OverX, OverY, leftDown: false);
-        Tick(rig.Game.ServiceB);
-        rig.CursorB.Place(OverX, OverY, leftDown: true);
-        Tick(rig.Game.ServiceB);
+        Hold(rig, sideA: false);
 
         rig.Game.ServiceB.Uninitialize();
         rig.CursorB = null;
@@ -176,10 +201,7 @@ public class GumServiceUninitializeInputStateTests : BaseTestClass
     {
         using Rig rig = CreateRig(twoServices: false);
         WeakReference button = AddControl<Button>(rig.Game.ServiceA);
-        rig.CursorA!.Place(OverX, OverY, leftDown: false);
-        Tick(rig.Game.ServiceA);
-        rig.CursorA.Place(OverX, OverY, leftDown: true);
-        Tick(rig.Game.ServiceA);
+        Hold(rig, sideA: true);
 
         rig.Game.ServiceA.Uninitialize();
         rig.CursorA = null;
@@ -192,17 +214,6 @@ public class GumServiceUninitializeInputStateTests : BaseTestClass
     }
 
     #endregion
-
-    [Fact]
-    public void ProbeTemp_NoInput()
-    {
-        using Rig rig = CreateRig(twoServices: false);
-        WeakReference button = AddControl<Button>(rig.Game.ServiceA);
-        Tick(rig.Game.ServiceA);
-        rig.Game.ServiceA.Uninitialize();
-        rig.CursorA = null;
-        IsCollected(button).ShouldBeTrue("probe");
-    }
 
     #region Next push and click actions
 
@@ -306,9 +317,8 @@ public class GumServiceUninitializeInputStateTests : BaseTestClass
     {
         using Rig rig = CreateRig(twoServices: true);
         WeakReference textBoxA = AddControl<TextBox>(rig.Game.ServiceA);
-        Click(rig.Game.ServiceA, rig.CursorA!, OverX, OverY);
-        IGumService.Default = rig.Game.ServiceA;
-        InteractiveGue.CurrentInputReceiver.ShouldNotBeNull();
+        ClickA(rig);
+        HasFocus(rig.Game.ServiceA).ShouldBeTrue();
         Tick(rig.Game.ServiceA);
 
         rig.Game.ServiceA.Uninitialize();
@@ -328,9 +338,7 @@ public class GumServiceUninitializeInputStateTests : BaseTestClass
         using Rig rig = CreateRig(twoServices: false);
         ToolTipService.InitialShowDelay = TimeSpan.Zero;
         WeakReference button = AddControl<Button>(rig.Game.ServiceA, b => b.ToolTip = "tip");
-        rig.CursorA!.Place(OverX, OverY, leftDown: false);
-        Tick(rig.Game.ServiceA);
-        Tick(rig.Game.ServiceA);
+        Hover(rig);
 
         rig.Game.ServiceA.Uninitialize();
         rig.CursorA = null;
@@ -345,9 +353,7 @@ public class GumServiceUninitializeInputStateTests : BaseTestClass
         ToolTipService.InitialShowDelay = TimeSpan.Zero;
         Tooltip? tooltipA = null;
         AddControl<Button>(rig.Game.ServiceA, b => { b.ToolTip = "tip"; tooltipA = ToolTipService.GetTooltip(b); });
-        rig.CursorA!.Place(OverX, OverY, leftDown: false);
-        Tick(rig.Game.ServiceA);
-        Tick(rig.Game.ServiceA);
+        Hover(rig);
         tooltipA.ShouldNotBeNull().IsOpen.ShouldBeTrue();
 
         Tick(rig.Game.ServiceB);
