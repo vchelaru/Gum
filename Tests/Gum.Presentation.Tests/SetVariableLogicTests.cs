@@ -876,6 +876,24 @@ public class SetVariableLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void ReactToPropertyValueChanged_ShouldStoreForwardSlashes_WhenFontPathIsRelativeWithBackslashes()
+    {
+        // A canvas drop or a typed value hands the Font row a relative path in the OS's spelling.
+        mocker.GetMock<IProjectState>()
+            .Setup(x => x.ProjectDirectory)
+            .Returns("/TestProject/");
+
+        (ComponentSave container, InstanceSave instance, VariableSave variable) =
+            CreateTextInstanceWithFont("Fonts\\Sins 7.ttf");
+
+        _setVariableLogic.ReactToPropertyValueChanged(
+            "Font", null, container, instance, container.DefaultState, refresh: false,
+            recordUndo: false, trySave: false).Succeeded.ShouldBeTrue();
+
+        variable.Value.ShouldBe("Fonts/Sins 7.ttf");
+    }
+
+    [Fact]
     public void ReactToPropertyValueChanged_ShouldStoreRelativeFontPath_WhenTtfIsOutsideProjectAndReferencedInPlace()
     {
         // Choosing "Reference the file in its current location" must still not bake this

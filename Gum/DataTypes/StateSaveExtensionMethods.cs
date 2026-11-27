@@ -634,6 +634,17 @@ public static class StateSaveExtensionMethods
             }
             bool isFile = DetermineIfIsFile(stateSave, variableName, instanceSave, variableSave);
 
+            // Every route that writes a file reference (picker, drop-down, typed value, canvas drop,
+            // gumcli) lands here, so store it the one way a project spells paths. A project that was
+            // never saved has no file name, so an absolute path stays absolute.
+            if (isFile && value is string fileValue)
+            {
+                string? projectDirectory = ObjectFinder.Self.GumProjectSave?.FullFileName is { Length: > 0 } projectFileName
+                    ? FileManager.GetDirectory(projectFileName)
+                    : null;
+                value = FileManager.ToStoredFilePath(fileValue, projectDirectory);
+            }
+
             if (value is IList valueAsList)
             {
                 // This should already be the type
@@ -664,30 +675,6 @@ public static class StateSaveExtensionMethods
                 }
 
                 stateSave.Variables.Sort((first, second) => GumProjectSave.CompareNames(first.Name, second.Name));
-            }
-
-
-
-
-            // A project that was never saved has no file name, so there is nothing to make the
-            // path relative to; keep it absolute.
-            if (isFile &&
-                value is string asString &&
-                !string.IsNullOrEmpty(asString) &&
-                !FileManager.IsRelative(asString) &&
-                ObjectFinder.Self.GumProjectSave?.FullFileName is { Length: > 0 } projectFileName)
-            {
-                string directoryToMakeRelativeTo = FileManager.GetDirectory(projectFileName);
-
-                const bool preserveCase = true;
-                if(!FileManager.IsUrl(asString))
-                {
-                    value = FileManager.MakeRelative(asString, directoryToMakeRelativeTo, preserveCase);
-                }
-
-                // re-assign the value using the relative name now
-                var assignedVariable = stateSave.AssignVariableSave(variableName, value, instanceSave, variableType);
-                assignedVariable.IsFile = isFile;
             }
         }
 

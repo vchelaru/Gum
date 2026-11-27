@@ -627,6 +627,26 @@ namespace ToolsUtilities
             return resourcesDirectory + absolutePath.Substring(exeDirectory.Length);
         }
 
+        /// <summary>
+        /// <paramref name="path"/> as a project stores a file reference: relative to <paramref name="directory"/>
+        /// and with forward slashes, since a backslash is a file-name character on macOS and Linux. A URL is
+        /// returned as is, and a null <paramref name="directory"/> (an unsaved project) leaves an absolute path absolute.
+        /// </summary>
+        public static string ToStoredFilePath(string path, string? directory)
+        {
+            if (string.IsNullOrEmpty(path) || IsUrl(path))
+            {
+                return path;
+            }
+
+            if (!string.IsNullOrEmpty(directory) && !IsRelative(path))
+            {
+                path = MakeRelative(path, directory!, preserveCase: true);
+            }
+
+            return path.Replace('\\', '/');
+        }
+
         public static string MakeRelative(string pathToMakeRelative, string pathToMakeRelativeTo)
         {
             return MakeRelative(pathToMakeRelative, pathToMakeRelativeTo, false);

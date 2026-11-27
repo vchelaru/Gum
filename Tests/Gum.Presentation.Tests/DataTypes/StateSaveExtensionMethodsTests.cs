@@ -1044,4 +1044,58 @@ public class StateSaveExtensionMethodsTests : BaseTestClass
             "because ignoring the derived state's own value should fall through to the base component's value, " +
             "which is what 'Make Default' would restore.");
     }
+
+    // Leading-slash literals are rooted on Windows and Unix alike (see gum-unit-tests skill).
+    [Theory]
+    [InlineData("/MyProject/Images/Hero.png")]
+    [InlineData("Images\\Hero.png")]
+    [InlineData("Images/Hero.png")]
+    public void SetValue_FileVariable_StoresAProjectRelativePathWithForwardSlashes(string assigned)
+    {
+        (StateSave state, InstanceSave sprite) = CreateScreenWithSprite();
+        ObjectFinder.Self.GumProjectSave!.FullFileName = "/MyProject/MyProject.gumx";
+
+        state.SetValue("Sprite.SourceFile", assigned, sprite);
+
+        state.GetVariableSave("Sprite.SourceFile")!.Value.ShouldBe("Images/Hero.png");
+    }
+
+    [Fact]
+    public void SetValue_FileVariable_UnsavedProject_KeepsTheAbsolutePathWithForwardSlashes()
+    {
+        (StateSave state, InstanceSave sprite) = CreateScreenWithSprite();
+
+        state.SetValue("Sprite.SourceFile", "\\Elsewhere\\Hero.png", sprite);
+
+        state.GetVariableSave("Sprite.SourceFile")!.Value.ShouldBe("/Elsewhere/Hero.png");
+    }
+
+    [Fact]
+    public void SetValue_FileVariable_Url_IsStoredAsGiven()
+    {
+        (StateSave state, InstanceSave sprite) = CreateScreenWithSprite();
+        ObjectFinder.Self.GumProjectSave!.FullFileName = "/MyProject/MyProject.gumx";
+
+        state.SetValue("Sprite.SourceFile", "https://example.com/a/Hero.png", sprite);
+
+        state.GetVariableSave("Sprite.SourceFile")!.Value.ShouldBe("https://example.com/a/Hero.png");
+    }
+
+    private static (StateSave State, InstanceSave Sprite) CreateScreenWithSprite()
+    {
+        StandardElementSave spriteStandard = new() { Name = "Sprite" };
+        StateSave spriteDefault = new() { Name = "Default", ParentContainer = spriteStandard };
+        spriteDefault.Variables.Add(new VariableSave { Name = "SourceFile", Type = "string", IsFile = true });
+        spriteStandard.States.Add(spriteDefault);
+        ObjectFinder.Self.GumProjectSave!.StandardElements.Add(spriteStandard);
+
+        ScreenSave screen = new() { Name = "MainScreen" };
+        StateSave screenDefault = new() { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+        InstanceSave sprite = new() { Name = "Sprite", BaseType = "Sprite", ParentContainer = screen };
+        screen.Instances.Add(sprite);
+        ObjectFinder.Self.GumProjectSave.Screens.Add(screen);
+
+        return (screenDefault, sprite);
+    }
 }

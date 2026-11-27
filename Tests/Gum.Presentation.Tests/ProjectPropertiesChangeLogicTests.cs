@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Localization;
@@ -84,7 +83,7 @@ public class ProjectPropertiesChangeLogicTests
     }
 
     [Fact]
-    public void HandlePropertyChanged_LocalizationFiles_NormalizesAbsolutePathsToRelative()
+    public void HandlePropertyChanged_LocalizationFiles_NormalizesAbsolutePathsToRelativeWithForwardSlashes()
     {
         ProjectPropertiesViewModel viewModel = MakeViewModel();
         // Leading-slash literal, not "C:\...": rooted on both Windows and Unix, unlike a
@@ -94,9 +93,7 @@ public class ProjectPropertiesChangeLogicTests
 
         _logic.HandlePropertyChanged(viewModel, nameof(viewModel.LocalizationFiles));
 
-        // FileManager.Standardize normalizes to the OS-native separator, so the expected
-        // relative path must too.
-        viewModel.LocalizationFiles.ShouldContain($"Localization{Path.DirectorySeparatorChar}en.csv");
+        viewModel.LocalizationFiles.ShouldContain("Localization/en.csv");
         _fileCommands.Verify(f => f.LoadLocalizationFile(), Times.Never);
     }
 

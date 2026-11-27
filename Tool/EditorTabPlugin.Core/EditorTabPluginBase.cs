@@ -1321,7 +1321,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             {
                 foreach (string file in validFiles)
                 {
-                    string fileName = FileManager.MakeRelative(file, _fileLocations.ProjectFolder, preserveCase: true);
+                    string fileName = FileManager.ToStoredFilePath(file, _fileLocations.ProjectFolder);
                     AddNewInstanceForDrop(fileName, worldX, worldY);
                     shouldUpdate = true;
                 }
@@ -1496,7 +1496,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
             if ((isFontFile && isFontTarget) || (!isFontFile && isTextureTarget))
             {
-                string fileName = FileManager.MakeRelative(files[0], _fileLocations.ProjectFolder, preserveCase: true);
+                string fileName = FileManager.ToStoredFilePath(files[0], _fileLocations.ProjectFolder);
 
                 string? baseType = GetBaseTypeForExtension(fileName);
                 string addNewLabel = "Add new " + (baseType ?? "Sprite");
@@ -1600,7 +1600,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
         if (instance != null)
         {
-            string fileName = FileManager.MakeRelative(files[0], _fileLocations.ProjectFolder, preserveCase: true);
+            string fileName = FileManager.ToStoredFilePath(files[0], _fileLocations.ProjectFolder);
 
             string? baseType = GetBaseTypeForExtension(fileName);
             string addNewLabel = "Add new " + (baseType ?? "Sprite");

@@ -78,6 +78,17 @@ public class ReferencedFileChoicesTests : BaseTestClass
     }
 
     [Fact]
+    public void GetChoices_CurrentValueSavedWithBackslashes_IsListedOnce()
+    {
+        AddSprite("Plain", "Art/a.png");
+        AddSprite("Backslash", "Art\\a.png", createFile: false);
+
+        IReadOnlyList<string> choices = _choices.GetChoices(_ => true, currentValue: "Art\\a.png");
+
+        choices.Count.ShouldBe(1, "an older project can store a backslash path; it is the same file as the forward-slash one");
+    }
+
+    [Fact]
     public void GetChoices_ListsAFileOutsideTheProjectFolderOnce()
     {
         string outside = Path.Combine(Path.GetTempPath(), "GumReferencedOutside_" + Guid.NewGuid().ToString("N"));
