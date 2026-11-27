@@ -117,6 +117,9 @@ public class MainErrorsPlugin : CorePriorityPlugin
         this.VariableSetBatchCompleted += UpdateErrorsForElement;
         this.VariableRemovedFromCategory += HandleVariableRemovedFromCategory;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+        // An undo restores variables without a VariableSet for the selected element, so the rows
+        // an edit added (a missing file) would stay until some other refresh.
+        this.AfterUndo += () => UpdateErrorsForElement(_selectedState.SelectedElement);
 
         this.ProjectLoad += HandleProjectLoad;
         this.AfterProjectSave += _ => ScheduleProjectErrorRefresh();
