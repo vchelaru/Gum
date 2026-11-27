@@ -50,13 +50,13 @@ public class StateVariableWriterTests : BaseTestClass
             sprite.States.Add(new StateSave { Name = "Default", ParentContainer = sprite });
             Project.StandardElements.Add(sprite);
         }
-        sprite.DefaultState.Variables.RemoveAll(item => item.Name == "SourceFile");
+        sprite.DefaultState!.Variables.RemoveAll(item => item.Name == "SourceFile");
         sprite.DefaultState.Variables.Add(new VariableSave { Name = "SourceFile", Type = "string", IsFile = true });
         ComponentSave hud = EditingTestProject.AddComponent(Project, "Hud");
         InstanceSave icon = new InstanceSave { Name = "Icon", BaseType = "Sprite", ParentContainer = hud };
         hud.Instances.Add(icon);
 
-        new StateVariableWriter().SetVariable(hud, hud.DefaultState, "Icon.SourceFile", "Images\\Hero.png", icon, fallbackType: null);
+        new StateVariableWriter().SetVariable(hud, hud.DefaultState!, "Icon.SourceFile", "Images\\Hero.png", icon, fallbackType: null);
 
         hud.DefaultState.GetVariableSave("Icon.SourceFile")!.Value.ShouldBe("Images/Hero.png");
     }
