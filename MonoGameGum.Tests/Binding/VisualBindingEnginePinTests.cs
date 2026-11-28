@@ -939,8 +939,8 @@ public class VisualBindingEnginePinTests : BaseTestClass
     public void ColorAssignment_BoundRedChannel_LeavesViewModel()
     {
         PinViewModel viewModel = new() { Number = 100 };
-        ColoredRectangleRuntime sut = new() { BindingContext = viewModel };
-        sut.SetBinding(nameof(ColoredRectangleRuntime.Red), nameof(PinViewModel.Number));
+        SpriteRuntime sut = new() { BindingContext = viewModel };
+        sut.SetBinding(nameof(SpriteRuntime.Red), nameof(PinViewModel.Number));
 
         sut.Color = new Microsoft.Xna.Framework.Color(7, 8, 9, 255);
 
