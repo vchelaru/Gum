@@ -3,7 +3,7 @@ Third-party packages whose DLLs ship in Plugins/, with the license each declares
 BrotliSharpLib 0.3.3 : https://github.com/master131/BrotliSharpLib/blob/master/LICENSE
 CsvHelper 33.1.0 : MS-PL OR Apache-2.0
 ExCSS 4.3.1 : MIT
-FlatRedBall.InterpolationCore 2025.4.22.1 : see the package
+FlatRedBall.InterpolationCore 2026.11.27.1138 : MIT
 HarfBuzzSharp.NativeAssets.Linux 14.2.1.301 : MIT
 HarfBuzzSharp.NativeAssets.macOS 14.2.1.301 : MIT
 HarfBuzzSharp.NativeAssets.Win32 14.2.1.301 : MIT
