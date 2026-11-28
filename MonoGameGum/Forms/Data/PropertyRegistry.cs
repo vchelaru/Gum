@@ -150,12 +150,14 @@ internal class PropertyRegistry
         }
 
         expression.Dispose();
+        // Removed before the restore, so a setter that pushes or commits its binding finds none and leaves the
+        // view model alone.
+        BindingExpressions.Remove(uiPropertyName);
+        Bindings.Remove(uiPropertyName);
         // Only a OneWayToSource binding can target a property with no setter, and it never wrote it.
         if (expression is NpcBindingExpression { HasTargetSetter: true } npcExpression)
         {
             npcExpression.GetTargetProperty().SetValue(Owner, npcExpression.UnboundTargetValue);
         }
-        BindingExpressions.Remove(uiPropertyName);
-        Bindings.Remove(uiPropertyName);
     }
 }
