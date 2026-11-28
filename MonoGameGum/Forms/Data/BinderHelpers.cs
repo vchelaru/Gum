@@ -767,24 +767,25 @@ internal static class BinderHelpers
     // variable, field or property; anything that depends on the lambda's parameter or calls a method is refused.
     private static int EvaluateIndex(Expression indexArgument)
     {
+        string indexText = DescribeIndex(indexArgument);
         if (indexArgument.Type != typeof(int))
         {
             throw new InvalidOperationException(
-                $"Unsupported binding index '{indexArgument}': binding paths support only int indexes, " +
+                $"Unsupported binding index '{indexText}': binding paths support only int indexes, " +
                 $"but this index is a {indexArgument.Type.Name}.");
         }
 
-        if (!TryEvaluateCapturedValue(indexArgument, out object? value))
+        if (!TryEvaluateCapturedValue(indexArgument, indexText, out object? value))
         {
             throw new InvalidOperationException(
-                $"Unsupported binding index '{indexArgument}': an index must be a constant or a captured " +
+                $"Unsupported binding index '{indexText}': an index must be a constant or a captured " +
                 "variable, field or property, read once at SetBinding. Store the index in a local first.");
         }
 
         return (int)value!;
     }
 
-    private static bool TryEvaluateCapturedValue(Expression expression, out object? value)
+    private static bool TryEvaluateCapturedValue(Expression expression, string indexText, out object? value)
     {
         value = null;
         if (expression is ConstantExpression constant)
@@ -800,9 +801,19 @@ internal static class BinderHelpers
 
         // A static member has no owner expression.
         object? owner = null;
-        if (member.Expression != null && !TryEvaluateCapturedValue(member.Expression, out owner))
+        if (member.Expression != null)
         {
-            return false;
+            if (!TryEvaluateCapturedValue(member.Expression, indexText, out owner))
+            {
+                return false;
+            }
+
+            if (owner == null)
+            {
+                throw new InvalidOperationException(
+                    $"Binding index '{indexText}' cannot be read: '{DescribeIndex(member.Expression)}' is null " +
+                    "at SetBinding.");
+            }
         }
 
         switch (member.Member)
@@ -816,6 +827,18 @@ internal static class BinderHelpers
             default:
                 return false;
         }
+    }
+
+    // Shows a captured variable by its name rather than as a member of the compiler's closure object.
+    private static string DescribeIndex(Expression indexArgument) =>
+        new CapturedVariableNamer().Visit(indexArgument).ToString();
+
+    private sealed class CapturedVariableNamer : ExpressionVisitor
+    {
+        protected override Expression VisitMember(MemberExpression node) =>
+            node.Expression is ConstantExpression
+                ? Expression.Parameter(node.Type, node.Member.Name)
+                : base.VisitMember(node);
     }
 
     /// <summary>

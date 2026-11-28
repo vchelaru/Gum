@@ -181,6 +181,37 @@ public class LambdaCapturedIndexBindingTests : BaseTestClass
         propertyLabel.Text.ShouldBe("t2");
     }
 
+    [Fact]
+    public void TypedLambda_ComputedCapturedIndex_ThrowsWithReadableIndex()
+    {
+        InventoryViewModel vm = CreateInventory();
+        int i = 0;
+        Label label = new() { BindingContext = vm };
+
+        string message = Should.Throw<InvalidOperationException>(() =>
+            label.SetBinding<InventoryViewModel>(nameof(Label.Text), v => v.Names[i + 1])).Message;
+
+        message.ShouldContain("i + 1");
+        message.ShouldNotContain("DisplayClass");
+    }
+
+    private class IndexHolder
+    {
+        public int Index { get; set; }
+    }
+
+    [Fact]
+    public void TypedLambda_CapturedIndexOwnerIsNull_ThrowsNamingIndex()
+    {
+        InventoryViewModel vm = CreateInventory();
+        IndexHolder? holder = null;
+        Label label = new() { BindingContext = vm };
+
+        Should.Throw<InvalidOperationException>(() =>
+            label.SetBinding<InventoryViewModel>(nameof(Label.Text), v => v.Names[holder!.Index]))
+            .Message.ShouldContain("holder.Index");
+    }
+
     private static readonly int FirstIndexField = 0;
     private static int LastIndexProperty => 2;
 
