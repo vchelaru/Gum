@@ -358,6 +358,24 @@
     <Variable Type="float" Name="Disabled.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
+    <Variable Type="string" Name="Emphasis.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/Nunito-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="Emphasis.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="bool" Name="Emphasis.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="Emphasis.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="Emphasis.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyles</Value>
+    </Variable>
+    <Variable Type="string" Name="Emphasis.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Emphasis</Value>
+    </Variable>
     <Variable Type="int" Name="GlowMedium.FillAlpha" SetsValue="true">
       <Value xsi:type="xsd:int">110</Value>
     </Variable>
@@ -399,6 +417,60 @@
     </Variable>
     <Variable Type="float" Name="GlowStrong.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="string" Name="H1.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/Fraunces-BoldItalic.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="H1.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">22</Value>
+    </Variable>
+    <Variable Type="bool" Name="H1.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="H1.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="H1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyles</Value>
+    </Variable>
+    <Variable Type="string" Name="H1.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">H1</Value>
+    </Variable>
+    <Variable Type="string" Name="H2.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/Fraunces-BoldItalic.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="H2.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">18</Value>
+    </Variable>
+    <Variable Type="bool" Name="H2.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="H2.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="H2.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyles</Value>
+    </Variable>
+    <Variable Type="string" Name="H2.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">H2</Value>
+    </Variable>
+    <Variable Type="string" Name="H3.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/Fraunces-BoldItalic.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="H3.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">16</Value>
+    </Variable>
+    <Variable Type="bool" Name="H3.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="H3.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="H3.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyles</Value>
+    </Variable>
+    <Variable Type="string" Name="H3.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">H3</Value>
     </Variable>
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
@@ -622,6 +694,24 @@
     <Variable Type="float" Name="SliderTrack.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
+    <Variable Type="string" Name="Small.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/Nunito-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="Small.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">12</Value>
+    </Variable>
+    <Variable Type="bool" Name="Small.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="Small.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="string" Name="Small.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyles</Value>
+    </Variable>
+    <Variable Type="string" Name="Small.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Small</Value>
+    </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
       <Value xsi:type="xsd:string">Default</Value>
     </Variable>
@@ -695,11 +785,29 @@
     <Variable Type="float" Name="TextStyles.Y" SetsValue="true">
       <Value xsi:type="xsd:float">81</Value>
     </Variable>
+    <Variable Type="string" Name="Tiny.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/Nunito-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="Tiny.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">10</Value>
+    </Variable>
+    <Variable Type="bool" Name="Tiny.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="Tiny.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="string" Name="Tiny.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyles</Value>
+    </Variable>
+    <Variable Type="string" Name="Tiny.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Tiny</Value>
+    </Variable>
     <Variable Type="string" Name="Title.Font" SetsValue="true">
       <Value xsi:type="xsd:string">Fonts/Fraunces-BoldItalic.ttf</Value>
     </Variable>
     <Variable Type="int" Name="Title.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">18</Value>
+      <Value xsi:type="xsd:int">28</Value>
     </Variable>
     <Variable Type="bool" Name="Title.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -827,8 +935,14 @@
   <Instance Name="SliderTrack" BaseType="Rectangle" />
   <Instance Name="SliderDisabled" BaseType="Rectangle" />
   <Instance Name="VineCord" BaseType="Rectangle" />
+  <Instance Name="Tiny" BaseType="Text" />
+  <Instance Name="Small" BaseType="Text" />
   <Instance Name="Normal" BaseType="Text" />
+  <Instance Name="Emphasis" BaseType="Text" />
   <Instance Name="Strong" BaseType="Text" />
+  <Instance Name="H3" BaseType="Text" />
+  <Instance Name="H2" BaseType="Text" />
+  <Instance Name="H1" BaseType="Text" />
   <Instance Name="Title" BaseType="Text" />
   <Instance Name="Icon" BaseType="Text" />
   <Instance Name="TextStyles" BaseType="Container" />
