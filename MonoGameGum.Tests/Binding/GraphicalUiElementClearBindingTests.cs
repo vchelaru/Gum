@@ -22,6 +22,13 @@ public class GraphicalUiElementClearBindingTests
         private PropertyChangedEventHandler? _propertyChanged;
         private string? _name;
         private float _size;
+        private ClearViewModel? _child;
+
+        public ClearViewModel? Child
+        {
+            get => _child;
+            set { _child = value; Notify(); }
+        }
 
         public event PropertyChangedEventHandler? PropertyChanged
         {
@@ -131,5 +138,24 @@ public class GraphicalUiElementClearBindingTests
 
         viewModel.HasRaisedSubscribers.ShouldBeFalse();
         sut.Hits.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ClearBinding_BoundBindingContext_InheritsParentContextAgain()
+    {
+        ClearViewModel child = new();
+        ClearViewModel viewModel = new() { Child = child };
+        ContainerRuntime parent = new() { BindingContext = viewModel };
+        ClearRuntime sut = new();
+        parent.Children.Add(sut);
+        sut.SetBinding(nameof(ClearRuntime.BindingContext), nameof(ClearViewModel.Child));
+        sut.BindingContext.ShouldBe(child);
+
+        sut.ClearBinding(nameof(ClearRuntime.BindingContext));
+        sut.BindingContext.ShouldBe(viewModel);
+
+        ClearViewModel second = new();
+        parent.BindingContext = second;
+        sut.BindingContext.ShouldBe(second);
     }
 }
