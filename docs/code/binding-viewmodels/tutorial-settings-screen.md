@@ -55,6 +55,8 @@ This section shows how to set up binding in a `SettingsScreen` class. The bindin
 {% tabs %}
 {% tab title="Code-Only" %}
 ```csharp
+using BindingTutorial.ViewModels;
+
 public class SettingsScreen : FrameworkElement
 {
     Slider SfxSlider;
@@ -126,9 +128,11 @@ public class SettingsScreen : FrameworkElement
 
 {% tab title="Gum UI tool (with code generation)" %}
 ```csharp
-public partial class SettingsScreen
+using BindingTutorial.ViewModels;
+
+partial class SettingsScreen
 {
-    void CustomInitialize()
+    partial void CustomInitialize()
     {
         SfxSlider.SetBinding(
             nameof(SfxSlider.Value),

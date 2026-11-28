@@ -151,11 +151,11 @@ public class TaskScreen : FrameworkElement
 {% tab title="Gum UI tool (with code generation)" %}
 
 ```csharp
-class TaskScreen
+partial class TaskScreen
 {
     TaskScreenViewModel ViewModel => (TaskScreenViewModel)BindingContext!;
     
-    private void CustomInitialize()
+    partial void CustomInitialize()
     {
         TaskListBox.SetBinding(
             nameof(TaskListBox.Items), 
