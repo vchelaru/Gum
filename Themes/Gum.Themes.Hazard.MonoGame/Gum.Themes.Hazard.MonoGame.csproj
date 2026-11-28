@@ -22,6 +22,7 @@
     <!-- Per-backend shims source-shared across this theme's MonoGame/KNI/raylib variants.
          They live outside the project folder, so they are linked explicitly. -->
     <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeTextStyles.cs" Link="ThemeTextStyles.cs" />
     <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
   </ItemGroup>
   <ItemGroup>

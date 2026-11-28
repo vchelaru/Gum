@@ -389,7 +389,7 @@ public class HazardTemplateTests
             "Ink", "Muted", "Placeholder", "PressedFill", "PressedText", "Selection",
             "Surface1", "Surface2", "Text", "TextBright", "TextSelection"
         };
-        string[] expectedTextStyles = { "Normal", "Strong" };
+        string[] expectedTextStyles = { "Tiny", "Small", "Normal", "Emphasis", "Strong", "H3", "H2", "H1", "Title" };
 
         GumProjectSave project = LoadHazard();
         ComponentSave styles = project.Components.Single(c => c.Name == "Hazard/Styles");

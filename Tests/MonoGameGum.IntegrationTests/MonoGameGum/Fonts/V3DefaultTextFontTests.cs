@@ -70,6 +70,32 @@ public class V3DefaultTextFontTests : BaseTestClass
         }
     }
 
+    // The ladder rungs other than 18 (#8509) need a font creator, like any size the embedded atlas lacks. With none,
+    // the text keeps the embedded default font and the missing font is reported.
+    [Fact]
+    public void V3HeadingStyle_WithNoFontCreator_FallsBackToTheEmbeddedFontAndReports()
+    {
+        using V3Lease game = new();
+        StateSave h1 = V3Styling.ActiveStyle.Text.H1;
+        h1.GetValue("FontSize").ShouldBe(28);
+        List<string> reports = new();
+        void Handler(string message) => reports.Add(message);
+        global::Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError += Handler;
+        try
+        {
+            TextRuntime text = new TextRuntime();
+            text.ApplyState(h1);
+
+            BitmapFont embedded = (BitmapFont)LoaderManager.Self.GetDisposable("EmbeddedResource.MonoGameGum.Content.Font18Arial.fnt")!;
+            text.BitmapFont.ShouldBeSameAs(embedded);
+            reports.ShouldNotBeEmpty();
+        }
+        finally
+        {
+            global::Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
+        }
+    }
+
     // The before/after proof for the family switch: a code-only screen built with the styles' old family ("Arial")
     // and with "Liberation Sans" lays out to the same sizes and draws the same pixels. GUM_SCREENSHOT_DIR keeps both.
     [Fact]

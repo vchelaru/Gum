@@ -419,7 +419,7 @@
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="string" Name="H1.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Fonts/Fraunces-BoldItalic.ttf</Value>
+      <Value xsi:type="xsd:string">Fonts/Nunito-Bold.ttf</Value>
     </Variable>
     <Variable Type="int" Name="H1.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">22</Value>
@@ -428,7 +428,7 @@
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="bool" Name="H1.IsItalic" SetsValue="true">
-      <Value xsi:type="xsd:boolean">true</Value>
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="string" Name="H1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
@@ -437,7 +437,7 @@
       <Value xsi:type="xsd:string">H1</Value>
     </Variable>
     <Variable Type="string" Name="H2.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Fonts/Fraunces-BoldItalic.ttf</Value>
+      <Value xsi:type="xsd:string">Fonts/Nunito-Bold.ttf</Value>
     </Variable>
     <Variable Type="int" Name="H2.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">18</Value>
@@ -446,7 +446,7 @@
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="bool" Name="H2.IsItalic" SetsValue="true">
-      <Value xsi:type="xsd:boolean">true</Value>
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="string" Name="H2.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
@@ -455,7 +455,7 @@
       <Value xsi:type="xsd:string">H2</Value>
     </Variable>
     <Variable Type="string" Name="H3.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Fonts/Fraunces-BoldItalic.ttf</Value>
+      <Value xsi:type="xsd:string">Fonts/Nunito-Bold.ttf</Value>
     </Variable>
     <Variable Type="int" Name="H3.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">16</Value>
@@ -464,7 +464,7 @@
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="bool" Name="H3.IsItalic" SetsValue="true">
-      <Value xsi:type="xsd:boolean">true</Value>
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="string" Name="H3.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
