@@ -163,9 +163,17 @@ internal sealed class TextBlobBatch
             canvas.SetMatrix(_matrix);
         }
         _paint.Color = _color;
-        SKTextBlob? merged = count == 1 ? null : GetSlotBlob(count);
+        // The merged blob draws with one paint, so it holds runs with one synthetic-bold stroke (nonzero only on macOS).
+        float strokeWidth = GetStrokeWidth(in _items[0]);
+        bool isOneStroke = true;
+        for (int i = 1; isOneStroke && i < count; i++)
+        {
+            isOneStroke = GetStrokeWidth(in _items[i]) == strokeWidth;
+        }
+        SKTextBlob? merged = count == 1 || !isOneStroke ? null : GetSlotBlob(count);
         if (merged != null)
         {
+            SkiaGum.Content.Fonts.GumFontMapper.ApplySyntheticBoldStroke(_paint, strokeWidth);
             canvas.DrawText(merged, _items[0].X, _items[0].Y, _paint);
             _statistics.RecordDrawCall();
         }
@@ -174,6 +182,7 @@ internal sealed class TextBlobBatch
             for (int i = 0; i < count; i++)
             {
                 ref Item item = ref _items[i];
+                SkiaGum.Content.Fonts.GumFontMapper.ApplySyntheticBoldStroke(_paint, GetStrokeWidth(in item));
                 canvas.DrawText(item.Blob, item.X, item.Y, _paint);
                 _statistics.RecordDrawCall();
             }
@@ -186,6 +195,9 @@ internal sealed class TextBlobBatch
         // The pending items reference blobs the texts own; drop them so a removed text is not kept alive.
         Array.Clear(_items, 0, count);
     }
+
+    private static float GetStrokeWidth(in Item item) =>
+        SkiaGum.Content.Fonts.GumFontMapper.GetSyntheticBoldStrokeWidth(item.Embolden, item.FontSize);
 
     /// <summary>
     /// Starts a host frame: the next flush uses the first slot again. Called once per host frame by the Renderer.
