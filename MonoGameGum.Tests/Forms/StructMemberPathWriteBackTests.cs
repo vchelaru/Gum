@@ -313,6 +313,28 @@ public class StructMemberPathWriteBackTests : BaseTestClass
         _reports[0].ShouldContain(holderName);
     }
 
+    private class ArenaViewModel : ViewModel
+    {
+        public Position Fixed => default;
+    }
+
+    [Fact]
+    public void TwoWayEdit_ToStructBehindGetOnlyMember_OnSourcesOfTwoTypes_ReportsOncePerType()
+    {
+        TextBox textBox = new() { BindingContext = new WorldViewModel() };
+        textBox.SetBinding(nameof(TextBox.Text), "Fixed.X");
+
+        textBox.Text = "7";
+        textBox.BindingContext = new ArenaViewModel();
+        textBox.Text = "8";
+        textBox.BindingContext = new WorldViewModel();
+        textBox.Text = "9";
+
+        _reports.Count.ShouldBe(2);
+        _reports[0].ShouldStartWith("WorldViewModel.Fixed");
+        _reports[1].ShouldStartWith("ArenaViewModel.Fixed");
+    }
+
     [Fact]
     public void OneWayToSource_WritesBackThroughStruct()
     {
