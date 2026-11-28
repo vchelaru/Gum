@@ -50,7 +50,7 @@ label.SetBinding(
 This string-path overload resolves `LabelText` by reflection when the binding is applied. Under `PublishTrimmed`, a VM member reached *only* through a string-path binding can be removed by the trimmer if nothing else in your code references it directly. The binding then stops updating instead of throwing. The lambda overloads above avoid this: writing `vm => vm.LabelText` gives the compiler a direct reference to the property, which keeps the trimmer from removing it. Prefer lambda binding for any project that publishes with `PublishTrimmed` enabled.
 {% endhint %}
 
-A string path that names a property the `BindingContext` does not have, such as a misspelled name, does not throw. Gum writes one `[Gum]` warning for that binding naming the missing property, the `BindingContext` type and the bound property. A Forms control shows the binding's `FallbackValue` (or the property's default when none is set), and a visual keeps its current value.
+A string path that names a property the `BindingContext` does not have, such as a misspelled name, does not throw. Gum writes one `[Gum]` warning for that binding naming the missing property, the `BindingContext` type and the bound property. A Forms control shows the binding's `FallbackValue`, or the default of the property's type (such as `null` for `Text`) when none is set. A visual keeps its current value.
 
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source.
@@ -265,9 +265,9 @@ A `string` or integer source also converts to an enum target property, such as `
 
 ### Conversion Failures
 
-If `Convert.ChangeType` cannot convert a value, such as `"hello"` typed into a TextBox bound to `int`, the binding leaves the destination unchanged. No exception is thrown.
+If `Convert.ChangeType` cannot convert a value, no exception is thrown. A value typed into the UI that does not convert, such as `"hello"` in a TextBox bound to `int`, leaves the source unchanged. This includes empty strings: clearing the text in a TextBox bound to `int` does **not** reset the source to `0`.
 
-This applies in both directions and to edge cases such as empty strings. Clearing the text in a TextBox bound to `int` does **not** reset the source to `0`. The source keeps its previous value.
+A source value that does not convert to the UI property's type sets that property to its type's default, such as `0` for a Slider's `Value` bound to a `string` holding `"hello"`.
 
 {% hint style="info" %}
 The same rule applies to `Nullable<T>` source properties. An empty string does not convert to `null`, so the source is left unchanged. To support clearing a numeric field to `null`, supply a `Converter` with explicit `ConvertBack` logic.

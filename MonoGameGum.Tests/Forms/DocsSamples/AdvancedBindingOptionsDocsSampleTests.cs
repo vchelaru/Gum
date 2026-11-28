@@ -185,13 +185,33 @@ public class AdvancedBindingOptionsDocsSampleTests : BaseTestClass
     }
 
     [Fact]
-    public void MissingStringPath_DoesNotThrow_ShowsDefault()
+    public void MissingStringPath_DoesNotThrow_WarnsOnceAndShowsFallbackOrDefault()
     {
-        Label label = new();
-        label.Text = "Before";
-        label.BindingContext = new MyViewModel();
+        Action<string>? previous = GumRuntime.ElementSaveExtensions.ReportPropertyAssignmentError;
+        System.Collections.Generic.List<string> reports = new();
+        GumRuntime.ElementSaveExtensions.ReportPropertyAssignmentError = reports.Add;
+        try
+        {
+            Label withFallback = new() { Text = "Before" };
+            withFallback.BindingContext = new MyViewModel();
+            Label withoutFallback = new() { Text = "Before" };
+            withoutFallback.BindingContext = new MyViewModel();
 
-        Should.NotThrow(() => label.SetBinding(nameof(label.Text), "LabelTxt"));
+            Should.NotThrow(() => withFallback.SetBinding(nameof(Label.Text),
+                new Binding("LabelTxt") { FallbackValue = "fallback" }));
+            Should.NotThrow(() => withoutFallback.SetBinding(nameof(Label.Text), "LabelTxt"));
+
+            withFallback.Text.ShouldBe("fallback");
+            withoutFallback.Text.ShouldBeNull();
+            reports.Count.ShouldBe(2);
+            reports[1].ShouldContain("LabelTxt");
+            reports[1].ShouldContain(nameof(MyViewModel));
+            reports[1].ShouldContain("Text");
+        }
+        finally
+        {
+            GumRuntime.ElementSaveExtensions.ReportPropertyAssignmentError = previous;
+        }
     }
 
     [Fact]
@@ -389,6 +409,21 @@ public class AdvancedBindingOptionsDocsSampleTests : BaseTestClass
 
         byName.SelectionMode.ShouldBe(SelectionMode.Multiple);
         byNumber.SelectionMode.ShouldBe(SelectionMode.Multiple);
-        Should.Throw<Exception>(() => vm.Mode = "Bogus");
+        Exception thrown = Should.Throw<Exception>(() => vm.Mode = "Bogus");
+        thrown.Message.ShouldContain(nameof(SelectionMode));
+        thrown.Message.ShouldContain("Bogus");
+    }
+
+    [Fact]
+    public void ConversionFailure_SourceToTarget_SetsTargetTypeDefault()
+    {
+        ScoreViewModel vm = new() { Mode = "5" };
+        Slider slider = new() { Maximum = 100, BindingContext = vm };
+        slider.SetBinding(nameof(Slider.Value), nameof(ScoreViewModel.Mode));
+        slider.Value.ShouldBe(5);
+
+        vm.Mode = "hello";
+
+        slider.Value.ShouldBe(0);
     }
 }

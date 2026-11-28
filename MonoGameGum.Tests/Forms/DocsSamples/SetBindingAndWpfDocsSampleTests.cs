@@ -142,6 +142,7 @@ public class SetBindingAndWpfDocsSampleTests : BaseTestClass
             // Mistyped view-model path: one [Gum] report, no exception.
             myButton.SetBinding(nameof(Button.Text), "ButtonTxt");
             reports.Count.ShouldBe(1);
+            reports[0].ShouldContain("ButtonTxt");
 
             // Mistyped UI property throws at SetBinding.
             InvalidOperationException thrown = Should.Throw<InvalidOperationException>(() => myButton.SetBinding("Txt", "ButtonText"));
