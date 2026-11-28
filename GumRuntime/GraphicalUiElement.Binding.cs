@@ -338,6 +338,12 @@ public partial class GraphicalUiElement : IBindingTarget
         SetBinding(uiProperty, BinderHelpers.ExtractPath(vmPropertyExpression), toStringFormat);
 
     /// <summary>
+    /// Removes the binding on <paramref name="uiProperty"/> and restores the value the property held before it
+    /// was bound. Does nothing if <paramref name="uiProperty"/> has no binding.
+    /// </summary>
+    public void ClearBinding(string uiProperty) => _propertyRegistry?.ClearBinding(uiProperty);
+
+    /// <summary>
     /// Writes this element's <paramref name="uiPropertyName"/> to the view model member it is bound to. Call it
     /// from a property setter on a derived visual whose value the user changes. A binding whose mode is
     /// <see cref="BindingMode.OneWay"/> ignores it.
