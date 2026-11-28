@@ -311,12 +311,12 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     /// <summary>
     /// Shows FallbackValue (not converted), or <see cref="UnboundTargetValue"/> when there is none or it cannot
-    /// reach the target. A OneWayToSource binding never writes the target, and a BindingContext binding is left alone.
+    /// reach the target. A BindingContext binding shows null instead, as a path that resolves to null does, so the
+    /// element never keeps the context its lost source gave it. A OneWayToSource binding never writes the target.
     /// </summary>
     protected override void ResetTarget()
     {
-        if (Mode is BindingMode.OneWayToSource ||
-            TargetProperty.Name is nameof(FrameworkElement.BindingContext))
+        if (Mode is BindingMode.OneWayToSource)
         {
             return;
         }
@@ -325,7 +325,11 @@ internal class NpcBindingExpression : UntypedBindingExpression
             ? GumProperty.UnsetValue
             : ToTargetValue(Binding.FallbackValue, canFallBack: true);
 
-        SetTargetValue(value == GumProperty.UnsetValue ? UnboundTargetValue : value);
+        if (value == GumProperty.UnsetValue)
+        {
+            value = IsBindingContextTarget ? null : UnboundTargetValue;
+        }
+        SetTargetValue(value);
     }
 
     private void SetTargetValue(object? value)

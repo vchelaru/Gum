@@ -212,4 +212,109 @@ public class BoundBindingContextScenarioTests : BaseTestClass
 
         playerPanel.BindingContext.ShouldBeNull();
     }
+
+    [Fact]
+    public void BoundFormsElementRemovedFromParent_ContextIsNullAndChildResets()
+    {
+        PlayerVm player = new() { Name = "a" };
+        StackPanel parent = new() { BindingContext = new GameVm { Player = player } };
+        StackPanel playerPanel = new();
+        playerPanel.SetBinding(nameof(FrameworkElement.BindingContext), nameof(GameVm.Player));
+        parent.AddChild(playerPanel);
+        Label label = new();
+        string? preBindingText = label.Text;
+        label.SetBinding(nameof(Label.Text), nameof(PlayerVm.Name));
+        playerPanel.AddChild(label);
+        label.Text.ShouldBe("a");
+
+        parent.RemoveChild(playerPanel);
+
+        playerPanel.BindingContext.ShouldBeNull();
+        label.BindingContext.ShouldBeNull();
+        label.Text.ShouldBe(preBindingText);
+    }
+
+    [Fact]
+    public void ParentContextSetToNull_BoundVisualContextIsNull()
+    {
+        PlayerVm player = new() { Name = "a" };
+        ContainerRuntime parent = new() { BindingContext = new GameVm { Player = player } };
+        ContainerRuntime playerPanel = new();
+        playerPanel.SetBinding(nameof(GraphicalUiElement.BindingContext), nameof(GameVm.Player));
+        parent.Children.Add(playerPanel);
+        playerPanel.BindingContext.ShouldBe(player);
+
+        parent.BindingContext = null;
+
+        playerPanel.BindingContext.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ParentContextSetToNull_BoundFormsContextIsNull()
+    {
+        PlayerVm player = new() { Name = "a" };
+        StackPanel parent = new() { BindingContext = new GameVm { Player = player } };
+        StackPanel playerPanel = new();
+        playerPanel.SetBinding(nameof(FrameworkElement.BindingContext), nameof(GameVm.Player));
+        parent.AddChild(playerPanel);
+        playerPanel.BindingContext.ShouldBe(player);
+
+        parent.BindingContext = null;
+
+        playerPanel.BindingContext.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ParentContextSetToNull_BoundContextWithFallback_ShowsFallback()
+    {
+        PlayerVm fallback = new() { Name = "fallback" };
+        StackPanel parent = new() { BindingContext = new GameVm { Player = new PlayerVm { Name = "a" } } };
+        StackPanel playerPanel = new();
+        playerPanel.SetBinding(nameof(FrameworkElement.BindingContext),
+            new Gum.Forms.Data.Binding(nameof(GameVm.Player)) { FallbackValue = fallback });
+        parent.AddChild(playerPanel);
+
+        parent.BindingContext = null;
+
+        playerPanel.BindingContext.ShouldBe(fallback);
+    }
+
+    [Fact]
+    public void ScreenLeavesRoot_BoundDescendantContextIsNull()
+    {
+        PlayerVm player = new() { Name = "a" };
+        StackPanel screen = new() { BindingContext = new GameVm { Player = player } };
+        StackPanel playerPanel = new();
+        playerPanel.SetBinding(nameof(FrameworkElement.BindingContext), nameof(GameVm.Player));
+        screen.AddChild(playerPanel);
+        screen.AddToRoot();
+        playerPanel.BindingContext.ShouldBe(player);
+
+        screen.RemoveFromRoot();
+
+        playerPanel.BindingContext.ShouldBeNull();
+    }
+
+    [Fact]
+    public void BoundElementReparented_ResolvesAgainstEachNewParent()
+    {
+        PlayerVm first = new() { Name = "first" };
+        PlayerVm second = new() { Name = "second" };
+        StackPanel firstParent = new() { BindingContext = new GameVm { Player = first } };
+        StackPanel secondParent = new() { BindingContext = new GameVm { Player = second } };
+        StackPanel parentWithoutContext = new();
+        StackPanel playerPanel = new();
+        playerPanel.SetBinding(nameof(FrameworkElement.BindingContext), nameof(GameVm.Player));
+        firstParent.AddChild(playerPanel);
+        playerPanel.BindingContext.ShouldBe(first);
+
+        secondParent.AddChild(playerPanel);
+        playerPanel.BindingContext.ShouldBe(second);
+
+        parentWithoutContext.AddChild(playerPanel);
+        playerPanel.BindingContext.ShouldBeNull();
+
+        firstParent.AddChild(playerPanel);
+        playerPanel.BindingContext.ShouldBe(first);
+    }
 }
