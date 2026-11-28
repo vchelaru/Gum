@@ -4,14 +4,16 @@ using Gum.Wireframe;
 using RenderingLibrary;
 using Shouldly;
 using System;
+using System.ComponentModel;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
-/// Leaving the root clears the leaving element's own explicitly set BindingContext, whichever way it
-/// leaves; descendants given their own keep theirs. Moving between other parents, and leaving the
-/// popup or modal root, keep it.
+/// Leaving the root pauses the bindings of the leaving subtree, whichever way it leaves: every element keeps
+/// its BindingContext, but no binding follows or subscribes to its view model until the subtree is added to
+/// the root again, which shows the view model's current values. Moving between other parents, and leaving the
+/// popup or modal root, do not pause. RemoveFromManagers still clears the element's own context.
 /// </summary>
 public class BindingAfterScreenRemovalTests : BaseTestClass
 {
@@ -21,6 +23,32 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
 
         [DependsOn(nameof(Gold))]
         public bool CanAfford => Gold >= 10;
+
+        public GameViewModel? Player { get => Get<GameViewModel?>(); set => Set(value); }
+    }
+
+    // Counts PropertyChanged subscribers, to show a removed screen does not stay subscribed.
+    private class CountingViewModel : INotifyPropertyChanged
+    {
+        private PropertyChangedEventHandler? _propertyChanged;
+        public int SubscriberCount => _propertyChanged?.GetInvocationList().Length ?? 0;
+
+        public event PropertyChangedEventHandler? PropertyChanged
+        {
+            add => _propertyChanged += value;
+            remove => _propertyChanged -= value;
+        }
+
+        private int _gold;
+        public int Gold
+        {
+            get => _gold;
+            set
+            {
+                _gold = value;
+                _propertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Gold)));
+            }
+        }
     }
 
     private const string ResetBecause = "because a target whose BindingContext becomes null resets (#8543)";
@@ -76,7 +104,7 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
     [InlineData("ParentNull")]
     [InlineData("RemoveChild")]
     [InlineData("MoveToOtherParent")]
-    public void LeavingRoot_ExplicitContext_IsClearedAndScreenStopsFollowingViewModel(string path)
+    public void LeavingRoot_ExplicitContext_IsKeptAndScreenStopsFollowingViewModel(string path)
     {
         GameViewModel viewModel = new() { Gold = 1 };
         (StackPanel screen, Label goldLabel, Button buyButton) = CreateScreen();
@@ -86,14 +114,59 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         LeaveRoot(screen, path);
         viewModel.Gold = 50;
 
-        screen.BindingContext.ShouldBeNull();
-        goldLabel.BindingContext.ShouldBeNull();
-        goldLabel.Text.ShouldBe(ContextResetExpectation.Of(new Label().Text), ResetBecause);
-        buyButton.IsEnabled.ShouldBe(ContextResetExpectation.Of(new Button().IsEnabled), ResetBecause);
+        screen.BindingContext.ShouldBe(viewModel);
+        goldLabel.BindingContext.ShouldBe(viewModel);
+        goldLabel.Text.ShouldBe("1");
+        buyButton.IsEnabled.ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("FormsRemoveFromRoot")]
+    [InlineData("VisualRemoveFromRoot")]
+    [InlineData("ChildrenRemove")]
+    [InlineData("ChildrenClear")]
+    [InlineData("ParentNull")]
+    [InlineData("RemoveChild")]
+    public void LeavingRoot_ThenAddToRootAgain_ShowsCurrentValuesAndFollowsViewModel(string path)
+    {
+        GameViewModel viewModel = new() { Gold = 1 };
+        (StackPanel screen, Label goldLabel, Button buyButton) = CreateScreen();
+        screen.AddToRoot();
+        screen.BindingContext = viewModel;
+
+        LeaveRoot(screen, path);
+        viewModel.Gold = 50;
+        screen.AddToRoot();
+
+        screen.BindingContext.ShouldBe(viewModel);
+        goldLabel.Text.ShouldBe("50");
+        buyButton.IsEnabled.ShouldBeTrue();
+        viewModel.Gold = 3;
+        goldLabel.Text.ShouldBe("3");
+        buyButton.IsEnabled.ShouldBeFalse();
     }
 
     [Fact]
-    public void LeavingRoot_ContextAssignedBeforeAddToRoot_IsCleared()
+    public void LeavingRoot_ViewModelLosesEverySubscriptionUntilAddedAgain()
+    {
+        CountingViewModel viewModel = new() { Gold = 1 };
+        (StackPanel screen, Label goldLabel, _) = CreateScreen();
+        screen.AddToRoot();
+        screen.BindingContext = viewModel;
+        int subscribedCount = viewModel.SubscriberCount;
+        subscribedCount.ShouldBeGreaterThan(0);
+
+        screen.RemoveFromRoot();
+        viewModel.SubscriberCount.ShouldBe(0);
+
+        screen.AddToRoot();
+        viewModel.SubscriberCount.ShouldBe(subscribedCount);
+        viewModel.Gold = 9;
+        goldLabel.Text.ShouldBe("9");
+    }
+
+    [Fact]
+    public void LeavingRoot_ContextAssignedBeforeAddToRoot_IsKeptAndPaused()
     {
         GameViewModel viewModel = new() { Gold = 1 };
         (StackPanel screen, Label goldLabel, _) = CreateScreen();
@@ -103,12 +176,12 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         Gum.GumService.Default.Root.Children.Clear();
         viewModel.Gold = 7;
 
-        screen.BindingContext.ShouldBeNull();
-        goldLabel.Text.ShouldBe(ContextResetExpectation.Of(new Label().Text), ResetBecause);
+        screen.BindingContext.ShouldBe(viewModel);
+        goldLabel.Text.ShouldBe("1");
     }
 
     [Fact]
-    public void LeavingRoot_DescendantWithOwnExplicitContext_KeepsIt()
+    public void LeavingRoot_DescendantWithOwnExplicitContext_KeepsItAndPausesUntilAddedAgain()
     {
         GameViewModel screenViewModel = new() { Gold = 1 };
         GameViewModel childViewModel = new() { Gold = 2 };
@@ -122,30 +195,102 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         screenViewModel.Gold = 50;
 
         goldLabel.BindingContext.ShouldBe(childViewModel);
+        goldLabel.Text.ShouldBe("2");
+        buyButton.BindingContext.ShouldBe(screenViewModel);
+        buyButton.IsEnabled.ShouldBeFalse();
+
+        screen.AddToRoot();
         goldLabel.Text.ShouldBe("40");
-        buyButton.BindingContext.ShouldBeNull();
-        buyButton.IsEnabled.ShouldBe(ContextResetExpectation.Of(new Button().IsEnabled), ResetBecause);
+        buyButton.IsEnabled.ShouldBeTrue();
     }
 
     [Fact]
-    public void RemoveFromRoot_ThenAddToRootAgain_NeedsContextAssignedAgain()
+    public void LeavingRoot_BoundBindingContext_IsKeptAndFollowsAgainAfterAddToRoot()
     {
-        GameViewModel viewModel = new() { Gold = 1 };
+        GameViewModel player = new() { Gold = 1 };
+        GameViewModel game = new() { Player = player };
+        StackPanel screen = new();
+        StackPanel playerPanel = new();
+        playerPanel.SetBinding(nameof(FrameworkElement.BindingContext), nameof(GameViewModel.Player));
+        screen.AddChild(playerPanel);
+        Label goldLabel = new();
+        goldLabel.SetBinding(nameof(Label.Text), nameof(GameViewModel.Gold));
+        playerPanel.AddChild(goldLabel);
+        screen.AddToRoot();
+        screen.BindingContext = game;
+
+        screen.RemoveFromRoot();
+        GameViewModel nextPlayer = new() { Gold = 5 };
+        game.Player = nextPlayer;
+
+        playerPanel.BindingContext.ShouldBe(player);
+        goldLabel.Text.ShouldBe("1");
+
+        screen.AddToRoot();
+        playerPanel.BindingContext.ShouldBe(nextPlayer);
+        goldLabel.Text.ShouldBe("5");
+    }
+
+    [Fact]
+    public void LeavingRoot_ContextAssignedWhileRemoved_IsShownAfterAddToRoot()
+    {
+        GameViewModel first = new() { Gold = 1 };
+        GameViewModel second = new() { Gold = 2 };
         (StackPanel screen, Label goldLabel, _) = CreateScreen();
+        screen.AddToRoot();
+        screen.BindingContext = first;
+        screen.RemoveFromRoot();
+
+        screen.BindingContext = second;
+        goldLabel.Text.ShouldBe("1");
+
+        screen.AddToRoot();
+        goldLabel.Text.ShouldBe("2");
+    }
+
+    [Fact]
+    public void LeavingRoot_BindingSetWhileRemoved_AttachesAfterAddToRoot()
+    {
+        GameViewModel viewModel = new() { Gold = 4 };
+        StackPanel screen = new();
+        screen.AddToRoot();
+        screen.BindingContext = viewModel;
+        screen.RemoveFromRoot();
+        Label goldLabel = new();
+        screen.AddChild(goldLabel);
+        string? unboundText = goldLabel.Text;
+
+        goldLabel.SetBinding(nameof(Label.Text), nameof(GameViewModel.Gold));
+        goldLabel.Text.ShouldBe(unboundText);
+
+        screen.AddToRoot();
+        goldLabel.Text.ShouldBe("4");
+    }
+
+    [Fact]
+    public void LeavingRoot_BoundItems_KeepsRowsAndFollowsCollectionAgainAfterAddToRoot()
+    {
+        ItemsViewModel viewModel = new();
+        viewModel.Names.Add("first");
+        StackPanel screen = new();
+        ListBox listBox = new();
+        listBox.SetBinding(nameof(ListBox.Items), nameof(ItemsViewModel.Names));
+        screen.AddChild(listBox);
         screen.AddToRoot();
         screen.BindingContext = viewModel;
 
         screen.RemoveFromRoot();
+        listBox.ListBoxItems.Count.ShouldBe(1);
+
         screen.AddToRoot();
-        viewModel.Gold = 30;
+        viewModel.Names.Add("second");
+        listBox.ListBoxItems.Count.ShouldBe(2);
+        listBox.ListBoxItems[1].BindingContext.ShouldBe("second");
+    }
 
-        screen.BindingContext.ShouldBeNull();
-        goldLabel.Text.ShouldBe(ContextResetExpectation.Of(new Label().Text), ResetBecause);
-
-        screen.BindingContext = viewModel;
-        goldLabel.Text.ShouldBe("30");
-        viewModel.Gold = 31;
-        goldLabel.Text.ShouldBe("31");
+    private class ItemsViewModel : ViewModel
+    {
+        public System.Collections.ObjectModel.ObservableCollection<string> Names { get; } = new();
     }
 
     [Fact]
@@ -164,7 +309,7 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
 
         goldLabel.Text.ShouldBe("20");
         buyButton.IsEnabled.ShouldBeTrue();
-        oldGoldLabel.Text.ShouldBe(ContextResetExpectation.Of(new Label().Text), ResetBecause);
+        oldGoldLabel.Text.ShouldBe("1");
     }
 
     [Fact]
@@ -266,7 +411,7 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
     }
 
     [Fact]
-    public void AddToManagers_RemoveFromRoot_ContainedInstancesKeepTheirOwnContext()
+    public void AddToManagers_RemoveFromRoot_ContainedInstancesKeepTheirOwnContextAndPause()
     {
         GameViewModel screenViewModel = new() { Gold = 1 };
         GameViewModel labelViewModel = new() { Gold = 2 };
@@ -290,9 +435,10 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         screen.RemoveFromRoot();
         labelViewModel.Gold = 40;
 
+        // Forms RemoveFromRoot also calls RemoveFromManagers, which clears the screen's own context.
         screen.BindingContext.ShouldBeNull();
         goldLabel.BindingContext.ShouldBe(labelViewModel);
-        goldLabel.Text.ShouldBe("40");
+        goldLabel.Text.ShouldBe("2");
         listBox.ListBoxItems[1].BindingContext.ShouldBe("second");
     }
 

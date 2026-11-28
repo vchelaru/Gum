@@ -142,6 +142,34 @@ internal class PropertyRegistry
         }
     }
 
+    /// <summary>
+    /// Pauses or resumes every binding as the owner's subtree leaves or rejoins the root. A paused binding
+    /// stops listening to its source and leaves the target as it is; resuming reattaches it to the owner's
+    /// current context and refreshes the target.
+    /// </summary>
+    [RequiresUnreferencedCode("Calls " + nameof(BindingExpressionBase.Resume) + ".")]
+    public void SetPaused(bool isPaused)
+    {
+        if (BindingExpressions.Count == 0)
+        {
+            return;
+        }
+
+        // A target setter can run user code that adds or clears bindings.
+        List<BindingExpressionBase> expressions = new(BindingExpressions.Values);
+        foreach (BindingExpressionBase expression in expressions)
+        {
+            if (isPaused)
+            {
+                expression.Pause();
+            }
+            else
+            {
+                expression.Resume();
+            }
+        }
+    }
+
     public void ClearBinding(string uiPropertyName)
     {
         if (!BindingExpressions.TryGetValue(uiPropertyName, out BindingExpressionBase? expression))

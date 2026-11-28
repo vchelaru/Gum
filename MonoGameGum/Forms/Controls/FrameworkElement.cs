@@ -426,9 +426,14 @@ public class FrameworkElement : INotifyPropertyChanged, IBindingTarget
 #if FRB
     object? IBindingTarget.InheritedBindingContext => BindingContext;
 
+    bool IBindingTarget.AreBindingsPaused => false;
+
     void IBindingTarget.SetIsBindingContextBound(bool isBound) { }
 #else
     object? IBindingTarget.InheritedBindingContext => ((IBindingTarget?)Visual)?.InheritedBindingContext;
+
+    // GraphicalUiElement.SetBindingsPaused pauses this control's bindings along with its Visual's.
+    bool IBindingTarget.AreBindingsPaused => Visual?.AreBindingsPaused == true;
 
     // Kept here as well as on the Visual so a replacement Visual is bound too.
     bool _isBindingContextBound;

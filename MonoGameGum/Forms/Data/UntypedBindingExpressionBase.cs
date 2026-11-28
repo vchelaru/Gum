@@ -88,14 +88,28 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         if (IsBindingContextTarget)
         {
             // Resolved first, so the target takes over its context only once the path has given it a value.
-            AttachToSource(TargetElement.InheritedBindingContext);
+            if (!TargetElement.AreBindingsPaused)
+            {
+                AttachToSource(TargetElement.InheritedBindingContext);
+            }
             TargetElement.SetIsBindingContextBound(true);
         }
-        else
+        else if (!TargetElement.AreBindingsPaused)
         {
             AttachToSource(TargetElement.BindingContext);
         }
     }
+
+    // The target keeps the value it shows, a bound BindingContext included, so the subtree comes back as it left.
+    public override void Pause()
+    {
+        FlushPendingTargetValue();
+        DetachPathObserver();
+    }
+
+    [RequiresUnreferencedCode("Calls " + nameof(AttachToSource) + ".")]
+    public override void Resume() =>
+        AttachToSource(IsBindingContextTarget ? TargetElement.InheritedBindingContext : TargetElement.BindingContext);
 
     /// <summary>
     /// Whether this binding sets the target's BindingContext. Its path is read from the context the target
@@ -108,7 +122,7 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
             "trim risk is already surfaced wherever SetBinding was actually called to create this binding.")]
     private void OnTargetBindingContextChanged(object? sender, BindingContextChangedEventArgs e)
     {
-        if (IsBindingContextTarget)
+        if (IsBindingContextTarget || TargetElement.AreBindingsPaused)
         {
             return;
         }
@@ -153,11 +167,7 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         FlushPendingTargetValue();
 
         bool wasAttached = CurrentRoot is not null;
-        PathObserver.Detach();
-        SourceGetter = null;
-        SourceSetter = null;
-        _unassignableStructMessage = null;
-        _isLeafInStruct = false;
+        DetachPathObserver();
 
         if (newSource is null)
         {
@@ -224,6 +234,15 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         {
             UpdateTarget();
         }
+    }
+
+    private void DetachPathObserver()
+    {
+        PathObserver.Detach();
+        SourceGetter = null;
+        SourceSetter = null;
+        _unassignableStructMessage = null;
+        _isLeafInStruct = false;
     }
 
     [RequiresUnreferencedCode("Calls " + nameof(BinderHelpers.GetMissingPathMessage) + ".")]
