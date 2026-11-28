@@ -229,19 +229,21 @@ public class BindingStateCategoryAndVisualTypeTests : BaseTestClass
         text.Text.ShouldBe("second changed");
     }
 
+    // #8543: losing the BindingContext resets the bound property to its pre-binding value, on a visual too.
     [Fact]
-    public void VisualBinding_InheritedContext_ChildUnparented_StopsFollowing()
+    public void VisualBinding_InheritedContext_ChildUnparented_StopsFollowingAndResets()
     {
         ShopViewModel viewModel = new() { Label = "start" };
         ContainerRuntime parent = new() { BindingContext = viewModel };
-        TextRuntime text = new();
+        TextRuntime text = new() { Text = "unbound" };
         text.SetBinding(nameof(TextRuntime.Text), nameof(ShopViewModel.Label));
         parent.AddChild(text);
+        text.Text.ShouldBe("start");
 
         text.Parent = null;
         viewModel.Label = "after";
 
-        text.Text.ShouldBe("start");
+        text.Text.ShouldBe(ContextResetExpectation.Of("unbound"));
     }
 
     [Fact]

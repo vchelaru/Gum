@@ -173,7 +173,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
         // While the user types, a value the view model sends back for this edit (a re-entrant
         // PropertyChanged, or the post-write read-back) would rewrite the text mid-typing ("1." becoming
         // "1"), so it waits until the edit ends, as WPF does.
-        _isPushingTextEdit = IsTextEditTarget && TargetElement.IsFocused;
+        _isPushingTextEdit = TargetElement is TextBoxBase { IsFocused: true } && IsTextEditTarget;
         try
         {
             UpdateSource();

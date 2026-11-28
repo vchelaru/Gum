@@ -48,6 +48,12 @@ You are affected if you move a control with bound `Items` by removing it from on
 
 Visuals (`GraphicalUiElement` and every `*Runtime`) now bind through the same engine as Forms controls. A visual binding still copies the ViewModel value to the visual only, and writes back only through `PushValueToViewModel`, unless its `Binding` sets `Mode`. The entries below are the places where a visual binding used to behave differently.
 
+### Visual Properties Reset When the BindingContext Becomes Null
+
+A bound visual property resets when its `BindingContext` becomes null, the same way a Forms control's does (see [Bound Properties Reset When the BindingContext Becomes Null](#bound-properties-reset-when-the-bindingcontext-becomes-null)). This includes a visual removed from the parent it inherited its context from. Previously the visual kept the last value from the view model.
+
+You are affected if a visual must keep showing the last view model value after its context is cleared or it leaves its parent. Keep the context assigned until the visual is hidden, or set `FallbackValue` on the `Binding` to the value it should show.
+
 ### One ViewModel Property Can Feed Several Visual Properties
 
 Binding two properties of one visual to the same ViewModel property now keeps both bindings. Previously the second binding removed the first.

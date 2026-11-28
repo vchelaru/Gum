@@ -297,20 +297,22 @@ public class VisualBindingEnginePinTests : BaseTestClass
         sut.StringValue.ShouldBe("second changed");
     }
 
+    // #8543: a bound target shows its pre-binding value when the BindingContext becomes null, on a visual as on a
+    // Forms control (BindingContextNullResetTests).
     [Theory]
-    [Trait("Pin", MustKeep)]
+    [Trait("Pin", WillMatchForms)]
     [InlineData(false)]
     [InlineData(true)]
-    public void ContextSetToNull_KeepsLastValueAndStopsFollowing(bool useLambda)
+    public void ContextSetToNull_ResetsToUnboundValueAndStopsFollowing(bool useLambda)
     {
         PinViewModel viewModel = new() { Value = "a" };
-        PinRuntime sut = new() { BindingContext = viewModel };
+        PinRuntime sut = new() { StringValue = "unbound", BindingContext = viewModel };
         Bind(sut, nameof(PinRuntime.StringValue), "Value", useLambda);
 
         sut.BindingContext = null;
         viewModel.Value = "b";
 
-        sut.StringValue.ShouldBe("a");
+        sut.StringValue.ShouldBe("unbound");
     }
 
     [Theory]
