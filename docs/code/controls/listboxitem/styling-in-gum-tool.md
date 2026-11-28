@@ -35,10 +35,17 @@ To add either one, select `ListBoxItemCategory` in the **States** tab and add a 
 
 ## Using Your Component in One ListBox
 
-To use your component for one ListBox only, set that ListBox's `VisualTemplate` in code:
+To use your component for one ListBox only, set that ListBox's `FrameworkElementTemplate` in code. This example uses a component named `ShopItem`, which code generation turns into a `ShopItem` class that derives from `ListBoxItem`:
 
 ```csharp
-// Initialize
+// In CustomInitialize
+ShopListBox.FrameworkElementTemplate = new Gum.Forms.FrameworkElementTemplate(() => new ShopItem());
+```
+
+This applies to the **Gum Forms (recommended)** Output Library, which new projects use. A deprecated Output Library such as **MonoGame (deprecated)** generates a `ShopItemRuntime` visual class instead, which goes in the ListBox's `VisualTemplate`:
+
+```csharp
+// In CustomInitialize
 ShopListBox.VisualTemplate = new Gum.Forms.VisualTemplate(() => new ShopItemRuntime(tryCreateFormsObject: false));
 ```
 
