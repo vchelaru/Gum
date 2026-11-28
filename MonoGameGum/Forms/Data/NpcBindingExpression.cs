@@ -38,10 +38,11 @@ internal class NpcBindingExpression : UntypedBindingExpression
         string targetPropertyName,
         Binding binding) : base(target, targetPropertyName, binding)
     {
-        TargetProperty = target.GetType()
-            .GetProperty(targetPropertyName)
+        PropertyInfo targetProperty = target.GetType().GetProperty(targetPropertyName)
             ?? throw new InvalidOperationException(
                 $"Property '{targetPropertyName}' not found on {target.GetType().Name}");
+        // Declared lookup, so a private setter on a base class is found for the read-only check, writes and ClearBinding.
+        TargetProperty = BinderHelpers.AsDeclared(targetProperty);
 
         // OneWay and TwoWay write the source value to the target, so refuse a target that cannot take it here
         // rather than when a BindingContext arrives. SetValue reaches a non-public setter, so any setter will do.
