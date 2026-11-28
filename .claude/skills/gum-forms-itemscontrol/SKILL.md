@@ -98,6 +98,10 @@ A direct `InnerPanel.Children.Move` (hot reload does this) reaches `HandleInnerP
 
 `ListBoxItem.AssignListBoxEvents` is guarded by `hasHadListBoxEventsAssigned`. A `ListBoxItem` that bypasses normal item creation (e.g., added to InnerPanel directly without going through `Items`) may or may not have its events assigned. If events are missing, the item renders but clicking it produces no selection change.
 
+### 6. Collection lifetime
+
+`Items` and ComboBox's pending items are observed through `WeakCollectionChangedListener<TOwner>` (bottom of `ItemsControl.cs`), so a view model's collection never keeps a control alive. Its handler must be a `static` lambda that reaches the control only through the `owner` argument; a lambda that captures the control makes the subscription strong again.
+
 ## Authoring Items In The Gum Tool
 
 Items placed in a ListBox, ComboBox or any container instance in the tool are parented to the instance's **Default Slot**, never to the instance itself: the demo screens set `ListBoxItemInstance.Parent` to `ResolutionBox.InnerPanelInstance`, not `ResolutionBox`. When writing a screen's `.gusj` or `.gusx` by hand (or generating one), read the component's Default Slot and parent to that child; a direct child of the control bypasses `InnerPanel` and the items never appear in the list. See `docs/gum-tool/gum-elements/component/default-child-container.md`.
