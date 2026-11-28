@@ -197,4 +197,117 @@ public class BoundBindingContextScenarioTests : BaseTestClass
         vm.Player = null;
         playerPanel.BindingContext.ShouldBeNull();
     }
+
+    [Fact]
+    public void BoundElementMovedToAnotherParent_ResolvesFromNewParentContext()
+    {
+        PlayerVm first = new() { Name = "first" };
+        PlayerVm second = new() { Name = "second" };
+        StackPanel firstParent = new() { BindingContext = new GameVm { Player = first } };
+        StackPanel secondParent = new() { BindingContext = new GameVm { Player = second } };
+        StackPanel playerPanel = new();
+        playerPanel.SetBinding(nameof(FrameworkElement.BindingContext), nameof(GameVm.Player));
+        Label label = new();
+        label.SetBinding(nameof(Label.Text), nameof(PlayerVm.Name));
+        playerPanel.AddChild(label);
+        firstParent.AddChild(playerPanel);
+        label.Text.ShouldBe("first");
+
+        firstParent.RemoveChild(playerPanel);
+        secondParent.AddChild(playerPanel);
+
+        playerPanel.BindingContext.ShouldBe(second);
+        label.Text.ShouldBe("second");
+    }
+
+    [Fact]
+    public void VisualBoundElementMovedToAnotherParent_ResolvesFromNewParentContext()
+    {
+        PlayerVm first = new() { Name = "first" };
+        PlayerVm second = new() { Name = "second" };
+        ContainerRuntime firstParent = new() { BindingContext = new GameVm { Player = first } };
+        ContainerRuntime secondParent = new() { BindingContext = new GameVm { Player = second } };
+        ContainerRuntime playerPanel = new();
+        playerPanel.SetBinding(nameof(GraphicalUiElement.BindingContext), nameof(GameVm.Player));
+        firstParent.Children.Add(playerPanel);
+        playerPanel.BindingContext.ShouldBe(first);
+
+        playerPanel.Parent = secondParent;
+
+        playerPanel.BindingContext.ShouldBe(second);
+    }
+
+    [Fact]
+    public void UnboundElementRemovedFromParent_LosesInheritedContext()
+    {
+        GameVm vm = new();
+        ContainerRuntime parent = new() { BindingContext = vm };
+        ContainerRuntime child = new();
+        parent.Children.Add(child);
+        child.BindingContext.ShouldBe(vm);
+
+        parent.Children.Remove(child);
+
+        child.BindingContext.ShouldBeNull();
+    }
+
+    public class TeamVm : ViewModel
+    {
+        public GameVm? Game { get => Get<GameVm?>(); set => Set(value); }
+        public string? Name { get => Get<string?>(); set => Set(value); }
+    }
+
+    [Fact]
+    public void DottedPathWithNullIntermediate_ContextIsNullNotParentContext()
+    {
+        TeamVm vm = new() { Name = "team", Game = null };
+        StackPanel panel = new() { BindingContext = vm };
+        StackPanel playerPanel = new();
+        panel.AddChild(playerPanel);
+        playerPanel.SetBinding(nameof(FrameworkElement.BindingContext), "Game.Player");
+        Label label = new();
+        string? preBindingText = label.Text;
+        label.SetBinding(nameof(Label.Text), nameof(PlayerVm.Name));
+        playerPanel.AddChild(label);
+
+        playerPanel.BindingContext.ShouldBeNull();
+        label.Text.ShouldBe(preBindingText);
+
+        PlayerVm player = new() { Name = "p" };
+        vm.Game = new GameVm { Player = player };
+
+        playerPanel.BindingContext.ShouldBe(player);
+        label.Text.ShouldBe("p");
+    }
+
+    [Fact]
+    public void OwnContextBeforeBinding_ClearBinding_RestoresOwnContext()
+    {
+        PlayerVm own = new() { Name = "own" };
+        GameVm vm = new() { Player = new PlayerVm { Name = "bound" } };
+        StackPanel panel = new() { BindingContext = vm };
+        StackPanel playerPanel = new() { BindingContext = own };
+        panel.AddChild(playerPanel);
+        playerPanel.SetBinding(nameof(FrameworkElement.BindingContext), nameof(GameVm.Player));
+        playerPanel.BindingContext.ShouldBe(vm.Player);
+
+        playerPanel.ClearBinding(nameof(FrameworkElement.BindingContext));
+
+        playerPanel.BindingContext.ShouldBe(own);
+    }
+
+    [Fact]
+    public void ClonedVisualWithBoundContext_ResolvesFromCloneParentContext()
+    {
+        PlayerVm player = new() { Name = "a" };
+        ContainerRuntime original = new();
+        original.SetBinding(nameof(GraphicalUiElement.BindingContext), nameof(GameVm.Player));
+        ContainerRuntime clone = (ContainerRuntime)original.Clone();
+        ContainerRuntime parent = new() { BindingContext = new GameVm { Player = player } };
+
+        parent.Children.Add(clone);
+
+        clone.BindingContext.ShouldBe(player);
+        original.BindingContext.ShouldBeNull();
+    }
 }
