@@ -29,7 +29,9 @@ internal class NpcBindingExpression : UntypedBindingExpression
     private bool _isUpdatingTarget;
     private bool _isUpdatingSource;
     private bool _isLostFocusTrigger;
-    
+    private bool _hasReportedFailedConversion;
+    private bool _hasReportedPushWithoutSetter;
+
     [UnconditionalSuppressMessage("Trimming", "IL2072",
         Justification = "Only value types reach Activator.CreateInstance here, and every value type " +
             "has a parameterless constructor that the trimmer cannot remove.")]
@@ -276,7 +278,27 @@ internal class NpcBindingExpression : UntypedBindingExpression
                 value, enumType, TargetElement.GetType().Name, TargetProperty.Name));
         }
 
+        if (converted == GumProperty.UnsetValue && value is not null)
+        {
+            ReportFailedConversionOnce(value, canFallBack);
+        }
+
         return converted;
+    }
+
+    // A value the target cannot take shows FallbackValue or the default instead of throwing, so it is reported
+    // once per binding rather than going unseen.
+    private void ReportFailedConversionOnce(object value, bool showsFallback)
+    {
+        if (_hasReportedFailedConversion)
+        {
+            return;
+        }
+        _hasReportedFailedConversion = true;
+        string shown = showsFallback ? nameof(Binding.FallbackValue) : "default";
+        GumRuntime.ElementSaveExtensions.ReportDiagnostic(
+            $"Binding for {TargetElement.GetType().Name}.{TargetProperty.Name} could not convert the value " +
+            $"'{value}' ({value.GetType().Name}) to {TargetProperty.PropertyType.Name}, so the property shows its {shown}.");
     }
 
     public override void UpdateSource()
@@ -298,6 +320,14 @@ internal class NpcBindingExpression : UntypedBindingExpression
             TargetProperty.Name is nameof(FrameworkElement.BindingContext))
         {
             return;
+        }
+        // A source member with no setter ignores the push; the target asked for the write, so say why once.
+        if (!_isUpdatingTarget && CurrentRoot != null && IsSourceResolvedWithoutSetter && !_hasReportedPushWithoutSetter)
+        {
+            _hasReportedPushWithoutSetter = true;
+            GumRuntime.ElementSaveExtensions.ReportDiagnostic(
+                $"{TargetElement.GetType().Name}.{TargetProperty.Name} pushed its value, but " +
+                $"{CurrentRoot.GetType().Name}.{Binding.Path} has no setter, so the view model was not changed.");
         }
         WriteTargetToSource();
     }

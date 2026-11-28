@@ -48,9 +48,9 @@ You are affected if a visual showed a value from the tool or from code while its
 
 ### Values the Target Cannot Take Set Its Default
 
-A ViewModel value that does not convert to the visual property's type, such as the string `"yes"` bound to `Visible`, now sets the property's default instead of throwing. A `decimal` bound to an `int` property now rounds instead of truncating, and a number outside a `byte` property's range sets `0` instead of clamping to `0` or `255`.
+A ViewModel value that does not convert to the visual property's type, such as the string `"yes"` bound to `Visible`, now sets the property's default (or `FallbackValue`) instead of throwing, and Gum writes one `[Gum]` warning for that binding. A `decimal` bound to an `int` property now rounds instead of truncating. A number outside a `byte` property's range sets `0` instead of clamping to `0` or `255`, with the same warning, so an alpha computed slightly above 255 makes the element invisible. A Forms control binding writes the same warning.
 
-You are affected if you relied on the exception or on the old rounding or clamping. Convert the value in the ViewModel or with a `Converter`.
+You are affected if you relied on the exception or on the old rounding or clamping. Convert or clamp the value in the ViewModel, or use a `Converter`.
 
 ### The toStringFormat Argument Formats Every Value
 
@@ -62,7 +62,7 @@ No change is needed unless code caught that exception.
 
 `PushValueToViewModel` in a derived visual follows the Forms rules when it writes to the ViewModel:
 
-* A ViewModel property with no setter is left alone instead of throwing.
+* A ViewModel property with no setter is left alone instead of throwing, and Gum writes one `[Gum]` warning for that binding.
 * A path that ends in an index, such as `Names[0]`, writes that item. Previously nothing was written.
 * A binding whose `Mode` is `OneWay` is not written.
 

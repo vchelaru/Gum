@@ -1437,6 +1437,97 @@ public class VisualBindingEnginePinTests : BaseTestClass
         sut.StringValue.ShouldBe("b");
     }
 
+    #region Diagnostics for what used to throw
+
+    // The old visual engine threw here; the shared engine shows the default and reports a [Gum] warning once.
+    [Fact]
+    public void InvalidStringToInt_ReportsOncePerBinding()
+    {
+        PinViewModel viewModel = new() { Value = "abc" };
+        PinRuntime sut = new() { BindingContext = viewModel };
+        sut.SetBinding(nameof(PinRuntime.IntValue), nameof(PinViewModel.Value));
+
+        viewModel.Value = "def";
+
+        _reports.ShouldBe(new[]
+        {
+            "Binding for PinRuntime.IntValue could not convert the value 'abc' (String) to Int32, so the property shows its default."
+        });
+    }
+
+    [Fact]
+    public void Forms_InvalidStringToInt_ReportsOncePerBinding()
+    {
+        PinViewModel viewModel = new() { Value = "abc" };
+        PinControl sut = new() { BindingContext = viewModel };
+
+        sut.SetBinding(nameof(PinControl.IntValue), new Binding(nameof(PinViewModel.Value)) { FallbackValue = 4 });
+
+        sut.IntValue.ShouldBe(4);
+        _reports.ShouldBe(new[]
+        {
+            "Binding for PinControl.IntValue could not convert the value 'abc' (String) to Int32, so the property shows its FallbackValue."
+        });
+    }
+
+    [Fact]
+    public void StringToBoolAndIntAboveByteRange_Report()
+    {
+        PinViewModel viewModel = new() { Value = "yes", Number = 300 };
+        PinRuntime sut = new() { BindingContext = viewModel };
+
+        sut.SetBinding(nameof(PinRuntime.BoolValue), nameof(PinViewModel.Value));
+        sut.SetBinding(nameof(PinRuntime.ByteValue), nameof(PinViewModel.Number));
+
+        _reports.ShouldBe(new[]
+        {
+            "Binding for PinRuntime.BoolValue could not convert the value 'yes' (String) to Boolean, so the property shows its default.",
+            "Binding for PinRuntime.ByteValue could not convert the value '300' (Int32) to Byte, so the property shows its default."
+        });
+    }
+
+    [Fact]
+    public void NullToValueTypeTarget_DoesNotReport()
+    {
+        PinViewModel viewModel = new() { Thing = null };
+        PinRuntime sut = new() { BindingContext = viewModel };
+
+        sut.SetBinding(nameof(PinRuntime.IntValue), nameof(PinViewModel.Thing));
+
+        _reports.ShouldBeEmpty();
+    }
+
+    // The old visual engine threw here; the shared engine leaves the source alone and reports a [Gum] warning once.
+    [Fact]
+    public void PushValueToViewModel_GetOnlyViewModelProperty_ReportsOncePerBinding()
+    {
+        PinViewModel viewModel = new();
+        PinRuntime sut = new() { BindingContext = viewModel };
+        sut.SetBinding(nameof(PinRuntime.PushedInt), nameof(PinViewModel.GetOnly));
+
+        sut.PushedInt = 5;
+        sut.PushedInt = 6;
+
+        _reports.ShouldBe(new[]
+        {
+            "PinRuntime.PushedInt pushed its value, but PinViewModel.GetOnly has no setter, so the view model was not changed."
+        });
+    }
+
+    [Fact]
+    public void PushValueToViewModel_ViewModelField_DoesNotReport()
+    {
+        PinViewModel viewModel = new() { Field = 1 };
+        PinRuntime sut = new() { BindingContext = viewModel };
+        sut.SetBinding(nameof(PinRuntime.PushedInt), nameof(PinViewModel.Field));
+
+        sut.PushedInt = 5;
+
+        _reports.ShouldBeEmpty();
+    }
+
+    #endregion
+
     #region SetBinding(string, Binding) on a visual
 
     public class NegateConverter : IValueConverter

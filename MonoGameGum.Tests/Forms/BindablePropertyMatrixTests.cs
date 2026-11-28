@@ -333,8 +333,9 @@ public class BindablePropertyMatrixTests : BaseTestClass
     }
 
     /// <summary>
-    /// A visual's SetBinding has no modes; a change made on the visual is written back only through
-    /// PushValueToViewModel, which no standard runtime calls, even for properties that raise PropertyChanged.
+    /// A visual binding that does not set a mode copies the view model value to the visual only; a change made on
+    /// the visual is written back only through PushValueToViewModel, which no standard runtime calls, even for
+    /// properties that raise PropertyChanged.
     /// </summary>
     [Fact]
     public void StandardRuntimes_EveryNotifyingProperty_StringBindingDoesNotWriteBackToViewModel()

@@ -33,6 +33,14 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     protected IBindingTarget TargetElement { get; }
     protected Type? LeafType => PathObserver.LeafType;
     protected object? CurrentRoot => PathObserver.CurrentRoot;
+
+    /// <summary>
+    /// Whether the path resolved to a source property that has no setter, so a write to the source does nothing.
+    /// A field is excluded: it is read, never written, by design.
+    /// </summary>
+    protected bool IsSourceResolvedWithoutSetter =>
+        PathObserver.HasResolution && !PathObserver.IsLeafField && SourceSetter is null;
+
     private Func<object, object?>? SourceGetter { get; set; }
     private Action<object, object?>? SourceSetter { get; set; }
     private PropertyPathObserver PathObserver { get; }
