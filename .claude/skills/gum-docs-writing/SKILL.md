@@ -263,6 +263,7 @@ For adding or updating XnaFiddle interactive links, see [xnafiddle.md](xnafiddle
 
 ## Code Sample Rules
 
+- **A sample that names a class Gum generates is built against code the generator produced.** Run codegen (`gumcli codegen`, see `gum-cli`) on a project made with the New Project defaults, paste the sample in, and build. A hand-written stand-in class only proves the sample matches what you assumed the generator makes; the Output Library decides whether a component becomes `ShopItem : ListBoxItem` or a `ShopItemRuntime` visual.
 - **Values a sample reads from outside the code block get a comment showing what they contain.** That covers translation keys, content files, project assets and configuration, so the code block makes sense without reading the prose.
 - **Parallel samples share one design.** When a page shows the same task in two forms (code-only vs. a generated screen, MonoGame vs. raylib), a design change to one sample (where navigation lives, how the classes are split up) gets applied to the others in the same pass, or the page explains why they differ.
 

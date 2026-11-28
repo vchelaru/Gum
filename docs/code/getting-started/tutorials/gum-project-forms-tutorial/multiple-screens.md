@@ -16,7 +16,7 @@ First we'll create Screen1:
 2.  Drag+drop a Components/Controls/Label component into Screen1\\
 
     <figure><img src="../../../../.gitbook/assets/10_06 06 33.png" alt=""><figcaption><p>Add a Label to Screen1</p></figcaption></figure>
-3. Set the **Label Text** property on the newly created LabelInstance to **Screen 1** so that you can tell that you are on Screen1 when running your game
+3. Set the **Text** property on the newly created LabelInstance to **Screen 1** so that you can tell that you are on Screen1 when running your game
 4. Drag+drop a **ButtonStandard** component into Screen1
 5. Set the Text property on the newly created **ButtonStandardInstance** to **Go to Screen 2**
 6. Arrange the two instances so they are not overlapping

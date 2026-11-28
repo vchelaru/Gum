@@ -373,7 +373,7 @@ The decoration methods are defined on `ItemsControl` / `ListBox`, so they are av
 
 ## Customizing with VisualTemplate
 
-The VisualTemplate lets you customize the type of ListBoxItem created for the ListBox. The following code shows how to assign a VisualTemplate to a runtime object named CustomListBoxItemRuntime:
+The VisualTemplate lets you customize the visual of each ListBoxItem created for the ListBox. The following code assigns a VisualTemplate that creates a visual class named CustomListBoxItemRuntime, such as a code-only visual or a class generated with a deprecated Output Library:
 
 ```csharp
 // Initialize
@@ -383,6 +383,15 @@ listBox.VisualTemplate =
         // do not create a forms object because this template will be
         // automatically added to a ListBoxItem by the ListBox:
         new CustomListBoxItemRuntime(tryCreateFormsObject:false));
+```
+
+A component generated with the **Gum Forms (recommended)** Output Library is a `ListBoxItem` rather than a visual, so it goes in `FrameworkElementTemplate` instead. For example, for a component named `CustomListBoxItem`:
+
+```csharp
+// Initialize
+// assign the template before adding new list items
+listBox.FrameworkElementTemplate =
+    new Gum.Forms.FrameworkElementTemplate(() => new CustomListBoxItem());
 ```
 
 The VisualTemplate class can optionally pass a parameter representing the item in the list box. This can be used to create different types of items based on the object added. For example the following code would compare the passed object as an integer to whether it is greater than 100 and returns a different item depending on this result:
@@ -403,8 +412,7 @@ listBox.VisualTemplate =
         {
             return new CustomListBoxItemLowValue(tryCreateFormsObject:false);
         }
-        
-    }
+    });
 ```
 
 {% hint style="info" %}
