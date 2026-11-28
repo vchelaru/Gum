@@ -198,7 +198,7 @@ public class SourceWithoutSetterBindingTests : BaseTestClass
         textBox.SetBinding(nameof(TextBox.Text), nameof(ComputedViewModel.FullName));
 
         textBox.BindingContext = viewModel;
-        string shown = textBox.Text;
+        string? shown = textBox.Text;
         textBox.Text = "edited";
 
         shown.ShouldBe("Ada Lovelace");
@@ -241,7 +241,7 @@ public class SourceWithoutSetterBindingTests : BaseTestClass
         textBox.SetBinding(nameof(TextBox.Text), nameof(PrivateSetterViewModel.Nickname));
 
         textBox.BindingContext = viewModel;
-        string shown = textBox.Text;
+        string? shown = textBox.Text;
         textBox.Text = "edited";
 
         shown.ShouldBe("start");

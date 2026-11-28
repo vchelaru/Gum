@@ -1641,7 +1641,7 @@ public class FrameworkElementBindingTests : BaseTestClass
     }
 
     [Fact]
-    public void ModeOneWayToSource_ReadonlySourceProperty_DoesNotThrowOrUpdateSource()
+    public void ModeOneWayToSource_ReadonlySourceProperty_ThrowsAndDoesNotUpdateSource()
     {
         // Arrange
         TestViewModel viewModel = new()
@@ -1656,7 +1656,7 @@ public class FrameworkElementBindingTests : BaseTestClass
         {
             Mode = BindingMode.OneWayToSource
         };
-        textBox.SetBinding(nameof(TextBox.Text), binding);
+        Should.Throw<InvalidOperationException>(() => textBox.SetBinding(nameof(TextBox.Text), binding));
 
         // Act
         textBox.Text = "ui text";

@@ -313,6 +313,21 @@
     <Variable Type="float" Name="Divider.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
+    <Variable Type="string" Name="Emphasis.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/ShareTechMono-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="Emphasis.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">13</Value>
+    </Variable>
+    <Variable Type="bool" Name="Emphasis.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="Emphasis.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyles</Value>
+    </Variable>
+    <Variable Type="string" Name="Emphasis.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Emphasis</Value>
+    </Variable>
     <Variable Type="int" Name="FocusRing.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
@@ -412,6 +427,51 @@
     <Variable Type="float" Name="GlowSubtle.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
+    <Variable Type="string" Name="H1.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/Orbitron-Bold.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="H1.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">22</Value>
+    </Variable>
+    <Variable Type="bool" Name="H1.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="H1.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyles</Value>
+    </Variable>
+    <Variable Type="string" Name="H1.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">H1</Value>
+    </Variable>
+    <Variable Type="string" Name="H2.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/Orbitron-Bold.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="H2.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">18</Value>
+    </Variable>
+    <Variable Type="bool" Name="H2.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="H2.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyles</Value>
+    </Variable>
+    <Variable Type="string" Name="H2.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">H2</Value>
+    </Variable>
+    <Variable Type="string" Name="H3.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/Orbitron-Bold.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="H3.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">16</Value>
+    </Variable>
+    <Variable Type="bool" Name="H3.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="H3.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyles</Value>
+    </Variable>
+    <Variable Type="string" Name="H3.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">H3</Value>
+    </Variable>
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -505,6 +565,18 @@
     <Variable Type="float" Name="SliderThumbShadow.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
+    <Variable Type="string" Name="Small.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/ShareTechMono-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="Small.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">12</Value>
+    </Variable>
+    <Variable Type="string" Name="Small.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyles</Value>
+    </Variable>
+    <Variable Type="string" Name="Small.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Small</Value>
+    </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
       <Value xsi:type="xsd:string">Default</Value>
     </Variable>
@@ -592,6 +664,33 @@
     <Variable Type="float" Name="TextStyles.X" SetsValue="true" />
     <Variable Type="float" Name="TextStyles.Y" SetsValue="true">
       <Value xsi:type="xsd:float">101</Value>
+    </Variable>
+    <Variable Type="string" Name="Tiny.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/ShareTechMono-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="Tiny.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">10</Value>
+    </Variable>
+    <Variable Type="string" Name="Tiny.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyles</Value>
+    </Variable>
+    <Variable Type="string" Name="Tiny.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Tiny</Value>
+    </Variable>
+    <Variable Type="string" Name="Title.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/Orbitron-Bold.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="Title.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">28</Value>
+    </Variable>
+    <Variable Type="bool" Name="Title.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="Title.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TextStyles</Value>
+    </Variable>
+    <Variable Type="string" Name="Title.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Title</Value>
     </Variable>
     <Variable Type="int" Name="White.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
@@ -687,8 +786,15 @@
   <Instance Name="Text" BaseType="Rectangle" />
   <Instance Name="White" BaseType="Rectangle" />
   <Instance Name="WindowShadow" BaseType="Rectangle" />
+  <Instance Name="Tiny" BaseType="Text" />
+  <Instance Name="Small" BaseType="Text" />
   <Instance Name="Normal" BaseType="Text" />
+  <Instance Name="Emphasis" BaseType="Text" />
   <Instance Name="Strong" BaseType="Text" />
+  <Instance Name="H3" BaseType="Text" />
+  <Instance Name="H2" BaseType="Text" />
+  <Instance Name="H1" BaseType="Text" />
+  <Instance Name="Title" BaseType="Text" />
   <Instance Name="TextStyles" BaseType="Container" />
   <Behaviors />
 </ComponentSave>

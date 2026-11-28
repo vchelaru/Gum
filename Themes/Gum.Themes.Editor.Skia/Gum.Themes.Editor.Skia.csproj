@@ -32,6 +32,7 @@
     <Compile Include="..\Gum.Themes.Editor.MonoGame\**\*.cs" />
     <Compile Remove="..\Gum.Themes.Editor.MonoGame\obj\**" />
     <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeTextStyles.cs" Link="ThemeTextStyles.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- Color (SkiaSharp.SKColor) resolves through this package on the SKIA branch of the theme

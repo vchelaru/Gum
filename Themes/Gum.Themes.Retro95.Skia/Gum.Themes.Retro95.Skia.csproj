@@ -35,6 +35,7 @@
     <Compile Remove="..\Gum.Themes.Retro95.MonoGame\obj\**" />
     <Compile Remove="..\Gum.Themes.Retro95.MonoGame\bin\**" />
     <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeTextStyles.cs" Link="ThemeTextStyles.cs" />
     <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
   </ItemGroup>
   <ItemGroup>
