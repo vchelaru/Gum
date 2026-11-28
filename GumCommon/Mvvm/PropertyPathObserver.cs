@@ -170,8 +170,9 @@ public class PropertyPathObserver : IDisposable
         "references them.")]
     private void OnSegmentChanged(int level, string? propName)
     {
-        // only react if the changed property matches the segment
-        if (_segments[level].Name != propName)
+        // React when the changed property matches the segment. A null or empty name means every
+        // property changed (the .NET convention), so the path is re-read from this level down.
+        if (!string.IsNullOrEmpty(propName) && _segments[level].Name != propName)
         {
             return;
         }
