@@ -197,4 +197,19 @@ public class BoundBindingContextScenarioTests : BaseTestClass
         vm.Player = null;
         playerPanel.BindingContext.ShouldBeNull();
     }
+
+    [Fact]
+    public void BoundElementRemovedFromParent_ContextIsNullNotStale()
+    {
+        PlayerVm player = new() { Name = "a" };
+        ContainerRuntime parent = new() { BindingContext = new GameVm { Player = player } };
+        ContainerRuntime playerPanel = new();
+        playerPanel.SetBinding(nameof(GraphicalUiElement.BindingContext), nameof(GameVm.Player));
+        parent.Children.Add(playerPanel);
+        playerPanel.BindingContext.ShouldBe(player);
+
+        parent.Children.Remove(playerPanel);
+
+        playerPanel.BindingContext.ShouldBeNull();
+    }
 }
