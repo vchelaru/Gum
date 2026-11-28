@@ -43,7 +43,7 @@ If the property requires a specific type, then the Visual can be casted to acces
 var buttonVisual = (ButtonVisual)MyButton.Visual;
 var text = buttonVisual.TextInstance;
 text.SetBinding<MyViewModel>(
-    nameof(Text.FontScale),
+    nameof(text.FontScale),
     vm => vm.ButtonFontScale);
 ```
 

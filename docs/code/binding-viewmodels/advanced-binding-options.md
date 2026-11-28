@@ -263,9 +263,9 @@ A `string` or integer source also converts to an enum target property, such as `
 
 ### Conversion Failures
 
-If `Convert.ChangeType` cannot convert a value — for example, the user types `"hello"` into a TextBox bound to `int` — the binding silently leaves the destination unchanged. No exception is thrown.
+If `Convert.ChangeType` cannot convert a value, such as `"hello"` typed into a TextBox bound to `int`, the binding leaves the destination unchanged. No exception is thrown.
 
-This applies in both directions and to edge cases such as empty strings. Clearing the text in a TextBox bound to `int` does **not** reset the source to `0` — it leaves the source at its previous value.
+This applies in both directions and to edge cases such as empty strings. Clearing the text in a TextBox bound to `int` does **not** reset the source to `0`. The source keeps its previous value.
 
 {% hint style="info" %}
 The same rule applies to `Nullable<T>` source properties. An empty string does not convert to `null`, so the source is left unchanged. To support clearing a numeric field to `null`, supply a `Converter` with explicit `ConvertBack` logic.
