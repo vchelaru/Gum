@@ -70,7 +70,11 @@ internal class PropertyRegistry
         {
             PropertyInfo targetProperty = npcExpression.GetTargetProperty();
             npcExpression.Dispose();
-            targetProperty.SetValue(Owner, null);
+            // Only a OneWayToSource binding can target a property with no setter, and it never wrote it.
+            if (npcExpression.HasTargetSetter)
+            {
+                targetProperty.SetValue(Owner, null);
+            }
             NpcBindingExpressions.Remove(uiPropertyName);
         }
     }

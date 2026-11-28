@@ -41,4 +41,39 @@ public class BindingOperationsTests
         Assert.Equal(123, widthBeforeClear);
         Assert.Equal(0, textBox.Width);
     }
+
+    [Fact]
+    public void ClearBinding_OneWayToSourceOnReadOnlyTarget_RemovesBindingWithoutThrowing()
+    {
+        ListBox listBox = new() { BindingContext = new TestViewModel() };
+        listBox.SetBinding(nameof(ListBox.SelectedItems),
+            new Binding(nameof(TestViewModel.Items)) { Mode = BindingMode.OneWayToSource });
+
+        Shouldly.Should.NotThrow(() => BindingOperations.ClearBinding(listBox, nameof(ListBox.SelectedItems)));
+
+        Assert.False(listBox.IsDataBound(nameof(ListBox.SelectedItems)));
+    }
+
+    [Fact]
+    public void ClearBinding_PrivateSetterTarget_ResetsTargetValue()
+    {
+        PrivateSetterElement element = new() { BindingContext = new TestViewModel { Text = "from view model" } };
+        element.SetBinding(nameof(PrivateSetterElement.Value),
+            new Binding(nameof(TestViewModel.Text)) { Mode = BindingMode.OneWay });
+        string? valueBeforeClear = element.Value;
+
+        BindingOperations.ClearBinding(element, nameof(PrivateSetterElement.Value));
+
+        Assert.Equal("from view model", valueBeforeClear);
+        Assert.Null(element.Value);
+    }
+
+    private class PrivateSetterElement : FrameworkElement
+    {
+        public PrivateSetterElement() : base(new Gum.Wireframe.InteractiveGue())
+        {
+        }
+
+        public string? Value { get; private set; }
+    }
 }

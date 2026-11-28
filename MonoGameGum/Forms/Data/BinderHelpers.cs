@@ -46,6 +46,21 @@ internal static class BinderHelpers
             $"{bindingName}, which writes the view model's value to it. Bind a property that has a public setter.";
     }
 
+    // A property reflected from a derived type hides a private accessor its base class declares, so setters are
+    // looked up on the declaring type.
+    public static PropertyInfo AsDeclared(PropertyInfo property)
+    {
+        if (property.DeclaringType is not { } declaringType || declaringType == property.ReflectedType)
+        {
+            return property;
+        }
+
+        Type[] indexTypes = Array.ConvertAll(property.GetIndexParameters(), parameter => parameter.ParameterType);
+        return declaringType.GetProperty(property.Name,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly,
+            binder: null, property.PropertyType, indexTypes, modifiers: null) ?? property;
+    }
+
     [RequiresUnreferencedCode(
         "Walks the path on targetType by name (GetProperty/GetField). Those members may be removed " +
         "under PublishTrimmed if nothing else in the app references them.")]

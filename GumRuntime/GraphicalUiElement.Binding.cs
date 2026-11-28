@@ -476,7 +476,7 @@ public partial class GraphicalUiElement
             // variables) are not targets.
             if (GetType().GetProperty(uiProperty) is { } targetProperty)
             {
-                if (targetProperty.SetMethod == null)
+                if (BinderHelpers.AsDeclared(targetProperty).SetMethod == null)
                 {
                     throw new InvalidOperationException(
                         BinderHelpers.GetReadOnlyTargetMessage(GetType().Name, uiProperty, modeName: null));
@@ -692,7 +692,7 @@ public partial class GraphicalUiElement
     {
         var thisType = this.GetType();
 
-        PropertyInfo? uiProperty = thisType.GetProperty(binding.UiProperty);
+        PropertyInfo? uiProperty = thisType.GetProperty(binding.UiProperty) is { } found ? BinderHelpers.AsDeclared(found) : null;
 
         if (uiProperty == null)
         {

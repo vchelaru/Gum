@@ -137,6 +137,8 @@ All binding features work with indexed paths: modes, converters, StringFormat, F
 
 **A setter-only target property binds OneWay on both systems.** Nothing may read the target without checking `CanRead` (`NpcBindingExpression.ShouldUpdateSource`, `GraphicalUiElement.PushValueToViewModel`); a default TwoWay binding only pushes source values, and `OneWayToSource` on a setter-only target throws.
 
+**A Forms `OneWayToSource` binding writes the control's current value to each source it attaches to** (`UntypedBindingExpression.AttachToSource`), as WPF does. This is how a view model bound to `ListBox.SelectedItems` receives the live selection collection, which never raises `PropertyChanged` itself. `ClearBinding` resets the target only when it has a setter of any visibility (`NpcBindingExpression.HasTargetSetter`). Tests: `OneWayToSourceAttachTests`.
+
 **`[DependsOn("Game.Gold")]` follows a dotted path.** `ViewModel` handles the root segment in `NotifyPropertyChanged` and watches the rest with a `PropertyPathObserver` on the root's value (weak, so the referenced VM never keeps the dependent alive); it attaches when the root is notified or on the first `PropertyChanged` subscription, and reports an unknown segment once through the `[Gum]` channel. Undotted `[DependsOn]` is unchanged. Tests: `ViewModelDottedDependsOnTests`, `DottedDependsOnBindingTests`.
 
 **Lambda extracts path at call time, not at update time.** `vm => vm.Child.Text` becomes the static path `"Child.Text"`. If `Child` is replaced, `PropertyPathObserver` re-hooks the listener chain automatically.
