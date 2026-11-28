@@ -41,4 +41,16 @@ public class BindingOperationsTests
         Assert.Equal(123, widthBeforeClear);
         Assert.Equal(0, textBox.Width);
     }
+
+    [Fact]
+    public void ClearBinding_OneWayToSourceOnReadOnlyTarget_RemovesBindingWithoutThrowing()
+    {
+        ListBox listBox = new() { BindingContext = new TestViewModel() };
+        listBox.SetBinding(nameof(ListBox.SelectedItems),
+            new Binding(nameof(TestViewModel.Items)) { Mode = BindingMode.OneWayToSource });
+
+        Shouldly.Should.NotThrow(() => BindingOperations.ClearBinding(listBox, nameof(ListBox.SelectedItems)));
+
+        Assert.False(listBox.IsDataBound(nameof(ListBox.SelectedItems)));
+    }
 }
