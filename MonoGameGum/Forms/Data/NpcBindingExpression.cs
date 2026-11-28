@@ -38,7 +38,10 @@ internal class NpcBindingExpression : UntypedBindingExpression
     private bool _isUpdatingSource;
     private bool _isLostFocusTrigger;
     private bool _hasReportedFailedConversion;
-    private bool _hasReportedIgnoredPush;
+    private bool _hasReportedUnwritableSource;
+    // The target's last change came from user input rather than from code; only such a change is reported
+    // when the source cannot take it.
+    private bool _isTargetValueFromInput;
     // A TextBox/PasswordBox edit is being written to the source with the PropertyChanged trigger.
     private bool _isPushingTextEdit;
     // The source sent a value back during that edit; shown when the edit ends.
@@ -138,6 +141,8 @@ internal class NpcBindingExpression : UntypedBindingExpression
             case UpdateSourceTrigger.LostFocus when ShouldUpdateSource:
                 _isLostFocusTrigger = true;
                 TargetElement.LostFocus += OnLostFocus;
+                // Only notes whether each change came from user input; the write waits for focus to leave.
+                TargetElement.PropertyChanged += OnTargetPropertyChanged;
                 break;
         }
     }
@@ -170,6 +175,12 @@ internal class NpcBindingExpression : UntypedBindingExpression
             return;
         }
 
+        _isTargetValueFromInput = IsDispatchingInput;
+        if (_isLostFocusTrigger)
+        {
+            return;
+        }
+
         // While the user types, a value the view model sends back for this edit (a re-entrant
         // PropertyChanged, or the post-write read-back) would rewrite the text mid-typing ("1." becoming
         // "1"), so it waits until the edit ends, as WPF does.
@@ -183,6 +194,14 @@ internal class NpcBindingExpression : UntypedBindingExpression
             _isPushingTextEdit = false;
         }
     }
+
+#if FRB
+    // FlatRedBall dispatches input through its own GuiManager, which raises no such flag, so no change is
+    // known to come from the user there.
+    private static bool IsDispatchingInput => false;
+#else
+    private static bool IsDispatchingInput => InteractiveGue.IsDispatchingInput;
+#endif
 
     private bool IsTextEditTarget =>
         TargetElement is TextBoxBase &&
@@ -398,16 +417,32 @@ internal class NpcBindingExpression : UntypedBindingExpression
             return;
         }
         // A field or a property with no setter ignores the push; the target asked for the write, so say why once.
-        if (!_isUpdatingTarget && CurrentRoot != null && !_hasReportedIgnoredPush &&
-            (IsSourceField || IsSourceResolvedWithoutSetter))
+        if (!_isUpdatingTarget)
         {
-            _hasReportedIgnoredPush = true;
-            string reason = IsSourceField ? "is a field, which bindings never write" : "has no setter";
-            GumRuntime.ElementSaveExtensions.ReportDiagnostic(
-                $"{TargetElement.GetType().Name}.{TargetProperty.Name} pushed its value, but " +
-                $"{CurrentRoot.GetType().Name}.{Binding.Path} {reason}, so the view model was not changed.");
+            ReportUnwritableSourceOnce("pushed its value", advise: false);
         }
         WriteTargetToSource();
+    }
+
+    /// <summary>
+    /// Reports once per binding that a value meant for the source was dropped because the source is a field or a
+    /// property with no setter. Does nothing when the source can be written.
+    /// </summary>
+    private void ReportUnwritableSourceOnce(string whatTargetDid, bool advise)
+    {
+        if (_hasReportedUnwritableSource || CurrentRoot is null || !(IsSourceField || IsSourceResolvedWithoutSetter))
+        {
+            return;
+        }
+        _hasReportedUnwritableSource = true;
+        string reason = IsSourceField ? "is a field, which bindings never write" : "has no setter";
+        string advice = !advise ? string.Empty
+            : IsSourceField
+                ? " Bind with Mode = OneWay for a display-only control, or make it a property with a setter."
+                : " Bind with Mode = OneWay for a display-only control, or give the property a setter.";
+        GumRuntime.ElementSaveExtensions.ReportDiagnostic(
+            $"{TargetElement.GetType().Name}.{TargetProperty.Name} {whatTargetDid}, but " +
+            $"{CurrentRoot.GetType().Name}.{Binding.Path} {reason}, so the view model was not changed.{advice}");
     }
 
     private void WriteTargetToSource()
@@ -464,6 +499,12 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
         if (!SetSourceValue(value))
         {
+            // A value set from code is left alone: a TwoWay binding to a get-only property is the usual
+            // display-only binding, and only a user's edit shows that the view model was expected to change.
+            if (_isTargetValueFromInput)
+            {
+                ReportUnwritableSourceOnce("was changed by the user", advise: true);
+            }
             return;
         }
 
