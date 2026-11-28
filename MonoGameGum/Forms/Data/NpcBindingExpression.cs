@@ -40,6 +40,9 @@ internal class NpcBindingExpression : UntypedBindingExpression
     private bool _isLostFocusTrigger;
     private bool _hasReportedFailedConversion;
     private bool _hasReportedFailedSourceConversion;
+    // Text typed mid-edit ("", "-") often does not convert yet; a failure is reported only if it is still the
+    // last write when the edit ends.
+    private (object Value, Type SourceType)? _pendingFailedSourceConversion;
     private bool _hasReportedUnwritableSource;
     // The target's last change came from user input rather than from code; only such a change is reported
     // when the source cannot take it.
@@ -211,6 +214,13 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     private void OnTextEditEnded(object? sender, EventArgs e)
     {
+        // The last write of the edit failed, so the text the user left does not convert.
+        if (_pendingFailedSourceConversion is { } failed)
+        {
+            _pendingFailedSourceConversion = null;
+            ReportFailedSourceConversionOnce(failed.Value, failed.SourceType);
+        }
+
         if (_hasDeferredTargetUpdate)
         {
             _hasDeferredTargetUpdate = false;
@@ -487,6 +497,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
         {
             return;
         }
+        _pendingFailedSourceConversion = null;
 
         // TargetNullValue is what the target shows for a null source, so the target holding it means null, as
         // in WPF. Like the way in, it skips the converter.
@@ -509,7 +520,12 @@ internal class NpcBindingExpression : UntypedBindingExpression
             if (converted == GumProperty.UnsetValue)
             {
                 // The source keeps its value; a null into a value type stays silent, as on the way to the target.
-                if (value is not null)
+                // While the user types, the report waits for the edit to end (OnTextEditEnded).
+                if (value is not null && _isPushingTextEdit)
+                {
+                    _pendingFailedSourceConversion = (value, sourceType);
+                }
+                else if (value is not null)
                 {
                     ReportFailedSourceConversionOnce(value, sourceType);
                 }

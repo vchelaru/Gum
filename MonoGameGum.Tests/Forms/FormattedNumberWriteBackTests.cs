@@ -75,6 +75,73 @@ public class FormattedNumberWriteBackTests : BaseTestClass
     }
 
     [Fact]
+    public void Typing_TransientTextThenNumber_WritesNumberWithoutReport()
+    {
+        CountViewModel vm = new() { Count = 5 };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), nameof(CountViewModel.Count));
+        textBox.IsFocused = true;
+
+        textBox.Text = "";
+        textBox.Text = "-";
+        textBox.Text = "-7";
+        textBox.IsFocused = false;
+
+        vm.Count.ShouldBe(-7);
+        _reports.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Typing_TextThatDoesNotParse_ReportsOnlyWhenEditingEnds()
+    {
+        CountViewModel vm = new() { Count = 5 };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), nameof(CountViewModel.Count));
+        textBox.IsFocused = true;
+
+        textBox.Text = "abc";
+        _reports.ShouldBeEmpty();
+        textBox.IsFocused = false;
+
+        vm.Count.ShouldBe(5);
+        _reports.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Typing_EmptyTextAtEditEnd_LeavesSourceUnchangedAndReports()
+    {
+        CountViewModel vm = new() { Count = 5 };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), nameof(CountViewModel.Count));
+        textBox.IsFocused = true;
+
+        textBox.Text = "";
+        textBox.IsFocused = false;
+
+        vm.Count.ShouldBe(5);
+        _reports.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void LostFocusTrigger_TextThatDoesNotParse_ReportsAtEditEnd()
+    {
+        CountViewModel vm = new() { Count = 5 };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), new Binding(nameof(CountViewModel.Count))
+        {
+            UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
+        });
+        textBox.IsFocused = true;
+
+        textBox.Text = "abc";
+        _reports.ShouldBeEmpty();
+        textBox.IsFocused = false;
+
+        vm.Count.ShouldBe(5);
+        _reports.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public void IntSource_TextThatDoesNotParse_LeavesSourceUnchangedAndReportsOnce()
     {
         CountViewModel vm = new() { Count = 5 };

@@ -269,7 +269,7 @@ A `string` or integer source also converts to an enum target property, such as `
 
 ### Conversion Failures
 
-If a value cannot convert, no exception is thrown. A value typed into the UI that does not convert, such as `"hello"` or `"$1,235"` in a TextBox bound to `int`, leaves the source unchanged, and Gum writes one `[Gum]` warning for that binding naming the value and the source property. This includes empty strings: clearing the text in a TextBox bound to `int` does **not** reset the source to `0`. Group separators in the current culture, such as the `,` in `"1,235"`, are accepted.
+If a value cannot convert, no exception is thrown. A value typed into the UI that does not convert, such as `"hello"` or `"$1,235"` in a TextBox bound to `int`, leaves the source unchanged. If the text still does not convert when editing ends (the TextBox loses focus or Enter is pressed), Gum writes one `[Gum]` warning for that binding naming the value and the source property, so partly typed text such as `"-"` raises no warning. This includes empty strings: clearing the text in a TextBox bound to `int` does **not** reset the source to `0`. Group separators in the current culture, such as the `,` in `"1,235"`, are accepted.
 
 A source value that does not convert to the UI property's type shows the binding's `FallbackValue`. With no `FallbackValue`, the UI property gets its type's default, such as `0` for a Slider's `Value` bound to a `string` holding `"hello"`.
 
