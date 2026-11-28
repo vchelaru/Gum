@@ -37,8 +37,11 @@ public class ThemeTextLadderTests
 
         foreach (string rung in Ladder)
         {
-            StateSave state = (StateSave)typeof(V3Text).GetField(rung)!.GetValue(text)!;
             string label = $"{themeName} {rung}";
+            System.Reflection.FieldInfo? field = typeof(V3Text).GetField(rung);
+            field.ShouldNotBeNull($"V3 Styling.Text has no {rung} style");
+            StateSave state = (StateSave)field.GetValue(text)!;
+            template.ShouldContainKey(rung + ".FontSize", $"{themeName}'s template Styles has no {rung} style");
 
             state.GetValue("FontSize").ShouldBe(int.Parse(template[rung + ".FontSize"]), label);
             state.GetValue("IsBold").ShouldBe(template.GetValueOrDefault(rung + ".IsBold") == "true", label);

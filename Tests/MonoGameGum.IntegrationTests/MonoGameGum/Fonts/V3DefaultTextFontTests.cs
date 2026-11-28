@@ -40,6 +40,28 @@ public class V3DefaultTextFontTests : BaseTestClass
         }
     }
 
+    // The rest of the template ladder (#8509), scaled by 18/14 around Normal so it stays ordered.
+    [Fact]
+    public void V3TextLadder_ScalesTheTemplateLadderAroundNormal()
+    {
+        global::Gum.Forms.DefaultVisuals.V3.Text text = new();
+
+        AssertFont(text.Tiny, fontSize: 13, isBold: false);
+        AssertFont(text.Small, fontSize: 15, isBold: false);
+        AssertFont(text.H3, fontSize: 21, isBold: true);
+        AssertFont(text.H2, fontSize: 23, isBold: true);
+        AssertFont(text.H1, fontSize: 28, isBold: true);
+        AssertFont(text.Title, fontSize: 36, isBold: true);
+
+        static void AssertFont(StateSave state, int fontSize, bool isBold)
+        {
+            state.GetValue("Font").ShouldBe("Liberation Sans");
+            state.GetValue("FontSize").ShouldBe(fontSize);
+            state.GetValue("IsBold").ShouldBe(isBold);
+            state.GetValue("IsItalic").ShouldBe(false);
+        }
+    }
+
     [Theory]
     [InlineData("Liberation Sans", false, false, "Font18Arial.fnt")]
     [InlineData("Liberation Sans", true, false, "Font18Arial_Bold.fnt")]
