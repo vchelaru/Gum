@@ -957,18 +957,16 @@ internal static class BinderHelpers
 
         Stack<string> segments = new();
 
-        while (body is MemberExpression || IsIndexerAccess(body))
+        while (true)
         {
             if (body is MemberExpression member)
             {
                 segments.Push(member.Member.Name);
                 body = member.Expression;
             }
-            else
+            else if (TryGetIndexer(body, out Expression? inner, out Expression? indexArgument))
             {
-                // Indexer access: get_Item(int) call, IndexExpression, or ArrayIndex
-                int index = ExtractIndexFromExpression(body!);
-                Expression inner = GetObjectFromExpression(body!);
+                int index = EvaluateIndex(indexArgument!);
 
                 if (inner is MemberExpression collectionMember)
                 {
@@ -980,6 +978,10 @@ internal static class BinderHelpers
                     throw new InvalidOperationException(
                         "Unsupported expression. Indexer must be applied to a property or field.");
                 }
+            }
+            else
+            {
+                break;
             }
         }
 
@@ -996,68 +998,106 @@ internal static class BinderHelpers
 
     #region Private helpers
 
-    private static bool IsIndexerAccess(Expression? expr)
+    // Matches a one-argument indexer: a get_Item call, an IndexExpression, or an array index.
+    private static bool TryGetIndexer(Expression? expr, out Expression? collection, out Expression? indexArgument)
     {
-        if (expr is MethodCallExpression mce && mce.Method.Name == "get_Item"
-            && mce.Arguments.Count == 1 && mce.Arguments[0] is ConstantExpression ce
-            && ce.Type == typeof(int))
+        switch (expr)
         {
-            return true;
+            case MethodCallExpression { Method.Name: "get_Item", Object: not null, Arguments.Count: 1 } call:
+                collection = call.Object;
+                indexArgument = call.Arguments[0];
+                return true;
+            case IndexExpression { Object: not null, Arguments.Count: 1 } index:
+                collection = index.Object;
+                indexArgument = index.Arguments[0];
+                return true;
+            case BinaryExpression { NodeType: ExpressionType.ArrayIndex } arrayIndex:
+                collection = arrayIndex.Left;
+                indexArgument = arrayIndex.Right;
+                return true;
+            default:
+                collection = null;
+                indexArgument = null;
+                return false;
         }
-
-        if (expr is IndexExpression idx && idx.Arguments.Count == 1
-            && idx.Arguments[0] is ConstantExpression ce2 && ce2.Type == typeof(int))
-        {
-            return true;
-        }
-
-        if (expr is BinaryExpression { NodeType: ExpressionType.ArrayIndex } bin
-            && bin.Right is ConstantExpression ce3 && ce3.Type == typeof(int))
-        {
-            return true;
-        }
-
-        return false;
     }
 
-    private static int ExtractIndexFromExpression(Expression expr)
+    // The path holds the index's value at the SetBinding call, so the index must be a constant or a captured
+    // variable, field or property; anything that depends on the lambda's parameter or calls a method is refused.
+    private static int EvaluateIndex(Expression indexArgument)
     {
-        if (expr is MethodCallExpression mce)
+        string indexText = DescribeIndex(indexArgument);
+        if (indexArgument.Type != typeof(int))
         {
-            return (int)((ConstantExpression)mce.Arguments[0]).Value!;
+            throw new InvalidOperationException(
+                $"Unsupported binding index '{indexText}': binding paths support only int indexes, " +
+                $"but this index is a {indexArgument.Type.Name}.");
         }
 
-        if (expr is IndexExpression idx)
+        if (!TryEvaluateCapturedValue(indexArgument, indexText, out object? value))
         {
-            return (int)((ConstantExpression)idx.Arguments[0]).Value!;
+            throw new InvalidOperationException(
+                $"Unsupported binding index '{indexText}': an index must be a constant or a captured " +
+                "variable, field or property, read once at SetBinding. Store the index in a local first.");
         }
 
-        if (expr is BinaryExpression bin)
-        {
-            return (int)((ConstantExpression)bin.Right).Value!;
-        }
-
-        throw new InvalidOperationException("Unsupported indexer expression type.");
+        return (int)value!;
     }
 
-    private static Expression GetObjectFromExpression(Expression expr)
+    private static bool TryEvaluateCapturedValue(Expression expression, string indexText, out object? value)
     {
-        if (expr is MethodCallExpression mce)
+        value = null;
+        if (expression is ConstantExpression constant)
         {
-            return mce.Object!;
+            value = constant.Value;
+            return true;
         }
 
-        if (expr is IndexExpression idx)
+        if (expression is not MemberExpression member)
         {
-            return idx.Object!;
+            return false;
         }
 
-        if (expr is BinaryExpression bin)
+        // A static member has no owner expression.
+        object? owner = null;
+        if (member.Expression != null)
         {
-            return bin.Left;
+            if (!TryEvaluateCapturedValue(member.Expression, indexText, out owner))
+            {
+                return false;
+            }
+
+            if (owner == null)
+            {
+                throw new InvalidOperationException(
+                    $"Binding index '{indexText}' cannot be read: '{DescribeIndex(member.Expression)}' is null " +
+                    "at SetBinding.");
+            }
         }
 
-        throw new InvalidOperationException("Unsupported indexer expression type.");
+        switch (member.Member)
+        {
+            case FieldInfo field:
+                value = field.GetValue(owner);
+                return true;
+            case PropertyInfo property:
+                value = property.GetValue(owner);
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    // Shows a captured variable by its name rather than as a member of the compiler's closure object.
+    private static string DescribeIndex(Expression indexArgument) =>
+        new CapturedVariableNamer().Visit(indexArgument).ToString();
+
+    private sealed class CapturedVariableNamer : ExpressionVisitor
+    {
+        protected override Expression VisitMember(MemberExpression node) =>
+            node.Expression is ConstantExpression
+                ? Expression.Parameter(node.Type, node.Member.Name)
+                : base.VisitMember(node);
     }
 
     /// <summary>

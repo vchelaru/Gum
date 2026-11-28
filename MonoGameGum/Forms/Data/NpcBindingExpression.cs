@@ -102,9 +102,13 @@ internal class NpcBindingExpression : UntypedBindingExpression
             HookUpdateSource(binding.UpdateSourceTrigger);
         }
 
-        if (targetPropertyName == nameof(FrameworkElement.BindingContext))
+        if (IsBindingContextTarget)
         {
             target.InheritedBindingContextChanged += OnInheritedBindingContextChanged;
+
+            // The context the target held of its own, so clearing the binding lets it inherit again rather
+            // than keep the parent's context it read here.
+            UnboundTargetValue = target.BindingContext == target.InheritedBindingContext ? null : target.BindingContext;
         }
     }
     
@@ -117,13 +121,8 @@ internal class NpcBindingExpression : UntypedBindingExpression
         Justification = "Automatic relay when an inherited BindingContext changes further up the visual " +
             "tree. The trim risk is already surfaced wherever SetBinding was actually called to create " +
             "this binding.")]
-    private void OnInheritedBindingContextChanged(object? sender, BindingContextChangedEventArgs e)
-    {
-        if (CurrentRoot != null)
-        {
-            AttachToSource(TargetElement.BindingContext);
-        }
-    }
+    private void OnInheritedBindingContextChanged(object? sender, BindingContextChangedEventArgs e) =>
+        AttachToSource(e.NewBindingContext);
 
     private void HookUpdateSource(UpdateSourceTrigger trigger)
     {
