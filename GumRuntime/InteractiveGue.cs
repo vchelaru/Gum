@@ -115,6 +115,12 @@ public partial class InteractiveGue : GraphicalUiElement
     /// </summary>
     public static double CurrentGameTime { get; internal set; }
 
+    /// <summary>
+    /// True while cursor, keyboard and gamepad input is being dispatched, so a control value that changes then
+    /// was changed by the user rather than set from code.
+    /// </summary>
+    internal static bool IsDispatchingInput { get; set; }
+
 
     static InteractiveGue? _processWideLastVisualPushed;
 
@@ -1788,6 +1794,20 @@ public static class GueInteractiveExtensionMethods
     // dispatchToFocusedReceiver false runs the cursor walk only, leaving the focused control without keyboard
     // and gamepad input this frame.
     internal static void DoUiActivityRecursively(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds, bool dispatchToFocusedReceiver)
+    {
+        bool wasDispatchingInput = InteractiveGue.IsDispatchingInput;
+        InteractiveGue.IsDispatchingInput = true;
+        try
+        {
+            DispatchInput(gues, cursor, keyboard, currentGameTimeInSeconds, dispatchToFocusedReceiver);
+        }
+        finally
+        {
+            InteractiveGue.IsDispatchingInput = wasDispatchingInput;
+        }
+    }
+
+    static void DispatchInput(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds, bool dispatchToFocusedReceiver)
     {
 #if FULL_DIAGNOSTICS
         if (cursor == null)
