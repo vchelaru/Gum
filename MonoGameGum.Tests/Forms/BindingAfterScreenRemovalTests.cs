@@ -319,6 +319,22 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         listBox.ListBoxItems.Count.ShouldBe(2);
     }
 
+    [Fact]
+    public void MoveFromRootIntoDetachedPanel_ExplicitContext_IsKeptAndPaused()
+    {
+        GameViewModel viewModel = new() { Gold = 1 };
+        (StackPanel screen, Label goldLabel, _) = CreateScreen();
+        StackPanel detachedPanel = new();
+        screen.AddToRoot();
+        screen.BindingContext = viewModel;
+
+        detachedPanel.AddChild(screen);
+        viewModel.Gold = 2;
+
+        screen.BindingContext.ShouldBe(viewModel);
+        goldLabel.Text.ShouldBe("1");
+    }
+
     private class ItemsViewModel : ViewModel
     {
         public System.Collections.ObjectModel.ObservableCollection<string> Names { get; } = new();
