@@ -415,15 +415,20 @@ public class AdvancedBindingOptionsDocsSampleTests : BaseTestClass
     }
 
     [Fact]
-    public void ConversionFailure_SourceToTarget_SetsTargetTypeDefault()
+    public void ConversionFailure_SourceToTarget_ShowsFallbackOrTypeDefault()
     {
         ScoreViewModel vm = new() { Mode = "5" };
         Slider slider = new() { Maximum = 100, BindingContext = vm };
         slider.SetBinding(nameof(Slider.Value), nameof(ScoreViewModel.Mode));
+        Slider withFallback = new() { Maximum = 100, BindingContext = vm };
+        withFallback.SetBinding(nameof(Slider.Value),
+            new Binding(nameof(ScoreViewModel.Mode)) { FallbackValue = 50.0 });
         slider.Value.ShouldBe(5);
+        withFallback.Value.ShouldBe(5);
 
         vm.Mode = "hello";
 
         slider.Value.ShouldBe(0);
+        withFallback.Value.ShouldBe(50);
     }
 }

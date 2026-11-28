@@ -147,7 +147,7 @@ The following properties are available on the Binding class:
 * `Path` - the property path on the source. This can be a simple name like `LabelText`, a dotted path like `Player.Name`, or an indexed path like `Items[0].Text`.
 * `Mode` - the direction of data flow in binding. This can be used to create one-way binding.
 * `UpdateSourceTrigger` - controls when binding is applied. See [Enter and Binding](../controls/textbox.md#enter-and-binding) for a `TextBox`-specific example, including how the Enter key interacts with `UpdateSourceTrigger.LostFocus`.
-* `FallbackValue` - the value to apply when binding cannot retrieve a value from the source
+* `FallbackValue` - the value to apply when binding cannot retrieve a value from the source, or the value cannot convert to the target's type
 * `TargetNullValue` - the value to use when the source property value is null
 * `Converter` - a converter to transform values between the source and target
 * `ConverterParameter` - an optional parameter to pass to the Converter
@@ -267,7 +267,11 @@ A `string` or integer source also converts to an enum target property, such as `
 
 If `Convert.ChangeType` cannot convert a value, no exception is thrown. A value typed into the UI that does not convert, such as `"hello"` in a TextBox bound to `int`, leaves the source unchanged. This includes empty strings: clearing the text in a TextBox bound to `int` does **not** reset the source to `0`.
 
-A source value that does not convert to the UI property's type sets that property to its type's default, such as `0` for a Slider's `Value` bound to a `string` holding `"hello"`.
+A source value that does not convert to the UI property's type shows the binding's `FallbackValue`. With no `FallbackValue`, the UI property gets its type's default, such as `0` for a Slider's `Value` bound to a `string` holding `"hello"`.
+
+{% hint style="info" %}
+`FallbackValue` on a failed conversion is available in December 2026, or now if building Gum from source.
+{% endhint %}
 
 {% hint style="info" %}
 The same rule applies to `Nullable<T>` source properties. An empty string does not convert to `null`, so the source is left unchanged. To support clearing a numeric field to `null`, supply a `Converter` with explicit `ConvertBack` logic.
