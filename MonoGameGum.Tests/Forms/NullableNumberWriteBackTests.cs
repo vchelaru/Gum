@@ -48,6 +48,38 @@ public class NullableNumberWriteBackTests : BaseTestClass
             get => Get<float?>();
             set => Set(value);
         }
+
+        public bool? IsActive
+        {
+            get => Get<bool?>();
+            set => Set(value);
+        }
+    }
+
+    [Fact]
+    public void NullableIntSource_FractionalSliderValue_WritesRoundedNumber()
+    {
+        LimitViewModel vm = new() { Limit = 3 };
+        Slider slider = new() { BindingContext = vm };
+        slider.SetBinding(nameof(Slider.Value), nameof(LimitViewModel.Limit));
+
+        slider.Value = 40.6;
+
+        vm.Limit.ShouldBe(41);
+        _reports.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void NullableBoolSource_TypedText_WritesBool()
+    {
+        LimitViewModel vm = new() { IsActive = false };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), nameof(LimitViewModel.IsActive));
+
+        textBox.Text = "True";
+
+        vm.IsActive.ShouldBe(true);
+        _reports.ShouldBeEmpty();
     }
 
     [Fact]
