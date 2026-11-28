@@ -389,6 +389,26 @@ public partial class GraphicalUiElement
         return parent.GetType().GetEvent(leafName) != null;
     }
 
+    // Accepts any instance method in the hierarchy, of any visibility, so no method that BindEvent's
+    // Delegate.CreateDelegate(type, this, name) can bind is refused.
+    [RequiresUnreferencedCode("Looks up methods on the element's type by name.")]
+    private static bool HasInstanceMethod(Type type, string name)
+    {
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic |
+            BindingFlags.DeclaredOnly;
+        for (Type? current = type; current != null; current = current.BaseType)
+        {
+            foreach (MethodInfo method in current.GetMethods(flags))
+            {
+                if (method.Name == name)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     [RequiresUnreferencedCode("Calls " + nameof(IsDottedPathTargetingEvent) + ".")]
     private void ThrowIfDottedPathTargetsEvent(string vmProperty)
     {
@@ -442,12 +462,22 @@ public partial class GraphicalUiElement
         }
         else
         {
-            // A binding always writes the VM value to the UI property. A name with no property may still be a
-            // method bound to a VM event, so only a property with no setter is refused.
-            if (GetType().GetProperty(uiProperty) is { SetMethod: null })
+            // A binding writes the VM value to a public property with a setter of any visibility, or binds a VM
+            // event to a method of any visibility. Variables that only SetProperty knows (states, exposed
+            // variables) are not targets.
+            if (GetType().GetProperty(uiProperty) is { } targetProperty)
+            {
+                if (targetProperty.SetMethod == null)
+                {
+                    throw new InvalidOperationException(
+                        BinderHelpers.GetReadOnlyTargetMessage(GetType().Name, uiProperty, modeName: null));
+                }
+            }
+            else if (!HasInstanceMethod(GetType(), uiProperty))
             {
                 throw new InvalidOperationException(
-                    BinderHelpers.GetReadOnlyTargetMessage(GetType().Name, uiProperty, modeName: null));
+                    $"{GetType().Name} has no public property and no method named '{uiProperty}', so it cannot be " +
+                    "the target of a binding. Bind a public property, or a method for a view model event.");
             }
 
             if (vmPropsToUiProps.TryGetValue(vmProperty, out var existingByVm))
