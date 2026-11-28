@@ -282,7 +282,7 @@ textBox.SetBinding(nameof(TextBox.Text), nameof(MyViewModel.Score));
 In the example above, setting `vm.Score = 12` updates `textBox.Text` to `"12"`, and typing `"42"` into the textbox updates `vm.Score` to `42`. The standard numeric types are supported: `byte`, `int`, `float`, `double`, and `decimal`, and their nullable forms such as `int?`.
 
 {% hint style="info" %}
-Conversion to and from nullable numbers such as `int?` is available in December 2026, or now if building Gum from source.
+Available in December 2026, or now if building Gum from source.
 {% endhint %}
 
 A `string` or integer source also converts to an enum target property, such as `ListBox.SelectionMode`. A string matches a member name in any case, and a number matches a member value. A value that matches no member makes the binding throw, naming the enum and the value. A `[Flags]` enum accepts any number, including bits no member defines.
