@@ -27,4 +27,11 @@ internal interface IBindingTarget : INotifyPropertyChanged
 
     /// <summary>Raised when the target loses focus, for <see cref="UpdateSourceTrigger.LostFocus"/>.</summary>
     event EventHandler? LostFocus;
+
+    /// <summary>
+    /// The mode of a binding whose <see cref="Binding.Mode"/> is not set. A Forms control is TwoWay, since the
+    /// user edits it. A visual is OneWay, since its property changes come from states, SetProperty and
+    /// localization rather than user input; it writes to the source only through PushValueToViewModel.
+    /// </summary>
+    BindingMode DefaultBindingMode { get; }
 }

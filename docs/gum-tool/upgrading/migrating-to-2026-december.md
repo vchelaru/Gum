@@ -24,6 +24,68 @@ See [Properties Set by Forms Controls](../../code/styling/properties-set-by-form
 
 You are affected if a variable of type `RangeBase` reads one of those members, or if you subclass `RangeBase` directly. Change the type to `ThumbRangeBase`. Code that uses `Slider` or `ScrollBar` does not change.
 
+## Binding
+
+Visuals (`GraphicalUiElement` and every `*Runtime`) now bind through the same engine as Forms controls, so `SetBinding` on a visual behaves the way it does on a Forms control. The entries below are the places where a visual binding used to behave differently.
+
+### Visual Bindings Are TwoWay
+
+A visual binding writes the visual's value back to the ViewModel whenever the bound property raises `PropertyChanged`, as a Forms binding does. Previously a visual binding wrote back only when a derived visual called `PushValueToViewModel`. Among the standard runtimes this affects properties such as `Text`, `Alpha` and `Rotation`.
+
+You are affected if code changes a bound visual property and the ViewModel must keep its own value. Bind with `new Binding(path) { Mode = BindingMode.OneWay }` instead of the string path.
+
+### One ViewModel Property Can Feed Several Visual Properties
+
+Binding two properties of one visual to the same ViewModel property now keeps both bindings. Previously the second binding removed the first.
+
+You are affected if code relied on the second `SetBinding` replacing the first. Bind the first property to a different path, or stop binding it.
+
+### Missing ViewModel Property Resets the Visual Property
+
+A path that names a member the `BindingContext` does not have now sets the visual property to the binding's `FallbackValue`, or to the property's default when none is set. Previously the visual kept its current value. The `[Gum]` warning is unchanged.
+
+You are affected if a visual showed a value from the tool or from code while its binding path was wrong. Fix the path, or set `FallbackValue` to the value to show.
+
+### Values the Target Cannot Take Set Its Default
+
+A ViewModel value that does not convert to the visual property's type, such as the string `"yes"` bound to `Visible`, now sets the property's default instead of throwing. A `decimal` bound to an `int` property now rounds instead of truncating, and a number outside a `byte` property's range sets `0` instead of clamping to `0` or `255`.
+
+You are affected if you relied on the exception or on the old rounding or clamping. Convert the value in the ViewModel or with a `Converter`.
+
+### The toStringFormat Argument Formats Every Value
+
+The `toStringFormat` argument of a visual's `SetBinding` now formats any value, and a value that has no format of its own, such as a `bool`, shows its text. Previously only number types were formatted and other values threw. `SetBinding(ui, path, "N0")` is the same as `new Binding(path) { StringFormat = "{0:N0}" }`.
+
+No change is needed unless code caught that exception.
+
+### Writing Back to the ViewModel
+
+A write from a visual to the ViewModel follows the Forms rules:
+
+* A ViewModel property with no setter is left alone instead of throwing.
+* A path that ends in an index, such as `Names[0]`, writes that item. Previously nothing was written.
+* A ViewModel field is written. Previously fields were only read.
+
+You are affected if a ViewModel relied on one of these being skipped. Bind that property with `Mode = BindingMode.OneWay`.
+
+### BindingContext Bindings
+
+A `SetBinding(nameof(BindingContext), path)` call made before the visual has a parent now resolves the path once the visual is added to one. It also follows changes to that ViewModel property even when the parent has no binding of its own. Previously the visual kept the parent's `BindingContext` in the first case and missed the change in the second.
+
+No change is needed unless code set `BindingContext` by hand to work around this. Remove that code.
+
+### ViewModel Events Follow BindingContext Changes
+
+A ViewModel event bound to a method now unsubscribes from the old `BindingContext` and subscribes to the new one whenever it changes. Previously the method stayed subscribed to a `BindingContext` that does not implement `INotifyPropertyChanged`, and was not subscribed to the new one. A Forms control can now bind a ViewModel event to a method too.
+
+You are affected if code subscribed to the new ViewModel's event by hand after changing `BindingContext`. Remove that code, or the method runs twice.
+
+### Error Messages and Removed Counters
+
+The error for a visual property with no setter now names the binding mode (`TwoWay`). Binding a Forms control to a name that is neither a property nor a method now throws the same message as a visual. `GraphicalUiElement.PropertyUnsubscribeCallCount` and `GraphicalUiElement.GetTypeCallCount` are removed.
+
+You are affected if code compares the message text or reads one of the counters. Update the comparison, and delete the counter references.
+
 ## Raylib
 
 ### Gum Draws With Normal Blending

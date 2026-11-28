@@ -21,6 +21,15 @@ namespace Gum.Forms.Data;
 internal abstract class UntypedBindingExpression : BindingExpressionBase
 {
     protected Binding Binding { get; }
+
+    /// <summary>The binding's mode, or the target's default mode when the binding does not set one.</summary>
+    protected BindingMode Mode { get; }
+
+    /// <summary>
+    /// Whether the source may be written: by the mode, or by an explicit push from a target whose binding left the
+    /// mode unset (a visual's PushValueToViewModel).
+    /// </summary>
+    protected bool CanWriteSource => Mode is BindingMode.TwoWay or BindingMode.OneWayToSource || !Binding.IsModeSet;
     protected IBindingTarget TargetElement { get; }
     protected Type? LeafType => PathObserver.LeafType;
     protected object? CurrentRoot => PathObserver.CurrentRoot;
@@ -44,6 +53,7 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         TargetElement.BindingContextChanged += OnTargetBindingContextChanged;
 
         Binding = binding;
+        Mode = binding.IsModeSet ? binding.Mode : targetElement.DefaultBindingMode;
 
         PathObserver = new PropertyPathObserver(binding.Path);
         PathObserver.ValueChanged += UpdateTarget;
@@ -104,8 +114,8 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
         // OneWayToSource only writes, so a source member with no setter would leave it doing nothing. TwoWay (the
         // default mode) still shows the source value, so a get-only source keeps working in that direction.
-        if (Binding.Mode is BindingMode.OneWayToSource &&
-            BinderHelpers.GetReadOnlySourceMessage(newSource.GetType(), Binding.Path, Binding.Mode.ToString(),
+        if (Mode is BindingMode.OneWayToSource &&
+            BinderHelpers.GetReadOnlySourceMessage(newSource.GetType(), Binding.Path, Mode.ToString(),
                 TargetElement.GetType().Name, _targetPropertyName) is { } readOnlySourceMessage)
         {
             throw new InvalidOperationException(readOnlySourceMessage);
@@ -114,7 +124,7 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         PathObserver.Attach(newSource);
 
         bool shouldBuildSourceSetter =
-            Binding.Mode is BindingMode.TwoWay or BindingMode.OneWayToSource;
+            CanWriteSource;
 
         if (shouldBuildSourceSetter && BinderHelpers.CanWritePath(newSource.GetType(), Binding.Path))
         {
@@ -140,7 +150,7 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         }
 
         // OneWayToSource hands the new source the value the control already holds, as WPF does.
-        if (Binding.Mode is BindingMode.OneWayToSource)
+        if (Mode is BindingMode.OneWayToSource)
         {
             UpdateSource();
         }
@@ -191,7 +201,8 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
     protected void SetSourceValue(object? value)
     {
-        if (SourceSetter is null || !PathObserver.HasResolution || CurrentRoot is null)
+        // A view model field is read, never written.
+        if (SourceSetter is null || !PathObserver.HasResolution || PathObserver.IsLeafField || CurrentRoot is null)
         {
             // binding error: broken path
             return;

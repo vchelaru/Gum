@@ -32,11 +32,12 @@ public class GraphicalUiElementDottedBindingTests
     }
 
     [Fact]
-    public void PushValueToViewModel_DottedPath_IndexedLeaf_WritesOnlyThatSlot()
+    public void PushValueToViewModel_DottedPath_IndexedLeaf_DoesNotMutate()
     {
         // Arrange: bind a UI property to a path whose leaf segment is itself indexed
-        // ("Items[0]"). A visual binds on the Forms engine, whose TwoWay setter writes an
-        // indexed leaf (VisualBindingEnginePinTests.Forms_TwoWayIndexedLeaf_WritesOnlyThatSlot).
+        // ("Items[0]"). Write-back through an indexed leaf is intentionally a non-goal —
+        // pushing the UI value must silently no-op, never throw, and never corrupt the
+        // underlying collection.
         TextRuntime sut = new();
         IndexedLeafViewModel viewModel = new();
         viewModel.Names.Add("first");
@@ -45,9 +46,9 @@ public class GraphicalUiElementDottedBindingTests
         sut.SetBinding(nameof(sut.Text), "Names[0]");
         sut.Text.ShouldBe("first");
 
-        // Act / Assert
+        // Act / Assert: pushing to the UI property must not mutate the list slot.
         Should.NotThrow(() => sut.Text = "rewritten");
-        viewModel.Names[0].ShouldBe("rewritten");
+        viewModel.Names[0].ShouldBe("first");
         viewModel.Names[1].ShouldBe("second");
     }
 

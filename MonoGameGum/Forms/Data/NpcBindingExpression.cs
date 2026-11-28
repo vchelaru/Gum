@@ -46,11 +46,11 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
         // OneWay and TwoWay write the source value to the target, so refuse a target that cannot take it here
         // rather than when a BindingContext arrives. SetValue reaches a non-public setter, so any setter will do.
-        if (binding.Mode is not BindingMode.OneWayToSource &&
+        if (Mode is not BindingMode.OneWayToSource &&
             !HasTargetSetter)
         {
             throw new InvalidOperationException(BinderHelpers.GetReadOnlyTargetMessage(
-                target.GetType().Name, targetPropertyName, binding.Mode.ToString()));
+                target.GetType().Name, targetPropertyName, Mode.ToString()));
         }
 
         DefaultTargetValue = TargetProperty.PropertyType.IsValueType
@@ -61,7 +61,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
         // TwoWay (the default). OneWayToSource would never do anything, so it is refused.
         if (!TargetProperty.CanRead)
         {
-            if (binding.Mode is BindingMode.OneWayToSource)
+            if (Mode is BindingMode.OneWayToSource)
             {
                 throw new InvalidOperationException(
                     $"Property '{targetPropertyName}' on {target.GetType().Name} has no getter, so it cannot be " +
@@ -73,7 +73,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
             LastTargetValue = TargetProperty.GetValue(target);
         }
 
-        if (binding.Mode is BindingMode.TwoWay or BindingMode.OneWayToSource)
+        if (Mode is BindingMode.TwoWay or BindingMode.OneWayToSource)
         {
             HookUpdateSource(binding.UpdateSourceTrigger);
         }
@@ -85,7 +85,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
     }
     
     private bool ShouldUpdateSource =>
-        Binding.Mode is not BindingMode.OneWay &&
+        Mode is not BindingMode.OneWay &&
         TargetProperty.CanRead &&
         TargetProperty.Name is not nameof(FrameworkElement.BindingContext);
 
@@ -161,7 +161,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     public override void UpdateTarget()
     {
-        if (_isUpdatingTarget || Binding.Mode is BindingMode.OneWayToSource)
+        if (_isUpdatingTarget || Mode is BindingMode.OneWayToSource)
         {
             return;
         }
@@ -245,9 +245,32 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     public override void UpdateSource()
     {
+        if (!ShouldUpdateSource)
+        {
+            return;
+        }
+        WriteTargetToSource();
+    }
+
+    /// <summary>
+    /// Writes the target's value to the source when the target asks for it (a visual's PushValueToViewModel).
+    /// Unlike a PropertyChanged trigger, this also writes for a binding that left its mode unset.
+    /// </summary>
+    public void PushTargetToSource()
+    {
+        if (!CanWriteSource || !TargetProperty.CanRead ||
+            TargetProperty.Name is nameof(FrameworkElement.BindingContext))
+        {
+            return;
+        }
+        WriteTargetToSource();
+    }
+
+    private void WriteTargetToSource()
+    {
         // During a BindingContext change, a binding that has not re-attached yet still points at the
         // outgoing view model; a target change raised by a sibling binding must not be written there (#7856).
-        if (_isUpdatingSource || _isUpdatingTarget || !ShouldUpdateSource || !IsAttachedToCurrentBindingContext)
+        if (_isUpdatingSource || _isUpdatingTarget || !IsAttachedToCurrentBindingContext)
         {
             return;
         }

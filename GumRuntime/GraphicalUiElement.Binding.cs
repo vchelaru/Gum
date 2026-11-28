@@ -41,6 +41,10 @@ public partial class GraphicalUiElement : IBindingTarget
         remove { }
     }
 
+    // States, SetProperty and localization change a visual's properties, so a binding that does not set its mode
+    // never writes them to the view model; only PushValueToViewModel does.
+    BindingMode IBindingTarget.DefaultBindingMode => BindingMode.OneWay;
+
     partial void OnConstructor()
     {
         this.ParentChanged += HandleBindingParentChanged;
@@ -307,9 +311,9 @@ public partial class GraphicalUiElement : IBindingTarget
         SetBinding(uiProperty, BinderHelpers.ExtractPath(vmPropertyExpression), toStringFormat);
 
     /// <summary>
-    /// Tells the bindings that this element's <paramref name="uiPropertyName"/> changed, so a TwoWay or
-    /// OneWayToSource binding writes it to its view model member. Call it from a property setter on a
-    /// derived visual whose setter does not already raise <see cref="PropertyChanged"/>.
+    /// Writes this element's <paramref name="uiPropertyName"/> to the view model member it is bound to. Call it
+    /// from a property setter on a derived visual whose value the user changes. A binding whose mode is
+    /// <see cref="BindingMode.OneWay"/> ignores it.
     /// </summary>
     protected void PushValueToViewModel([CallerMemberName] string? uiPropertyName = null)
     {
@@ -317,7 +321,7 @@ public partial class GraphicalUiElement : IBindingTarget
         {
             return;
         }
-        RaisePropertyChangedEvent(uiPropertyName);
+        _propertyRegistry?.PushTargetToSource(uiPropertyName);
     }
 
     private IEnumerable<GraphicalUiElement> GetAllBindableChildren()
@@ -326,6 +330,23 @@ public partial class GraphicalUiElement : IBindingTarget
         else return ContainedElements;
     }
 
+    // Obsoleted 2026-11, keep until at least 2027-05.
+    /// <summary>No longer updated: bindings on visuals run on the Forms engine. Always 0.</summary>
+    [Obsolete("No longer updated since November 2026, when visual bindings moved to the Forms binding engine. Always 0.")]
+    public static int PropertyUnsubscribeCallCount = 0;
+
+    // Obsoleted 2026-11, keep until at least 2027-05.
+    /// <summary>No longer updated: bindings on visuals run on the Forms engine. Always 0.</summary>
+    [Obsolete("No longer updated since November 2026, when visual bindings moved to the Forms binding engine. Always 0.")]
+    public static int GetTypeCallCount = 0;
+
+    // Obsoleted 2026-11, keep until at least 2027-05.
+    /// <summary>
+    /// The conversion visual bindings used before November 2026. Bindings no longer call it; they convert the way
+    /// Forms bindings do.
+    /// </summary>
+    [Obsolete("Bindings no longer use this since November 2026; they convert the way Forms bindings do. " +
+        "Use a Binding Converter for custom conversion.")]
     public static object? ConvertValue(object? value, Type desiredType, string? format)
     {
         object? convertedValue = value;

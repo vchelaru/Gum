@@ -887,9 +887,11 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
     #region WillMatchForms
 
+    // A visual keeps its own default mode (VM to UI only): its property changes come from states, SetProperty and
+    // localization, never user input, so they must not reach the view model.
     [Fact]
-    [Trait("Pin", WillMatchForms)]
-    public void DefaultMode_TargetRaisesPropertyChanged_WritesViewModel()
+    [Trait("Pin", MustKeep)]
+    public void DefaultMode_TargetRaisesPropertyChanged_DoesNotWriteViewModel()
     {
         PinViewModel viewModel = new() { Number = 1 };
         PinRuntime sut = new() { BindingContext = viewModel };
@@ -897,7 +899,107 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
         sut.NotifyingInt = 5;
 
-        viewModel.Number.ShouldBe(5);
+        viewModel.Number.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Pin", MustKeep)]
+    public void ApplyState_BoundText_LeavesViewModel()
+    {
+        PinViewModel viewModel = new() { Value = "fromVm" };
+        TextRuntime sut = new() { BindingContext = viewModel };
+        sut.SetBinding(nameof(TextRuntime.Text), nameof(PinViewModel.Value));
+        Gum.DataTypes.Variables.StateSave state = new();
+        state.Variables.Add(new Gum.DataTypes.Variables.VariableSave
+        {
+            Name = "Text", Value = "fromState", SetsValue = true, Type = "string"
+        });
+
+        sut.ApplyState(state);
+
+        sut.Text.ShouldBe("fromState");
+        viewModel.Value.ShouldBe("fromVm");
+    }
+
+    [Fact]
+    [Trait("Pin", MustKeep)]
+    public void SetProperty_BoundText_LeavesViewModel()
+    {
+        PinViewModel viewModel = new() { Value = "fromVm" };
+        TextRuntime sut = new() { BindingContext = viewModel };
+        sut.SetBinding(nameof(TextRuntime.Text), nameof(PinViewModel.Value));
+
+        sut.SetProperty("Text", "fromSetProperty");
+
+        viewModel.Value.ShouldBe("fromVm");
+    }
+
+    [Fact]
+    [Trait("Pin", MustKeep)]
+    public void ColorAssignment_BoundRedChannel_LeavesViewModel()
+    {
+        PinViewModel viewModel = new() { Number = 100 };
+        ColoredRectangleRuntime sut = new() { BindingContext = viewModel };
+        sut.SetBinding(nameof(ColoredRectangleRuntime.Red), nameof(PinViewModel.Number));
+
+        sut.Color = new Microsoft.Xna.Framework.Color(7, 8, 9, 255);
+
+        viewModel.Number.ShouldBe(100);
+    }
+
+    [Fact]
+    [Trait("Pin", MustKeep)]
+    public void LocalizationRefresh_BoundText_KeepsViewModelKey()
+    {
+        Gum.Localization.LocalizationService localization = new();
+        localization.AddDatabase(new Dictionary<string, string[]> { { "T_Hi", new[] { "Hello", "Bonjour" } } },
+            new List<string> { "English", "French" });
+        localization.CurrentLanguage = 0;
+        Gum.Localization.ILocalizationService? previousService = CustomSetPropertyOnRenderable.LocalizationService;
+        Action<GraphicalUiElement>? previousRefresh = GraphicalUiElement.RefreshLocalizationOnElementAction;
+        CustomSetPropertyOnRenderable.LocalizationService = localization;
+        GraphicalUiElement.RefreshLocalizationOnElementAction = element =>
+        {
+            string? key = CustomSetPropertyOnRenderable.TryGetLocalizationKey(element);
+            if (key != null)
+            {
+                element.SetProperty("Text", key);
+            }
+        };
+        try
+        {
+            PinViewModel viewModel = new() { Value = "T_Hi" };
+            TextRuntime sut = new() { BindingContext = viewModel };
+            sut.SetBinding(nameof(TextRuntime.Text), nameof(PinViewModel.Value));
+
+            localization.CurrentLanguage = 1;
+            sut.RefreshLocalization();
+
+            viewModel.Value.ShouldBe("T_Hi");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = previousService;
+            GraphicalUiElement.RefreshLocalizationOnElementAction = previousRefresh;
+        }
+    }
+
+    // An explicit TwoWay on a visual writes every change, whatever made it.
+    [Fact]
+    public void ExplicitTwoWay_ApplyState_WritesViewModel()
+    {
+        PinViewModel viewModel = new() { Value = "fromVm" };
+        TextRuntime sut = new() { BindingContext = viewModel };
+        sut.SetBinding(nameof(TextRuntime.Text), new Binding(nameof(PinViewModel.Value)) { Mode = BindingMode.TwoWay });
+        Gum.DataTypes.Variables.StateSave state = new();
+        state.Variables.Add(new Gum.DataTypes.Variables.VariableSave
+        {
+            Name = "Text", Value = "fromState", SetsValue = true, Type = "string"
+        });
+
+        sut.ApplyState(state);
+
+        viewModel.Value.ShouldBe("fromState");
     }
 
     [Fact]
@@ -975,7 +1077,7 @@ public class VisualBindingEnginePinTests : BaseTestClass
             sut.SetBinding(nameof(PinRuntime.ReadOnlyValue), nameof(PinViewModel.Number)));
 
         exception.Message.ShouldBe("PinRuntime.ReadOnlyValue has no setter, so it cannot be the target of a " +
-            "TwoWay binding, which writes the view model's value to it. Bind a property that has a public setter.");
+            "OneWay binding, which writes the view model's value to it. Bind a property that has a public setter.");
     }
 
     [Fact]
@@ -1144,11 +1246,10 @@ public class VisualBindingEnginePinTests : BaseTestClass
         viewModel.GetOnly.ShouldBe(42);
     }
 
-    // A field is written through the setter the Forms engine already built for one (BinderHelpers.BuildSetter);
-    // it went unwritten only because the path could not be resolved before fields were read.
+    // A view model field is read but never written, on a visual and on a Forms control.
     [Fact]
-    [Trait("Pin", WillMatchForms)]
-    public void PushValueToViewModel_ViewModelField_IsWritten()
+    [Trait("Pin", MustKeep)]
+    public void PushValueToViewModel_ViewModelField_IsNotWritten()
     {
         PinViewModel viewModel = new() { Field = 1 };
         PinRuntime sut = new() { BindingContext = viewModel };
@@ -1156,12 +1257,12 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
         sut.PushedInt = 5;
 
-        viewModel.Field.ShouldBe(5);
+        viewModel.Field.ShouldBe(1);
     }
 
     [Fact]
-    [Trait("Pin", WillMatchForms)]
-    public void Forms_TwoWayToViewModelField_WritesIt()
+    [Trait("Pin", MustKeep)]
+    public void Forms_TwoWayToViewModelField_DoesNotWriteIt()
     {
         PinViewModel viewModel = new() { Field = 1 };
         PinControl sut = new() { BindingContext = viewModel };
@@ -1169,7 +1270,23 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
         sut.NotifyingInt = 5;
 
-        viewModel.Field.ShouldBe(5);
+        viewModel.Field.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Pin", WillMatchForms)]
+    public void PushValueToViewModel_IndexedLeaf_WritesThatItem()
+    {
+        PinViewModel viewModel = new();
+        viewModel.Items.Add("first");
+        viewModel.Items.Add("second");
+        PinRuntime sut = new() { BindingContext = viewModel };
+        sut.SetBinding(nameof(PinRuntime.PushedString), "Items[0]");
+
+        sut.PushedString = "rewritten";
+
+        viewModel.Items[0].ShouldBe("rewritten");
+        viewModel.Items[1].ShouldBe("second");
     }
 
     // Reading a view model field was visual-only (ViewModelField_IsRead); the shared engine keeps it.
@@ -1278,17 +1395,20 @@ public class VisualBindingEnginePinTests : BaseTestClass
     [Trait("Pin", MustKeep)]
     public void FormsVisual_ControlBindingChangesSharedProperty_VisualBindingDoesNotWriteItsSource()
     {
-        PinViewModel viewModel = new() { Amount = 10, Ratio = 30 };
-        Button button = new() { BindingContext = viewModel };
-        button.Visual.SetBinding(nameof(GraphicalUiElement.Width), nameof(PinViewModel.Amount));
-        button.SetBinding(nameof(Button.Width), new Binding(nameof(PinViewModel.Ratio)) { Mode = BindingMode.OneWay });
+        PinViewModel viewModel = new() { Value = "visual", Child = new PinViewModel { Value = "control" } };
+        Label label = new() { BindingContext = viewModel };
+        TextRuntime text = (TextRuntime)label.Visual;
+        text.SetBinding(nameof(TextRuntime.Text), nameof(PinViewModel.Value));
+        label.SetBinding(nameof(Label.Text), new Binding("Child.Value") { Mode = BindingMode.OneWay });
+        text.Text.ShouldBe("control");
 
-        viewModel.Ratio = 40;
+        viewModel.Child.Value = "control changed";
 
-        viewModel.Amount.ShouldBe(10);
+        text.Text.ShouldBe("control changed");
+        viewModel.Value.ShouldBe("visual");
     }
-    // A null or empty PropertyChanged name re-reads every binding on both engines (#8539).
 
+    // A null or empty PropertyChanged name re-reads every binding on both engines (#8539).
     [Fact]
     [Trait("Pin", MustKeep)]
     public void ViewModelRaisesEmptyPropertyName_TargetIsRefreshed()
@@ -1317,7 +1437,125 @@ public class VisualBindingEnginePinTests : BaseTestClass
         sut.StringValue.ShouldBe("b");
     }
 
-    // Pair for GraphicalUiElementDottedBindingTests.PushValueToViewModel_DottedPath_IndexedLeaf_WritesOnlyThatSlot.
+    #region SetBinding(string, Binding) on a visual
+
+    public class NegateConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter) => !(bool)value!;
+        public object? ConvertBack(object? value, Type targetType, object? parameter) => !(bool)value!;
+    }
+
+    [Fact]
+    public void BindingObject_ExplicitTwoWay_WritesTargetChanges()
+    {
+        PinViewModel viewModel = new() { Number = 1 };
+        PinRuntime sut = new() { BindingContext = viewModel };
+        sut.SetBinding(nameof(PinRuntime.NotifyingInt), new Binding(nameof(PinViewModel.Number)) { Mode = BindingMode.TwoWay });
+
+        sut.NotifyingInt = 5;
+
+        viewModel.Number.ShouldBe(5);
+    }
+
+    [Fact]
+    public void BindingObject_ExplicitOneWay_IgnoresPushValueToViewModel()
+    {
+        PinViewModel viewModel = new() { Number = 1 };
+        PinRuntime sut = new() { BindingContext = viewModel };
+        sut.SetBinding(nameof(PinRuntime.PushedInt), new Binding(nameof(PinViewModel.Number)) { Mode = BindingMode.OneWay });
+
+        sut.PushedInt = 5;
+        viewModel.Number.ShouldBe(1);
+        viewModel.Number = 7;
+
+        sut.PushedInt.ShouldBe(7);
+    }
+
+    [Fact]
+    public void BindingObject_OneWayToSource_WritesTargetToSource()
+    {
+        PinViewModel viewModel = new() { Number = 1 };
+        PinRuntime sut = new() { NotifyingInt = 3, BindingContext = viewModel };
+
+        sut.SetBinding(nameof(PinRuntime.NotifyingInt),
+            new Binding(nameof(PinViewModel.Number)) { Mode = BindingMode.OneWayToSource });
+        viewModel.Number.ShouldBe(3);
+        sut.NotifyingInt = 4;
+        viewModel.Number.ShouldBe(4);
+        viewModel.Number = 9;
+
+        sut.NotifyingInt.ShouldBe(4);
+    }
+
+    [Fact]
+    public void BindingObject_Converter_Applies()
+    {
+        PinViewModel viewModel = new() { Flag = true };
+        PinRuntime sut = new() { BindingContext = viewModel };
+
+        sut.SetBinding(nameof(PinRuntime.BoolValue),
+            new Binding(nameof(PinViewModel.Flag)) { Converter = new NegateConverter() });
+
+        sut.BoolValue.ShouldBeFalse();
+        viewModel.Flag = false;
+        sut.BoolValue.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void BindingObject_StringFormat_FormatsValue()
+    {
+        PinViewModel viewModel = new() { Number = 5 };
+        PinRuntime sut = new() { BindingContext = viewModel };
+
+        sut.SetBinding(nameof(PinRuntime.StringValue),
+            new Binding(nameof(PinViewModel.Number)) { StringFormat = "Gold: {0}" });
+
+        sut.StringValue.ShouldBe("Gold: 5");
+    }
+
+    [Fact]
+    public void BindingObject_FallbackAndTargetNullValue_Apply()
+    {
+        PinViewModel viewModel = new() { Value = null };
+        PinRuntime sut = new() { BindingContext = viewModel };
+
+        sut.SetBinding(nameof(PinRuntime.StringValue),
+            new Binding(nameof(PinViewModel.Value)) { TargetNullValue = "none" });
+        sut.StringValue.ShouldBe("none");
+        sut.SetBinding(nameof(PinRuntime.IntValue), new Binding("Missing") { FallbackValue = 12 });
+
+        sut.IntValue.ShouldBe(12);
+    }
+
+    public class ButtonWidthViewModel : ViewModel
+    {
+        public float ButtonWidth { get => Get<float>(); set => Set(value); }
+    }
+
+    // The sample in binding-deep-dive.md, "Binding Visual Properties Directly".
+    [Fact]
+    public void DocsSample_VisualBindingObject_FollowsViewModel()
+    {
+        ButtonWidthViewModel viewModel = new() { ButtonWidth = 150 };
+        Button MyButton = new() { BindingContext = viewModel };
+
+        var buttonVisual = MyButton.Visual;
+        buttonVisual.SetBinding(
+            nameof(buttonVisual.Width),
+            new Binding(nameof(ButtonWidthViewModel.ButtonWidth))
+            {
+                Mode = BindingMode.OneWay,
+                FallbackValue = 100f
+            });
+
+        buttonVisual.Width.ShouldBe(150);
+        viewModel.ButtonWidth = 175;
+        buttonVisual.Width.ShouldBe(175);
+    }
+
+    #endregion
+
+    // Pair for PushValueToViewModel_IndexedLeaf_WritesThatItem.
     [Fact]
     [Trait("Pin", WillMatchForms)]
     public void Forms_TwoWayIndexedLeaf_WritesOnlyThatSlot()

@@ -421,6 +421,8 @@ public class FrameworkElement : INotifyPropertyChanged, IBindingTarget
         remove => InheritedBindingContextChanged -= value;
     }
 
+    BindingMode IBindingTarget.DefaultBindingMode => BindingMode.TwoWay;
+
     /// <summary>
     /// The height in pixels. This is a calculated value considering HeightUnits and Height.
     /// </summary>

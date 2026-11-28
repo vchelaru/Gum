@@ -97,6 +97,16 @@ internal class PropertyRegistry
         return false;
     }
 
+    /// <summary>Writes the owner's <paramref name="uiPropertyName"/> to its binding's source, if it is bound.</summary>
+    public void PushTargetToSource(string uiPropertyName)
+    {
+        if (BindingExpressions.TryGetValue(uiPropertyName, out BindingExpressionBase? expression) &&
+            expression is NpcBindingExpression npcExpression)
+        {
+            npcExpression.PushTargetToSource();
+        }
+    }
+
     /// <summary>
     /// Re-evaluates every binding's target from its source, for when the control's Visual is replaced and
     /// the new Visual's own values sit under the bound properties. Never writes to a source.
