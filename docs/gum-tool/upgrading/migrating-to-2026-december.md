@@ -30,6 +30,12 @@ See [Properties Set by Forms Controls](../../code/styling/properties-set-by-form
 
 You are affected if a variable of type `RangeBase` reads one of those members, or if you subclass `RangeBase` directly. Change the type to `ThumbRangeBase`. Code that uses `Slider` or `ScrollBar` does not change.
 
+### Bound Items Empty When BindingContext Becomes Null
+
+A `ListBox`, `ComboBox` or other items control whose `Items` is bound now shows no items while its `BindingContext` is null, and shows the view model's collection again when the context returns. Before, it kept the collection, which kept the control alive and kept adding rows after it was removed from the screen.
+
+You are affected if you move a control with bound `Items` by removing it from one parent's `Children` and adding it to another. The control briefly has no `BindingContext`, so it loses its selection and scroll position. To keep both, move the control by assigning its `Parent` directly. To keep only the selection, bind `SelectedObject` to a view model property.
+
 ## Raylib
 
 ### Gum Draws With Normal Blending
