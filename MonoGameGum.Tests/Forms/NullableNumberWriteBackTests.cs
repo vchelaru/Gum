@@ -103,4 +103,54 @@ public class NullableNumberWriteBackTests : BaseTestClass
         vm.Limit.ShouldBeNull();
         _reports.ShouldBeEmpty();
     }
+
+    [Theory]
+    [InlineData("abc")]
+    [InlineData("1.5")]
+    [InlineData("")]
+    public void NullableIntSource_TextThatIsNotAnInteger_KeepsValueAndReports(string text)
+    {
+        LimitViewModel vm = new() { Limit = 3 };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), nameof(LimitViewModel.Limit));
+
+        textBox.Text = text;
+
+        vm.Limit.ShouldBe(3);
+        _reports.ShouldHaveSingleItem().ShouldContain($"'{text}'");
+    }
+
+    [Fact]
+    public void NullableIntSource_SliderValue_WritesNumber()
+    {
+        LimitViewModel vm = new() { Limit = 3 };
+        Slider slider = new() { BindingContext = vm };
+        slider.SetBinding(nameof(Slider.Value), nameof(LimitViewModel.Limit));
+
+        slider.Value = 40;
+
+        vm.Limit.ShouldBe(40);
+        _reports.ShouldBeEmpty();
+    }
+
+    private class WidthViewModel : ViewModel
+    {
+        public int MinimumWidth
+        {
+            get => Get<int>();
+            set => Set(value);
+        }
+    }
+
+    [Fact]
+    public void IntSource_NullableFloatTarget_ShowsNumber()
+    {
+        WidthViewModel vm = new() { MinimumWidth = 200 };
+        TextBox textBox = new() { BindingContext = vm };
+
+        textBox.SetBinding(nameof(TextBox.MinWidth), nameof(WidthViewModel.MinimumWidth));
+
+        textBox.MinWidth.ShouldBe(200f);
+        _reports.ShouldBeEmpty();
+    }
 }

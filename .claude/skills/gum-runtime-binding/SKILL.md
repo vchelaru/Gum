@@ -142,6 +142,8 @@ Only the default mode (above) and `UpdateSourceTrigger.LostFocus`, which never f
 
 **Forms bindings convert strings and integers to enum targets.** `BinderHelpers.ConvertToEnum` parses names ignoring case (as WPF's `EnumConverter` does) and maps numbers with `Enum.ToObject`; a value naming no member throws in `UpdateTarget`, while an unmatched edit written back to an enum source leaves the source unchanged.
 
+**A `Nullable<T>` source or target converts as its `T`** (`NpcBindingExpression.TryConvert`, the one conversion both binding systems use). Empty text is not null: it writes null only when it equals the binding's `TargetNullValue`, otherwise it is a failed conversion that leaves the source unchanged. Tests: `NullableNumberWriteBackTests`.
+
 **A bound target (Forms control or visual) resets when an attached BindingContext becomes null.** `NpcBindingExpression.ResetTarget` shows `FallbackValue`, else the value the property held before it was first bound (`UnboundTargetValue`, kept per property by `PropertyRegistry` across rebinds; `ClearBinding` restores it too); OneWayToSource and BindingContext targets are skipped, and binding before any context resets nothing. Visual (GUE) bindings keep their last value. Tests: `BindingContextNullResetTests`, whose expected values go through `ContextResetExpectation`.
 
 **A focused TextBox/PasswordBox with the PropertyChanged trigger is not rewritten mid-typing.** A source value raised during its own edit is deferred (`_hasDeferredTargetUpdate`) and shown on `LostFocus` or `EditCommitted`. Tests: `TextBoxPropertyChangedEditTests`.

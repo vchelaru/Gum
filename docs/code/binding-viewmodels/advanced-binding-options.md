@@ -279,7 +279,11 @@ TextBox textBox = new() { BindingContext = vm };
 textBox.SetBinding(nameof(TextBox.Text), nameof(MyViewModel.Score));
 ```
 
-In the example above, setting `vm.Score = 12` updates `textBox.Text` to `"12"`, and typing `"42"` into the textbox updates `vm.Score` to `42`. The standard numeric types are supported: `byte`, `int`, `float`, `double`, and `decimal`.
+In the example above, setting `vm.Score = 12` updates `textBox.Text` to `"12"`, and typing `"42"` into the textbox updates `vm.Score` to `42`. The standard numeric types are supported: `byte`, `int`, `float`, `double`, and `decimal`, and their nullable forms such as `int?`.
+
+{% hint style="info" %}
+Conversion to and from nullable numbers such as `int?` is available in December 2026, or now if building Gum from source.
+{% endhint %}
 
 A `string` or integer source also converts to an enum target property, such as `ListBox.SelectionMode`. A string matches a member name in any case, and a number matches a member value. A value that matches no member makes the binding throw, naming the enum and the value. A `[Flags]` enum accepts any number, including bits no member defines.
 
@@ -294,7 +298,7 @@ A source value that does not convert to the UI property's type shows the binding
 {% endhint %}
 
 {% hint style="info" %}
-The same rule applies to `Nullable<T>` source properties. An empty string does not convert to `null`, so the source is left unchanged. To support clearing a numeric field to `null`, supply a `Converter` with explicit `ConvertBack` logic.
+The same rule applies to `Nullable<T>` source properties. An empty string does not convert to `null`, so the source is left unchanged. To let clearing a numeric field write `null`, set the binding's `TargetNullValue` to `""`.
 {% endhint %}
 
 ### Culture Sensitivity

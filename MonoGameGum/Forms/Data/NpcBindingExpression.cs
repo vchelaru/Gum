@@ -584,10 +584,13 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     static object? TryConvert(object? source, Type targetType)
     {
+        // Convert.ChangeType refuses Nullable<T>, so convert to T. Only TargetNullValue writes null (SetValueToSource).
+        targetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
         // Convert.ChangeType does not reach enums; names and numbers convert as WPF's binding does.
-        if (source is not null && GetEnumType(targetType) is { } enumType)
+        if (source is not null && targetType.IsEnum)
         {
-            return BinderHelpers.ConvertToEnum(source, enumType);
+            return BinderHelpers.ConvertToEnum(source, targetType);
         }
 
         try
