@@ -82,6 +82,32 @@ public class GumFontMapper : FontMapper
         font.SkewX = NeedsSyntheticItalic(style, typeface) ? SyntheticItalicSkewX : 0;
     }
 
+    // Workaround for https://github.com/mono/SkiaSharp/issues/5891: Skia's CoreText port draws regular glyphs from
+    // dilated outlines (font smoothing at Normal hinting) but fake bold from the glyph path without that dilation, so
+    // on macOS synthetic bold comes out no heavier than regular. Delete the workaround (this constant and its use in
+    // GetSyntheticBoldStrokeWidth) when SkiaMacEmboldenCanaryTests fails.
+    // The constant: both glyphs drawn through the path rasterizer, as on Linux, give bold 1.37-1.44 times regular's
+    // ink (Liberation Sans and Nunito, 10-40px, macOS 26.5). This extra stroke per pixel of font size brings the
+    // CoreText-drawn ratio to 1.26-1.49 there (1.35-1.43 at 14px), against 0.93-1.11 without it.
+    private const float MacSyntheticBoldStrokePerFontSize = 0.033f;
+
+    private static readonly bool IsMacOS =
+        System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
+
+    /// <summary>
+    /// The stroke, on top of <see cref="SKFont.Embolden"/>, that a run <see cref="ApplySyntheticStyle"/> emboldened
+    /// draws with: 0 everywhere but macOS (see <see cref="MacSyntheticBoldStrokePerFontSize"/>).
+    /// </summary>
+    public static float GetSyntheticBoldStrokeWidth(bool isEmboldened, float fontSize) =>
+        isEmboldened && IsMacOS ? fontSize * MacSyntheticBoldStrokePerFontSize : 0;
+
+    /// <summary>Sets <paramref name="fill"/>, a run's fill paint, to also stroke its glyphs by <paramref name="strokeWidth"/>.</summary>
+    public static void ApplySyntheticBoldStroke(SKPaint fill, float strokeWidth)
+    {
+        fill.Style = strokeWidth > 0 ? SKPaintStyle.StrokeAndFill : SKPaintStyle.Fill;
+        fill.StrokeWidth = strokeWidth;
+    }
+
     /// <summary>True when <see cref="ApplySyntheticStyle"/> changes how a run with this style and typeface draws.</summary>
     public static bool NeedsSyntheticStyle(IStyle style, SKTypeface? typeface) =>
         NeedsSyntheticBold(style, typeface) || NeedsSyntheticItalic(style, typeface);

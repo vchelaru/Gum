@@ -2172,6 +2172,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             public SKFontEdging Edging;
             public bool Embolden;
             public float SkewX;
+            // GumFontMapper.GetSyntheticBoldStrokeWidth: what the run's fill paint strokes on top of Embolden.
+            public float BoldStrokeWidth;
             // The built-in effect drawn on this one-glyph run, and the glyph's distance from the start of its line.
             public ParameterizedLetterCustomizationCall? Effect;
             public float LetterX;
@@ -2451,6 +2453,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         private SKPaint? _halo;
         private bool _isFillKnown;
         private SKColor _fillColor;
+        // The fill's synthetic-bold stroke; a reset paint has none.
+        private float _fillStrokeWidth;
         private bool _isHaloKnown;
         private SKColor _haloColor;
         private float _haloWidth;
@@ -2508,6 +2512,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     _isHaloKnown = false;
                 }
                 fill.Color = textColor;
+                Content.Fonts.GumFontMapper.ApplySyntheticBoldStroke(fill, run.BoldStrokeWidth);
                 if (hasHalo)
                 {
                     SetHaloStroke(configured, style);
@@ -2522,6 +2527,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 canvas.DrawText(run.Blob, x, y + run.VerticalOffset, fill);
                 fill.Reset();
                 configured.Reset();
+                _fillStrokeWidth = 0;
                 return;
             }
 
@@ -2552,6 +2558,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             {
                 fill.Color = _fillColor = textColor;
                 _isFillKnown = true;
+            }
+            if (_fillStrokeWidth != run.BoldStrokeWidth)
+            {
+                Content.Fonts.GumFontMapper.ApplySyntheticBoldStroke(fill, run.BoldStrokeWidth);
+                _fillStrokeWidth = run.BoldStrokeWidth;
             }
             canvas.DrawText(run.Blob, x, y + run.VerticalOffset, fill);
         }
@@ -2673,6 +2684,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 Edging = font.Edging,
                 Embolden = font.Embolden,
                 SkewX = font.SkewX,
+                BoldStrokeWidth = Content.Fonts.GumFontMapper.GetSyntheticBoldStrokeWidth(font.Embolden, font.Size),
                 Effect = effect,
                 LetterX = letterX,
             });
