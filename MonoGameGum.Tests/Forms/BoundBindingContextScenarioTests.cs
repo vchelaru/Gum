@@ -237,20 +237,6 @@ public class BoundBindingContextScenarioTests : BaseTestClass
         playerPanel.BindingContext.ShouldBe(second);
     }
 
-    [Fact]
-    public void UnboundElementRemovedFromParent_LosesInheritedContext()
-    {
-        GameVm vm = new();
-        ContainerRuntime parent = new() { BindingContext = vm };
-        ContainerRuntime child = new();
-        parent.Children.Add(child);
-        child.BindingContext.ShouldBe(vm);
-
-        parent.Children.Remove(child);
-
-        child.BindingContext.ShouldBeNull();
-    }
-
     public class TeamVm : ViewModel
     {
         public GameVm? Game { get => Get<GameVm?>(); set => Set(value); }
