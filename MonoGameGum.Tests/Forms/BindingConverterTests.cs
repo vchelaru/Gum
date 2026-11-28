@@ -91,6 +91,26 @@ public class BindingConverterTests : BaseTestClass
         vm.IntValue.ShouldBe(5);
     }
 
+    [Theory]
+    [InlineData("null")]
+    [InlineData("wrongType")]
+    public void Convert_ReturnsValueTargetCannotTake_ShowsFallbackValue(string output)
+    {
+        TestViewModel vm = new() { Text = "anything" };
+        Button button = new() { BindingContext = vm };
+        object? converted = output == "null" ? null : "not a bool";
+        button.SetBinding(nameof(Button.IsEnabled), new Binding(nameof(TestViewModel.Text))
+        {
+            Converter = new DelegateConverter { To = _ => converted },
+            FallbackValue = true
+        });
+
+        button.IsEnabled = false;
+        vm.Text = "changed";
+
+        button.IsEnabled.ShouldBeTrue();
+    }
+
     [Fact]
     public void ConverterParameter_ReachesConvertAndConvertBack()
     {
