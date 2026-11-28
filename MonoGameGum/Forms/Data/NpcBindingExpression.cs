@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection;
 using Gum.Wireframe;
 
@@ -38,6 +39,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
     private bool _isUpdatingSource;
     private bool _isLostFocusTrigger;
     private bool _hasReportedFailedConversion;
+    private bool _hasReportedFailedSourceConversion;
     private bool _hasReportedUnwritableSource;
     // The target's last change came from user input rather than from code; only such a change is reported
     // when the source cannot take it.
@@ -396,6 +398,20 @@ internal class NpcBindingExpression : UntypedBindingExpression
             $"'{value}' ({value.GetType().Name}) to {TargetProperty.PropertyType.Name}, so the property shows its {shown}.");
     }
 
+    // An edit the source cannot take is dropped, so it is reported once per binding rather than going unseen.
+    private void ReportFailedSourceConversionOnce(object value, Type sourceType)
+    {
+        if (_hasReportedFailedSourceConversion)
+        {
+            return;
+        }
+        _hasReportedFailedSourceConversion = true;
+        string source = CurrentRoot is null ? Binding.Path : $"{CurrentRoot.GetType().Name}.{Binding.Path}";
+        GumRuntime.ElementSaveExtensions.ReportDiagnostic(
+            $"Binding for {TargetElement.GetType().Name}.{TargetProperty.Name} could not convert the value " +
+            $"'{value}' ({value.GetType().Name}) to {sourceType.Name} for {source}, so the view model was not changed.");
+    }
+
     public override void UpdateSource()
     {
         if (!ShouldUpdateSource)
@@ -489,13 +505,17 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
         if (!IsValidForType(value, sourceType))
         {
-            value = TryConvert(value, sourceType);
-        }
-
-        if (value == GumProperty.UnsetValue)
-        {
-            // conversion failed: don't update source if we don't know what to set
-            return;
+            object? converted = TryConvert(value, sourceType);
+            if (converted == GumProperty.UnsetValue)
+            {
+                // The source keeps its value; a null into a value type stays silent, as on the way to the target.
+                if (value is not null)
+                {
+                    ReportFailedSourceConversionOnce(value, sourceType);
+                }
+                return;
+            }
+            value = converted;
         }
 
         if (!SetSourceValue(value))
@@ -557,6 +577,16 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
         try
         {
+            // Integral Parse rejects group separators, so a number shown as "1,234" would never come back.
+            // Parsed as a decimal with the current culture's separators instead; a fraction is refused.
+            if (source is string text && IsIntegral(targetType))
+            {
+                return decimal.TryParse(text, NumberStyles.Number, CultureInfo.CurrentCulture, out decimal number) &&
+                       decimal.Truncate(number) == number
+                    ? System.Convert.ChangeType(number, targetType, CultureInfo.InvariantCulture)
+                    : GumProperty.UnsetValue;
+            }
+
             return System.Convert.ChangeType(source, targetType);
         }
         catch
@@ -564,4 +594,8 @@ internal class NpcBindingExpression : UntypedBindingExpression
             return GumProperty.UnsetValue;
         }
     }
+
+    static bool IsIntegral(Type type) => Type.GetTypeCode(type) is
+        TypeCode.Byte or TypeCode.SByte or TypeCode.Int16 or TypeCode.UInt16 or
+        TypeCode.Int32 or TypeCode.UInt32 or TypeCode.Int64 or TypeCode.UInt64;
 }

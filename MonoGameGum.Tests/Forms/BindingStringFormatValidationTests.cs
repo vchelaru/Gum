@@ -63,21 +63,13 @@ public class BindingStringFormatValidationTests : BaseTestClass
     }
 
     [Fact]
-    public void VisualSetBinding_CompositeFormatPassedAsSpecifier_FailsAtSetBindingOrFormats()
+    public void VisualSetBinding_CompositeFormatPassedAsSpecifier_ThrowsArgumentException()
     {
         // The Forms overload takes "{0:N0}"; a user moving a binding to a visual passes the same string.
         TextRuntime text = new();
-        try
-        {
-            text.SetBinding(nameof(TextRuntime.Text), nameof(GoldViewModel.Gold), "{0:N0}");
-        }
-        catch (Exception)
-        {
-            return;
-        }
 
-        Should.NotThrow(() => text.BindingContext = new GoldViewModel { Gold = 1234 });
-        text.Text.ShouldBe("1,234");
+        Should.Throw<ArgumentException>(() =>
+            text.SetBinding(nameof(TextRuntime.Text), nameof(GoldViewModel.Gold), "{0:N0}"));
     }
 
     [Fact]
