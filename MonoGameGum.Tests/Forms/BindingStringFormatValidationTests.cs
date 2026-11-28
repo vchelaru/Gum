@@ -98,4 +98,13 @@ public class BindingStringFormatValidationTests : BaseTestClass
 
         Should.NotThrow(() => text.BindingContext = new GoldViewModel { Gold = 1234 });
     }
+
+    [Fact]
+    public void SpecifierTheValueTypeRejects_ContextAssigned_DoesNotThrowFromContextSetter()
+    {
+        Label label = new();
+        label.SetBinding(nameof(Label.Text), new Binding(nameof(GoldViewModel.Gold)) { StringFormat = "{0:Q}" });
+
+        Should.NotThrow(() => label.BindingContext = new GoldViewModel { Gold = 5 });
+    }
 }
