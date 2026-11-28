@@ -40,6 +40,28 @@ public class V3DefaultTextFontTests : BaseTestClass
         }
     }
 
+    // The rest of the template ladder (#8509), scaled by 18/14 around Normal so it stays ordered.
+    [Fact]
+    public void V3TextLadder_ScalesTheTemplateLadderAroundNormal()
+    {
+        global::Gum.Forms.DefaultVisuals.V3.Text text = new();
+
+        AssertFont(text.Tiny, fontSize: 13, isBold: false);
+        AssertFont(text.Small, fontSize: 15, isBold: false);
+        AssertFont(text.H3, fontSize: 21, isBold: true);
+        AssertFont(text.H2, fontSize: 23, isBold: true);
+        AssertFont(text.H1, fontSize: 28, isBold: true);
+        AssertFont(text.Title, fontSize: 36, isBold: true);
+
+        static void AssertFont(StateSave state, int fontSize, bool isBold)
+        {
+            state.GetValue("Font").ShouldBe("Liberation Sans");
+            state.GetValue("FontSize").ShouldBe(fontSize);
+            state.GetValue("IsBold").ShouldBe(isBold);
+            state.GetValue("IsItalic").ShouldBe(false);
+        }
+    }
+
     [Theory]
     [InlineData("Liberation Sans", false, false, "Font18Arial.fnt")]
     [InlineData("Liberation Sans", true, false, "Font18Arial_Bold.fnt")]
@@ -63,6 +85,32 @@ public class V3DefaultTextFontTests : BaseTestClass
             BitmapFont embedded = (BitmapFont)LoaderManager.Self.GetDisposable("EmbeddedResource.MonoGameGum.Content." + embeddedFile)!;
             text.BitmapFont.ShouldBeSameAs(embedded);
             reports.ShouldBeEmpty();
+        }
+        finally
+        {
+            global::Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
+        }
+    }
+
+    // The ladder rungs other than 18 (#8509) need a font creator, like any size the embedded atlas lacks. With none,
+    // the text keeps the embedded default font and the missing font is reported.
+    [Fact]
+    public void V3HeadingStyle_WithNoFontCreator_FallsBackToTheEmbeddedFontAndReports()
+    {
+        using V3Lease game = new();
+        StateSave h1 = V3Styling.ActiveStyle.Text.H1;
+        h1.GetValue("FontSize").ShouldBe(28);
+        List<string> reports = new();
+        void Handler(string message) => reports.Add(message);
+        global::Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError += Handler;
+        try
+        {
+            TextRuntime text = new TextRuntime();
+            text.ApplyState(h1);
+
+            BitmapFont embedded = (BitmapFont)LoaderManager.Self.GetDisposable("EmbeddedResource.MonoGameGum.Content.Font18Arial.fnt")!;
+            text.BitmapFont.ShouldBeSameAs(embedded);
+            reports.ShouldNotBeEmpty();
         }
         finally
         {

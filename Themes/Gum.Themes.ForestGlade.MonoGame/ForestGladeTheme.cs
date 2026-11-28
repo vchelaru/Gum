@@ -1,6 +1,5 @@
 using System.IO;
 using System.Reflection;
-using Gum.DataTypes.Variables;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
@@ -107,6 +106,8 @@ public static class ForestGladeTheme
         // Window title bar. Registered as the family's italic slot since
         // CSS applies font-style: italic alongside font-weight: 700.
         RegisterEmbeddedFont(BundledTitleFontFamily, "Fraunces-BoldItalic.ttf", style: "Italic");
+        // Also the bold italic slot, which Styling.Text.Title asks for (bold and italic, like the template).
+        RegisterEmbeddedFont(BundledTitleFontFamily, "Fraunces-BoldItalic.ttf", style: "BoldItalic");
 
         // Icon font registered under a distinct family name so visual code
         // addresses it explicitly via ForestGladeStyling.ActiveStyle.Text.IconFontFamily.
@@ -146,25 +147,8 @@ public static class ForestGladeTheme
         Styling styling = Styling.ActiveStyle;
         ForestGladeText text = ForestGladeStyling.ActiveStyle.Text;
 
-        styling.Text.Normal.Clear();
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "IsBold", Type = "bool", Value = false });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
-
-        styling.Text.Strong.Clear();
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "IsBold", Type = "bool", Value = true });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
+        ThemeTextStyles.ApplyLadder(styling.Text, text.FontFamily, text.FontSize,
+            headingFont: text.FontFamily, titleFont: text.TitleFontFamily, titleIsItalic: true);
 
         // Forest Glade tokens (see forest-glade.css :root for the source palette). We push
         // only the 4-token guardrail (TextPrimary, TextMuted, Primary, Accent) and the

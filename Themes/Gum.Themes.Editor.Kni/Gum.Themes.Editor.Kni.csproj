@@ -27,6 +27,7 @@
     <!-- Shared platform shim (lives outside the MonoGame project folder, so the glob above
          does not pick it up). -->
     <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeTextStyles.cs" Link="ThemeTextStyles.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- KernSmith is a runtime dependency (the theme generates fonts at runtime), so it must flow

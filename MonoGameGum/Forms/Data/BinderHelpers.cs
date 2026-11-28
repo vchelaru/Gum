@@ -55,18 +55,49 @@ internal static class BinderHelpers
     public static string? GetReadOnlySourceMessage(Type sourceType, string path, string modeName,
         string targetTypeName, string targetPropertyName)
     {
-        if (GetPathWritability(sourceType, path, out string leafName) != PathWritability.NoSetter)
+        if (GetPathWritability(sourceType, path, out Type leafOwner) != PathWritability.NoSetter)
         {
             return null;
         }
 
-        return $"{leafName} has no setter, so it cannot be the source of a {modeName} binding, " +
-            $"which writes {targetTypeName}.{targetPropertyName} to it. Give the property a setter.";
+        PathSegment[] segments = ParseSegments(path);
+        string leafName = $"{leafOwner.Name}.{FormatSegment(segments[^1])}";
+        string problem = $"so it cannot be the source of a {modeName} binding, " +
+            $"which writes {targetTypeName}.{targetPropertyName} to it.";
+        if (segments.Length == 1)
+        {
+            return $"{leafName} has no setter, {problem} Give the property a setter.";
+        }
+
+        // Past the root the leaf's owner is the declared type of the member holding it (often an interface or a
+        // base class), which the object held there may not match.
+        TryWalkToLeafOwner(sourceType, segments[..^1], out Type holderOwner, out _);
+        string holderName = $"{holderOwner.Name}.{FormatSegment(segments[^2])}";
+        return $"{leafName} has no setter ({leafOwner.Name} is the declared type of {holderName}), {problem} " +
+            $"Give {leafName} a setter, or declare {holderName} as a type whose {segments[^1].Name} has one.";
     }
+
+    private static string FormatSegment(PathSegment segment) =>
+        segment.Index is int index ? $"{segment.Name}[{index}]" : segment.Name;
 
     [RequiresUnreferencedCode("Calls " + nameof(GetPathWritability) + ".")]
     public static bool CanWritePath(Type targetType, string path) =>
         GetPathWritability(targetType, path, out _) == PathWritability.Writable;
+
+    // A property reflected from a derived type hides a private accessor its base class declares, so setters are
+    // looked up on the declaring type.
+    public static PropertyInfo AsDeclared(PropertyInfo property)
+    {
+        if (property.DeclaringType is not { } declaringType || declaringType == property.ReflectedType)
+        {
+            return property;
+        }
+
+        Type[] indexTypes = Array.ConvertAll(property.GetIndexParameters(), parameter => parameter.ParameterType);
+        return declaringType.GetProperty(property.Name,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly,
+            binder: null, property.PropertyType, indexTypes, modifiers: null) ?? property;
+    }
 
     private enum PathWritability
     {
@@ -78,20 +109,20 @@ internal static class BinderHelpers
     }
 
     // A setter of any visibility counts: the compiled setter and PropertyInfo.SetValue both reach a non-public
-    // one, as a visual's SetBinding already does. leafName is Owner.Member for messages.
+    // one, as a visual's SetBinding already does. leafOwner is the declared type the leaf is looked up on.
     [RequiresUnreferencedCode(
         "Walks the path on targetType by name (GetProperty/GetField). Those members may be removed " +
         "under PublishTrimmed if nothing else in the app references them.")]
-    private static PathWritability GetPathWritability(Type targetType, string path, out string leafName)
+    private static PathWritability GetPathWritability(Type targetType, string path, out Type leafOwner)
     {
-        leafName = string.Empty;
+        leafOwner = targetType;
         if (string.IsNullOrWhiteSpace(path))
         {
             return PathWritability.NotWritable;
         }
 
         PathSegment[] segments = ParseSegments(path);
-        if (!TryWalkToLeafOwner(targetType, segments, out Type currentType, out int failedIndex))
+        if (!TryWalkToLeafOwner(targetType, segments, out leafOwner, out int failedIndex))
         {
             // Past the root, a declared type that lacks the member may hold a derived object that has it;
             // BuildSetter resolves those segments on the runtime type at write time.
@@ -99,12 +130,12 @@ internal static class BinderHelpers
         }
 
         PathSegment leaf = segments[^1];
-        if (!TryGetMember(currentType, leaf.Name, out MemberInfo? leafMember, out Type memberType))
+        if (!TryGetMember(leafOwner, leaf.Name, out MemberInfo? leafMember, out Type memberType))
         {
             return segments.Length > 1 ? PathWritability.Writable : PathWritability.NotWritable;
         }
 
-        if (leaf.Index is int index)
+        if (leaf.Index.HasValue)
         {
             // The leaf is an indexed access like "Items[0]"; the collection's indexer must have a setter.
             PropertyInfo? indexer = FindIntIndexer(memberType);
@@ -112,14 +143,12 @@ internal static class BinderHelpers
             {
                 return PathWritability.NotWritable;
             }
-            leafName = $"{currentType.Name}.{leaf.Name}[{index}]";
-            return indexer.SetMethod is not null ? PathWritability.Writable : PathWritability.NoSetter;
+            return AsDeclared(indexer).SetMethod is not null ? PathWritability.Writable : PathWritability.NoSetter;
         }
 
-        leafName = $"{currentType.Name}.{leaf.Name}";
         return leafMember switch
         {
-            PropertyInfo propertyInfo => propertyInfo.SetMethod is not null
+            PropertyInfo propertyInfo => AsDeclared(propertyInfo).SetMethod is not null
                 ? PathWritability.Writable
                 : PathWritability.NoSetter,
             FieldInfo fieldInfo => !fieldInfo.IsInitOnly && !fieldInfo.IsLiteral
@@ -376,8 +405,8 @@ internal static class BinderHelpers
 
         switch (member)
         {
-            case PropertyInfo { SetMethod: not null } property:
-                property.SetValue(owner, value);
+            case PropertyInfo property when AsDeclared(property) is { SetMethod: not null } declared:
+                declared.SetValue(owner, value);
                 break;
             case FieldInfo { IsInitOnly: false, IsLiteral: false } field:
                 field.SetValue(owner, value);
@@ -522,6 +551,10 @@ internal static class BinderHelpers
         // now 'current' owns the final member
         string lastName = lastSegment.Name;
         MemberExpression memberExpr = Expression.PropertyOrField(current, lastName);
+        if (memberExpr.Member is PropertyInfo leafProperty)
+        {
+            memberExpr = Expression.Property(current, AsDeclared(leafProperty));
+        }
 
         // figure out the member's declared type
         Type memberType = memberExpr.Member switch
@@ -760,7 +793,7 @@ internal static class BinderHelpers
                 throw new InvalidOperationException(
                     $"Type '{collectionType.Name}' does not have an integer indexer.");
             }
-            MethodInfo setter = indexer.SetMethod
+            MethodInfo setter = AsDeclared(indexer).SetMethod
                 ?? throw new InvalidOperationException(
                     $"Indexer on type '{collectionType.Name}' does not have a setter.");
             return Expression.Call(collection, setter, indexExpr, value);

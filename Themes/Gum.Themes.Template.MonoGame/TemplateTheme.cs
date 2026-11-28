@@ -1,6 +1,5 @@
 using System.IO;
 using System.Reflection;
-using Gum.DataTypes.Variables;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
@@ -161,25 +160,8 @@ public static class TemplateTheme
         Styling styling = Styling.ActiveStyle;
         TemplateText text = TemplateStyling.ActiveStyle.Text;
 
-        styling.Text.Normal.Clear();
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "IsBold", Type = "bool", Value = false });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
-
-        styling.Text.Strong.Clear();
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "IsBold", Type = "bool", Value = true });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
+        ThemeTextStyles.ApplyLadder(styling.Text, text.FontFamily, text.FontSize,
+            headingFont: text.FontFamily, titleFont: text.FontFamily);
 
         // The four Styling.Colors slots that overlap with V3's vocabulary; they also color
         // the controls left at their stock V3 visual (e.g. Label). We push only the 4-token
