@@ -54,25 +54,51 @@ public class TextRelativeToChildrenSizeLimitTests : BaseTestClass
         width.ShouldBe(measuredWidth);
     }
 
-    // RenderTarget mode draws a texture that stops at 4096 pixels, so it is drawn at that size and the
-    // rest is cut off, rather than stretched over the full measured size.
+    // RenderTarget mode draws a texture that stops at 4096 pixels, so it is drawn at that size (times the
+    // font scale, and the line-height multiplier for height) and the rest is cut off, rather than stretched
+    // over the full measured size.
     [Theory]
-    [InlineData(300, 10)]
-    [InlineData(1, 600)]
-    public void RenderTargetMode_TextLargerThan4096_DrawsAt4096(int lineCount, int lettersPerLine)
+    [InlineData(1f, 1f, 4096f)]
+    [InlineData(0.5f, 1f, 2048f)]
+    [InlineData(2f, 1f, 8192f)]
+    [InlineData(1f, 0.5f, 2048f)]
+    [InlineData(1f, 1.5f, 6144f)]
+    public void RenderTargetMode_TextTallerThan4096_DrawsAtCappedHeight(float fontScale, float lineHeightMultiplier, float expectedHeight)
+    {
+        string manyLines = RepeatLines("mmmmmmmmmm", 300);
+
+        IRenderableIpso drawn = GetDrawnRectInRenderTargetMode(manyLines, fontScale, lineHeightMultiplier, out TextRuntime text);
+
+        text.AbsoluteHeight.ShouldBeGreaterThan(expectedHeight);
+        drawn.Height.ShouldBe(expectedHeight);
+    }
+
+    [Theory]
+    [InlineData(1f, 1f, 4096f)]
+    [InlineData(0.5f, 1f, 2048f)]
+    [InlineData(2f, 1f, 8192f)]
+    [InlineData(1f, 1.5f, 4096f)]
+    public void RenderTargetMode_TextWiderThan4096_DrawsAtCappedWidth(float fontScale, float lineHeightMultiplier, float expectedWidth)
+    {
+        string longLine = new string('m', 600);
+
+        IRenderableIpso drawn = GetDrawnRectInRenderTargetMode(longLine, fontScale, lineHeightMultiplier, out TextRuntime text);
+
+        text.AbsoluteWidth.ShouldBeGreaterThan(expectedWidth);
+        drawn.Width.ShouldBe(expectedWidth);
+    }
+
+    private static IRenderableIpso GetDrawnRectInRenderTargetMode(string value, float fontScale,
+        float lineHeightMultiplier, out TextRuntime text)
     {
         TextRenderingMode originalMode = Text.TextRenderingMode;
         Text.TextRenderingMode = TextRenderingMode.RenderTarget;
         try
         {
-            TextRuntime text = MakeRelative(RepeatLines(new string('m', lettersPerLine), lineCount));
-            Text renderable = (Text)text.RenderableComponent!;
-
-            IRenderableIpso drawn = renderable.UpdateIpsoForRenderingForTests();
-
-            System.Math.Max(text.AbsoluteWidth, text.AbsoluteHeight).ShouldBeGreaterThan(4096);
-            drawn.Width.ShouldBe(System.Math.Min(text.AbsoluteWidth, 4096));
-            drawn.Height.ShouldBe(System.Math.Min(text.AbsoluteHeight, 4096));
+            text = MakeRelative(value);
+            text.FontScale = fontScale;
+            text.LineHeightMultiplier = lineHeightMultiplier;
+            return ((Text)text.RenderableComponent!).UpdateIpsoForRenderingForTests();
         }
         finally
         {
