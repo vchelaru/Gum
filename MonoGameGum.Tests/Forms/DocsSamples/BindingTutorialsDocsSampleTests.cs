@@ -1,3 +1,5 @@
+// Sample code is copied from the docs as written, and the docs samples do not use nullable annotations.
+#nullable disable warnings
 using System.Collections.ObjectModel;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;

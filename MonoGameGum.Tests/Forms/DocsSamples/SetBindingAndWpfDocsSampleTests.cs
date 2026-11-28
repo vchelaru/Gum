@@ -1,3 +1,5 @@
+// Sample code is copied from the docs as written, and the docs samples do not use nullable annotations.
+#nullable disable warnings
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -100,6 +102,7 @@ public class SetBindingAndWpfDocsSampleTests : BaseTestClass
         textBox.Text.ShouldBe("Ada");
     }
 
+    [Fact]
     public void WpfPage_StringLambdaAndBindingObject_Work()
     {
         MyViewModel MyViewModel = new() { ButtonText = "Go", Name = "ada" };
