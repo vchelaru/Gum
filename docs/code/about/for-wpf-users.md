@@ -449,16 +449,20 @@ The `Binding` class supports the same modes you know from WPF:
 
 ### Binding Errors
 
-In WPF, binding errors appear in the Output window. Gum handles binding failures silently -- if a property name is mistyped in `SetBinding`, the binding simply has no effect. No exception is thrown and no diagnostic output is produced. Use `nameof()` expressions wherever possible to catch typos at compile time:
+In WPF, binding errors appear in the Output window. In Gum, a mistyped UI property makes `SetBinding` throw, naming the property and the control type. A mistyped ViewModel property does not throw: Gum writes one `[Gum]` warning for that binding, naming the missing property. Use `nameof()` expressions wherever possible to catch typos at compile time:
 
 ```csharp
 // Initialize
 // Prefer this (compile-time checked):
 myButton.SetBinding(nameof(Button.Text), nameof(MyViewModel.ButtonText));
 
-// Over this (silent failure if mistyped):
+// Over this ("Txt" throws, a mistyped "ButtonText" only warns):
 myButton.SetBinding("Txt", "ButtonText");
 ```
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
 
 ### No DependencyProperty Required
 

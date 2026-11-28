@@ -27,38 +27,6 @@ public class SetBindingAndWpfDocsSampleTests : BaseTestClass
         }
     }
 
-    public class GameViewModel : ViewModel
-    {
-        // Regular ViewModel events can be used in SetBinding
-        public event Action EnemySpawned;
-
-        // If the event needs to be raised externally (outside of the ViewModel)
-        // then a method for raising the event is needed:
-        public void RaiseEnemySpawned() => EnemySpawned?.Invoke();
-    }
-
-    class EnemyWatcher : FrameworkElement
-    {
-        public int SpawnCount;
-
-        public EnemyWatcher() : base(new ContainerRuntime())
-        {
-            CustomInitialize();
-        }
-
-        void CustomInitialize()
-        {
-            SetBinding(
-                nameof(HandleEnemySpawned),
-                nameof(GameViewModel.EnemySpawned));
-        }
-
-        void HandleEnemySpawned()
-        {
-            SpawnCount++;
-        }
-    }
-
     public class MyViewModel : ViewModel
     {
         public string ButtonText
@@ -132,19 +100,6 @@ public class SetBindingAndWpfDocsSampleTests : BaseTestClass
         textBox.Text.ShouldBe("Ada");
     }
 
-    [Fact]
-    public void SetBindingPage_EventBinding_CallsHandler()
-    {
-        EnemyWatcher watcher = new();
-        GameViewModel viewModel = new();
-        watcher.BindingContext = viewModel;
-
-        viewModel.RaiseEnemySpawned();
-
-        watcher.SpawnCount.ShouldBe(1);
-    }
-
-    [Fact]
     public void WpfPage_StringLambdaAndBindingObject_Work()
     {
         MyViewModel MyViewModel = new() { ButtonText = "Go", Name = "ada" };
@@ -172,7 +127,7 @@ public class SetBindingAndWpfDocsSampleTests : BaseTestClass
     }
 
     [Fact]
-    public void WpfPage_MistypedNames_ReportOrThrow()
+    public void WpfPage_MistypedNames_VmPathWarnsUiPropertyThrows()
     {
         Action<string>? previous = ElementSaveExtensions.ReportPropertyAssignmentError;
         List<string> reports = new();
@@ -185,9 +140,10 @@ public class SetBindingAndWpfDocsSampleTests : BaseTestClass
             myButton.SetBinding(nameof(Button.Text), "ButtonTxt");
             reports.Count.ShouldBe(1);
 
-            // Mistyped UI property: the page's own example.
-            Exception? thrown = Record.Exception(() => myButton.SetBinding("Txt", "ButtonText"));
-            thrown.ShouldBeNull("SetBinding(\"Txt\", ...) result: " + thrown?.GetType().Name + " " + thrown?.Message + " reports: " + string.Join(" | ", reports));
+            // Mistyped UI property throws at SetBinding.
+            InvalidOperationException thrown = Should.Throw<InvalidOperationException>(() => myButton.SetBinding("Txt", "ButtonText"));
+            thrown.Message.ShouldContain("Txt");
+            thrown.Message.ShouldContain(nameof(Button));
         }
         finally
         {

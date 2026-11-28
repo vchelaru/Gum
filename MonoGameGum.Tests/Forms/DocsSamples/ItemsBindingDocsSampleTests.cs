@@ -81,9 +81,7 @@ public class ItemsBindingDocsSampleTests : BaseTestClass
 
     public class WeaponDisplay : ListBoxItem
     {
-        TextRuntime subText;
-
-        public string SubTextText => subText.Text;
+        public TextRuntime SubText { get; }
         public string? MainText => coreText?.RawText;
 
         public WeaponDisplay() : base()
@@ -94,23 +92,19 @@ public class ItemsBindingDocsSampleTests : BaseTestClass
             text.Anchor(Gum.Wireframe.Anchor.TopLeft);
 
             // add a 2nd Text instance under the main text:
-            subText = new TextRuntime();
+            var subText = new TextRuntime();
             subText.Y = 22;
             subText.Color = new Color(220, 220, 200);
             subText.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
             this.AddChild(subText);
-        }
 
-        public override void UpdateToObject(object o)
-        {
-            var asWeaponViewModel = o as WeaponViewModel;
-
-            if(asWeaponViewModel != null)
-            {
-                coreText.RawText = asWeaponViewModel.WeaponName;
-                subText.Text = asWeaponViewModel.WeaponDetails;
-            }
+            // Each item's BindingContext is its WeaponViewModel.
+            // The main text shows WeaponName through DisplayMemberPath.
+            subText.SetBinding(
+                nameof(subText.Text),
+                nameof(WeaponViewModel.WeaponDetails));
+            SubText = subText;
         }
     }
 
@@ -199,6 +193,6 @@ public class ItemsBindingDocsSampleTests : BaseTestClass
         comboBox.IsDropDownOpen = true;
         var item = comboBox.ListBox.ListBoxItems.OfType<WeaponDisplay>().Single();
         item.MainText.ShouldBe("Sword");
-        item.SubTextText.ShouldBe("A sharp blade used for cutting.");
+        item.SubText.Text.ShouldBe("A sharp blade used for cutting.");
     }
 }
