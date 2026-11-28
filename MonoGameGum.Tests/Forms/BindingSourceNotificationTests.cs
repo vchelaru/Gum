@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Gum.Forms.Controls;
+using Gum.Forms.Data;
 using Gum.GueDeriving;
 using Shouldly;
 using Xunit;
@@ -7,8 +8,10 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
-/// How a binding reacts to a PropertyChanged raised with a null or empty property name, which means
-/// every property changed (the .NET and WPF convention), on Forms controls and on visuals.
+/// How a binding reacts to the change notifications its source raises: changes to an intermediate of a
+/// dotted path, unrelated property names, sources that raise no notifications at all, and a PropertyChanged
+/// raised with a null or empty property name, which means every property changed (the .NET and WPF
+/// convention), on Forms controls and on visuals.
 /// </summary>
 public class BindingSourceNotificationTests : BaseTestClass
 {
@@ -25,6 +28,124 @@ public class BindingSourceNotificationTests : BaseTestClass
         public void SetTextSilently(string? value) => _text = value;
         public void SetChildSilently(Node? value) => _child = value;
         public void Raise(string? propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private class PlainRoot
+    {
+        public Node? Child { get; set; }
+        public string? Text { get; set; }
+    }
+
+    [Fact]
+    public void NestedPath_IntermediateReplaced_OnlyTheNewIntermediateReachesTarget()
+    {
+        Node oldChild = new() { Text = "old" };
+        Node vm = new() { Child = oldChild };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), "Child.Text");
+
+        Node newChild = new() { Text = "new" };
+        vm.Child = newChild;
+        textBox.Text.ShouldBe("new");
+
+        oldChild.Text = "stale";
+        textBox.Text.ShouldBe("new");
+
+        newChild.Text = "new changed";
+        textBox.Text.ShouldBe("new changed");
+    }
+
+    [Fact]
+    public void NestedPath_IntermediateReplaced_TargetEditWritesTheNewIntermediate()
+    {
+        Node oldChild = new() { Text = "old" };
+        Node vm = new() { Child = oldChild };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), "Child.Text");
+
+        Node newChild = new() { Text = "new" };
+        vm.Child = newChild;
+        textBox.Text = "typed";
+
+        newChild.Text.ShouldBe("typed");
+        oldChild.Text.ShouldBe("old");
+    }
+
+    [Fact]
+    public void DeepPath_FirstIntermediateReplaced_OldBranchNoLongerReachesTarget()
+    {
+        Node oldGrandChild = new() { Text = "old" };
+        Node vm = new() { Child = new Node { Child = oldGrandChild } };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), "Child.Child.Text");
+
+        vm.Child = new Node { Child = new Node { Text = "new" } };
+        textBox.Text.ShouldBe("new");
+
+        oldGrandChild.Text = "stale";
+        textBox.Text.ShouldBe("new");
+    }
+
+    [Fact]
+    public void NestedPath_IntermediateNullThenBack_ShowsFallbackThenNewValueAndTakesEdits()
+    {
+        Node vm = new() { Child = new Node { Text = "first" } };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), new Binding("Child.Text") { FallbackValue = "none" });
+
+        vm.Child = null;
+        textBox.Text.ShouldBe("none");
+
+        Node back = new() { Text = "back" };
+        vm.Child = back;
+        textBox.Text.ShouldBe("back");
+
+        textBox.Text = "typed";
+        back.Text.ShouldBe("typed");
+
+        back.Text = "changed";
+        textBox.Text.ShouldBe("changed");
+    }
+
+    [Fact]
+    public void NestedPath_NonNotifyingRoot_IntermediateReplaced_OldIntermediateNoLongerReachesTarget()
+    {
+        Node oldGrandChild = new() { Text = "old" };
+        PlainRoot root = new() { Child = new Node { Child = oldGrandChild } };
+        TextBox textBox = new() { BindingContext = root };
+        textBox.SetBinding(nameof(TextBox.Text), "Child.Child.Text");
+
+        root.Child.Child = new Node { Text = "new" };
+        textBox.Text.ShouldBe("new");
+
+        oldGrandChild.Text = "stale";
+        textBox.Text.ShouldBe("new");
+    }
+
+    [Fact]
+    public void NonNotifyingSource_ShowsInitialValueAndTakesEdits()
+    {
+        PlainRoot root = new() { Text = "initial" };
+        TextBox textBox = new() { BindingContext = root };
+        textBox.SetBinding(nameof(TextBox.Text), nameof(PlainRoot.Text));
+
+        textBox.Text.ShouldBe("initial");
+
+        textBox.Text = "typed";
+        root.Text.ShouldBe("typed");
+    }
+
+    [Fact]
+    public void PropertyChanged_UnrelatedName_LeavesTargetAlone()
+    {
+        Node vm = new() { Text = "before" };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), nameof(Node.Text));
+
+        vm.SetTextSilently("after");
+        vm.Raise(nameof(Node.Child));
+
+        textBox.Text.ShouldBe("before");
     }
 
     [Theory]
