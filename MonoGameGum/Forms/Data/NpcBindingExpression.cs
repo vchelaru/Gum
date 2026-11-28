@@ -37,6 +37,15 @@ internal class NpcBindingExpression : UntypedBindingExpression
             ?? throw new InvalidOperationException(
                 $"Property '{targetPropertyName}' not found on {target.GetType().Name}");
 
+        // OneWay and TwoWay write the source value to the target, so refuse a target that cannot take it here
+        // rather than when a BindingContext arrives. SetValue reaches a non-public setter, so any setter will do.
+        if (binding.Mode is not BindingMode.OneWayToSource &&
+            TargetProperty.SetMethod == null)
+        {
+            throw new InvalidOperationException(BinderHelpers.GetReadOnlyTargetMessage(
+                target.GetType().Name, targetPropertyName, binding.Mode.ToString()));
+        }
+
         DefaultTargetValue = TargetProperty.PropertyType.IsValueType
             ? Activator.CreateInstance(TargetProperty.PropertyType)
             : null;
