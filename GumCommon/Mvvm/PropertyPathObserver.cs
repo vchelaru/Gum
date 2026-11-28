@@ -165,28 +165,28 @@ public class PropertyPathObserver : IDisposable
 
     // Detaches listeners on objects reached through segment `level`, matched by the level each listener
     // records. List positions are not levels: a level whose object is not INotifyPropertyChanged adds no
-    // listener.
+    // listener. Plain loops, not RemoveAll with a capturing lambda, because this runs on every
+    // PropertyChanged of a bound leaf and must not allocate.
     private void DetachDeeperThan(int level, bool keepCollectionAtLevel)
     {
-        _listeners.RemoveAll(listener =>
+        for (int i = _listeners.Count - 1; i >= 0; i--)
         {
-            bool remove = listener.Level > level;
-            if (remove)
+            if (_listeners[i].Level > level)
             {
-                listener.Detach();
+                _listeners[i].Detach();
+                _listeners.RemoveAt(i);
             }
-            return remove;
-        });
+        }
 
-        _collectionListeners.RemoveAll(listener =>
+        int firstCollectionLevelToDetach = keepCollectionAtLevel ? level + 1 : level;
+        for (int i = _collectionListeners.Count - 1; i >= 0; i--)
         {
-            bool remove = keepCollectionAtLevel ? listener.Level > level : listener.Level >= level;
-            if (remove)
+            if (_collectionListeners[i].Level >= firstCollectionLevelToDetach)
             {
-                listener.Detach();
+                _collectionListeners[i].Detach();
+                _collectionListeners.RemoveAt(i);
             }
-            return remove;
-        });
+        }
     }
 
     // Walks from segment `start` to the leaf beginning on `owner` (the object holding segment `start`),
