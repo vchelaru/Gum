@@ -65,7 +65,7 @@ isBrokeLabel.SetBinding(
 If this code were in a Screen defined in Gum with code generation, the code might look like the following block:
 
 ```csharp
-void CustomInitialize()
+partial void CustomInitialize()
 {
     var viewModel = new PlayerViewModel();
     // Can be added to the entire screen:

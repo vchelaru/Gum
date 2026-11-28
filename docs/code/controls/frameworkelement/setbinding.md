@@ -4,7 +4,7 @@
 
 SetBinding establishes a relationship between a property on the binding context and a property on the calling FrameworkElement. SetBinding is used to keep two properties synced, usually resulting changes on one of the properties automatically updating the other property.
 
-SetBinding requires the bound FrameworkElement having a valid BindingContext - which can be either directly set or indirectly inherited from its parent.
+The binding reads from the FrameworkElement's BindingContext, which can be set directly or inherited from its parent, before or after calling SetBinding.
 
 The following are common SetBinding Examples:
 
