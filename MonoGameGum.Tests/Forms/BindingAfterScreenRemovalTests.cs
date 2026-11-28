@@ -380,10 +380,49 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         goldLabel.BindingContext.ShouldBe(viewModel);
         goldLabel.Text.ShouldBe("12");
 
+        // Leaving a parent inside the root leaves the root tree, so the label pauses like a removed screen.
         goldLabel.Visual.Parent = null;
         viewModel.Gold = 13;
         goldLabel.BindingContext.ShouldBe(viewModel);
-        goldLabel.Text.ShouldBe("13");
+        goldLabel.Text.ShouldBe("12");
+    }
+
+    [Fact]
+    public void MoveFromRootIntoPanelInRoot_KeepsFollowingViewModel()
+    {
+        GameViewModel viewModel = new() { Gold = 1 };
+        (StackPanel screen, Label goldLabel, _) = CreateScreen();
+        StackPanel panel = new();
+        StackPanel panelHolder = new();
+        panelHolder.AddChild(panel);
+        panelHolder.AddToRoot();
+        screen.AddToRoot();
+        screen.BindingContext = viewModel;
+
+        panel.AddChild(screen);
+        viewModel.Gold = 2;
+
+        goldLabel.Text.ShouldBe("2");
+    }
+
+    [Fact]
+    public void PausedScreenInDetachedPanel_PanelAddedToRoot_Resumes()
+    {
+        GameViewModel viewModel = new() { Gold = 1 };
+        (StackPanel screen, Label goldLabel, _) = CreateScreen();
+        StackPanel detachedPanel = new();
+        screen.AddToRoot();
+        screen.BindingContext = viewModel;
+        screen.RemoveFromRoot();
+        detachedPanel.AddChild(screen);
+        viewModel.Gold = 2;
+        goldLabel.Text.ShouldBe("1");
+
+        detachedPanel.AddToRoot();
+
+        goldLabel.Text.ShouldBe("2");
+        viewModel.Gold = 3;
+        goldLabel.Text.ShouldBe("3");
     }
 
     [Fact]

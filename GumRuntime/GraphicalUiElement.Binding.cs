@@ -101,26 +101,27 @@ public partial class GraphicalUiElement : IBindingTarget
             "BindingContext/SetBinding was actually called by the app.")]
     private void HandleBindingParentChanged(object? sender, ParentChangedEventArgs args)
     {
+        GraphicalUiElement? oldParent = args.OldValue as GraphicalUiElement;
         GraphicalUiElement? newParent = args.NewValue as GraphicalUiElement;
-        bool isOwnPaused = _isLeftRoot;
+        if (oldParent is not null)
+        {
+            oldParent.BindingContextChanged -= ParentBindingContextChanged;
+        }
 
-        if (args.OldValue is GraphicalUiElement old)
-        {
-            old.BindingContextChanged -= ParentBindingContextChanged;
-            isOwnPaused |= old.PausesBindingsOfRemovedChildren;
-        }
-        if (newParent?.PausesBindingsOfRemovedChildren == true)
-        {
-            isOwnPaused = false;
-        }
+        bool wasUnderRoot = IsUnderPausingRoot(oldParent);
+        bool isUnderRoot = IsUnderPausingRoot(newParent);
+        // Entering the root tree from outside it resumes everything below, including descendants that left
+        // the root on their own before being added to this subtree.
+        bool clearsLeftRoot = isUnderRoot && !wasUnderRoot;
+        bool isLeftRoot = !isUnderRoot && (_isLeftRoot || wasUnderRoot);
 
         // Paused before the new parent's context arrives, so a removed subtree never attaches to it; resumed
         // after, so a re-added one attaches once to the context it ends up with.
         bool isAncestorPaused = newParent?.AreBindingsPaused == true;
-        bool isPausing = !AreBindingsPaused && (isOwnPaused || isAncestorPaused);
+        bool isPausing = !AreBindingsPaused && (isLeftRoot || isAncestorPaused);
         if (isPausing)
         {
-            SetBindingsPaused(isOwnPaused, isAncestorPaused);
+            SetBindingsPaused(isLeftRoot, isAncestorPaused, clearsLeftRoot: false);
         }
 
         if (newParent is not null)
@@ -132,13 +133,25 @@ public partial class GraphicalUiElement : IBindingTarget
 
         if (!isPausing)
         {
-            SetBindingsPaused(isOwnPaused, isAncestorPaused);
+            SetBindingsPaused(isLeftRoot, isAncestorPaused, clearsLeftRoot);
         }
     }
 
-    // Set on an element that left the root (a parent with PausesBindingsOfRemovedChildren) until it
-    // rejoins one; _isAncestorBindingPaused is set on its descendants. Either keeps the element's bindings off
-    // their source while its BindingContext stays as it was.
+    private static bool IsUnderPausingRoot(GraphicalUiElement? element)
+    {
+        for (GraphicalUiElement? current = element; current != null; current = current.Parent as GraphicalUiElement)
+        {
+            if (current.PausesBindingsOfRemovedChildren)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Set on an element that left the tree under a root with PausesBindingsOfRemovedChildren, until it is
+    // anywhere under one again; _isAncestorBindingPaused is set on its descendants. Either keeps the element's
+    // bindings off their source while its BindingContext stays as it was.
     bool _isLeftRoot;
     bool _isAncestorBindingPaused;
 
@@ -149,28 +162,31 @@ public partial class GraphicalUiElement : IBindingTarget
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "Resuming re-resolves bindings the app already set up; their trim risk was surfaced at " +
             "SetBinding or BindingContext.")]
-    private void SetBindingsPaused(bool isLeftRoot, bool isAncestorPaused)
+    private void SetBindingsPaused(bool isLeftRoot, bool isAncestorPaused, bool clearsLeftRoot)
     {
         bool wasPaused = AreBindingsPaused;
         _isLeftRoot = isLeftRoot;
         _isAncestorBindingPaused = isAncestorPaused;
         bool isPaused = AreBindingsPaused;
 
-        if (wasPaused == isPaused)
+        if (wasPaused == isPaused && !clearsLeftRoot)
         {
             return;
         }
 
         // Top down, so a descendant with a bound BindingContext resumes after its parent's context is current.
-        _propertyRegistry?.SetPaused(isPaused);
-        if (this is InteractiveGue { FormsControlAsObject: Gum.Forms.Controls.FrameworkElement control })
+        if (wasPaused != isPaused)
         {
-            control.PropertyRegistry.SetPaused(isPaused);
+            _propertyRegistry?.SetPaused(isPaused);
+            if (this is InteractiveGue { FormsControlAsObject: Gum.Forms.Controls.FrameworkElement control })
+            {
+                control.PropertyRegistry.SetPaused(isPaused);
+            }
         }
 
         foreach (GraphicalUiElement child in GetAllBindableChildren())
         {
-            child.SetBindingsPaused(child._isLeftRoot, isPaused);
+            child.SetBindingsPaused(clearsLeftRoot ? false : child._isLeftRoot, isPaused, clearsLeftRoot);
         }
     }
 
@@ -251,9 +267,9 @@ public partial class GraphicalUiElement : IBindingTarget
     /// <summary>
     /// The object this element's bindings read from and write to. Children inherit it unless they
     /// are given their own. Leaving the root, by any path (<see cref="RemoveFromRoot"/>, removing
-    /// from or clearing the root's <see cref="Children"/>, or assigning another
-    /// <see cref="Parent"/>), keeps it but pauses this element's bindings and its children's until the
-    /// element rejoins the root, which shows the view model's current values. While
+    /// from or clearing the root's <see cref="Children"/>, or assigning a <see cref="Parent"/> outside
+    /// it), keeps it but pauses this element's bindings and its children's until the element is under
+    /// the root again, which shows the view model's current values. While
     /// BindingContext is bound with SetBinding, it is the value the binding resolves, null included, and
     /// the parent's context shows through again once the binding is cleared.
     /// </summary>
