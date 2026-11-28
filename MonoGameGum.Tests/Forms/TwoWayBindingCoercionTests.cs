@@ -63,6 +63,20 @@ public class TwoWayBindingCoercionTests : BaseTestClass
     }
 
     [Fact]
+    public void ViewModelClampsToValueItAlreadyHolds_ControlShowsTheHeldValue()
+    {
+        CoercingViewModel vm = new() { Clamped = 10 };
+        Slider slider = new() { Minimum = 0, Maximum = 100, BindingContext = vm };
+        slider.SetBinding(nameof(Slider.Value), nameof(CoercingViewModel.Clamped));
+        slider.Value.ShouldBe(10);
+
+        slider.Value = 50;
+
+        vm.Clamped.ShouldBe(10);
+        slider.Value.ShouldBe(10, "because a two-way binding shows what the view model kept, as WPF re-reads the source after writing it");
+    }
+
+    [Fact]
     public void ViewModelSetterRaisesOtherProperty_OtherBindingUpdates()
     {
         CoercingViewModel vm = new() { Name = "a" };
