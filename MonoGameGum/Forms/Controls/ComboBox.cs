@@ -512,7 +512,12 @@ public class ComboBox :
     /// <summary>
     /// The next control to receive focus when the user presses the tab key.
     /// </summary>
+#if FRB
+    // FRB's IInputReceiver declares this non-nullable.
+    public IInputReceiver NextInTabSequence { get; set; } = null!;
+#else
     public IInputReceiver? NextInTabSequence { get; set; }
+#endif
 
     // These values are the list box values before the list box has been expanded.
     // The reason we need these is because the list box may have values (like Width)

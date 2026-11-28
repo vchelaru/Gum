@@ -91,7 +91,12 @@ public class Slider : ThumbRangeBase, IInputReceiver
     /// <summary>
     /// The next control to receive focus when the user presses the tab key.
     /// </summary>
+#if FRB
+    // FRB's IInputReceiver declares this non-nullable.
+    public IInputReceiver NextInTabSequence { get; set; } = null!;
+#else
     public IInputReceiver? NextInTabSequence { get; set; }
+#endif
 
     double ValueOnThumbOrTrackPush;
 

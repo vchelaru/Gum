@@ -502,6 +502,8 @@ public class ListBox : ItemsControl, IInputReceiver
         }
     }
 
+    // Under FRB, ScrollViewer declares these members and ListBox inherits them.
+#if !FRB
     /// <summary>
     /// A list of keys that should be ignored by this control. Empty by default.
     /// </summary>
@@ -517,6 +519,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// The next control to receive focus when the user presses the tab key.
     /// </summary>
     public IInputReceiver? NextInTabSequence { get; set; }
+#endif
 
     /// <summary>
     /// Whether the primary input button (usually the A button) results in the highlighted list box item
