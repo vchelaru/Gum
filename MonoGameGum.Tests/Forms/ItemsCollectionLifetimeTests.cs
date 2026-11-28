@@ -169,6 +169,50 @@ public class ItemsCollectionLifetimeTests : BaseTestClass
         listBox.ListBoxItems.Count.ShouldBe(2);
     }
 
+    [Fact]
+    public void BoundListBox_ReparentedThroughChildrenRemoveAndAdd_LosesUnboundSelectionAndScroll()
+    {
+        (ListBox listBox, StackPanel _, StackPanel b) = CreateScrolledBoundListBoxInPanel(selectedIndex: 2, scrollValue: 100);
+
+        listBox.Visual.Parent!.Children.Remove(listBox.Visual);
+        b.Visual.Children.Add(listBox.Visual);
+
+        listBox.ListBoxItems.Count.ShouldBe(20, "because the new parent's context binds Items again");
+        listBox.SelectedIndex.ShouldBe(-1, "because Items was released while the context was null");
+        listBox.VerticalScrollBarValue.ShouldBe(0);
+    }
+
+    [Fact]
+    public void BoundListBox_ReparentedByAssigningParent_KeepsSelectionAndScroll()
+    {
+        (ListBox listBox, StackPanel _, StackPanel b) = CreateScrolledBoundListBoxInPanel(selectedIndex: 2, scrollValue: 100);
+
+        listBox.Visual.Parent = b.Visual;
+
+        listBox.SelectedIndex.ShouldBe(2);
+        listBox.VerticalScrollBarValue.ShouldBe(100);
+    }
+
+    // Two panels sharing one view model; the ListBox starts in the first and inherits its context.
+    private static (ListBox, StackPanel, StackPanel) CreateScrolledBoundListBoxInPanel(int selectedIndex, double scrollValue)
+    {
+        ListViewModel vm = new() { Items = new() };
+        for (int i = 0; i < 20; i++)
+        {
+            vm.Items.Add(new ItemViewModel { Name = "item " + i });
+        }
+        StackPanel a = new() { BindingContext = vm };
+        StackPanel b = new() { BindingContext = vm };
+        ListBox listBox = new() { Height = 100 };
+        listBox.SetBinding(nameof(ListBox.Items), nameof(ListViewModel.Items));
+        a.AddChild(listBox);
+        listBox.SelectedIndex = selectedIndex;
+        listBox.VerticalScrollBarValue = scrollValue;
+        listBox.SelectedIndex.ShouldBe(selectedIndex);
+        listBox.VerticalScrollBarValue.ShouldBe(scrollValue);
+        return (listBox, a, b);
+    }
+
     private static IList GetItems(FrameworkElement control) => control switch
     {
         ComboBox comboBox => comboBox.Items,
