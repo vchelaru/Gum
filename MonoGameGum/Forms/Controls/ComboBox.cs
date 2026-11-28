@@ -355,16 +355,18 @@ public class ComboBox :
     // A bound SelectedIndex that arrived before the items it points at (see ListBox.SetSelectedIndex).
     int _deferredSelectedIndex = -1;
 
+    // Weak, so a long-lived collection (such as a view model's) never keeps this control alive.
+    WeakCollectionChangedListener<ComboBox>? _pendingItemsListener;
+
     private void SetPendingItems(IList? items)
     {
-        if (_pendingItems is System.Collections.Specialized.INotifyCollectionChanged oldItems)
-        {
-            oldItems.CollectionChanged -= HandlePendingItemsChanged;
-        }
+        _pendingItemsListener?.Dispose();
+        _pendingItemsListener = null;
         _pendingItems = items;
         if (_pendingItems is System.Collections.Specialized.INotifyCollectionChanged newItems)
         {
-            newItems.CollectionChanged += HandlePendingItemsChanged;
+            _pendingItemsListener = new(newItems, this,
+                static (owner, sender, e) => owner.HandlePendingItemsChanged(sender, e));
         }
     }
 
@@ -1310,6 +1312,11 @@ public class ComboBox :
 
     internal override void OnBindingContextRelayed()
     {
+        // Same release as ItemsControl: a bound Items that lost its context stops following it.
+        if (BindingContext is null && IsDataBound(nameof(Items)))
+        {
+            Items = null;
+        }
         if (ApplySelectionBindingsAfterRebind())
         {
             // The new view model may hold either value from before, so push both unconditionally.
