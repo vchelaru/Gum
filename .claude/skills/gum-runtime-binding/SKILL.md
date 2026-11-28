@@ -131,6 +131,8 @@ All binding features work with indexed paths: modes, converters, StringFormat, F
 
 **BindableGue is deprecated.** `GraphicalUiElement` now owns all binding logic. `BindableGue` exists only as a legacy alias.
 
+**A null or empty `PropertyChanged` name means every property changed.** `PropertyPathObserver` re-reads the path from the level that raised it, and the GUE root handler refreshes every flat binding and every descendant's `BindingContext` binding. Tests: `BindingSourceNotificationTests`.
+
 **Weak listeners in PropertyPathObserver.** Forms binding uses weak references to avoid memory leaks on deep paths. GUE binding does not — callers should unsubscribe when disposing.
 
 **Forms `StringFormat` is a composite format and must contain `{0}`.** `SetBinding` throws on one without it (`BinderHelpers.GetMissingPlaceholderMessage`), which is what a C# `$"..."` interpolated format leaves behind. The visual overload's format is a numeric specifier (`"N0"`) and is not checked.
