@@ -361,4 +361,138 @@ public class StructMemberPathWriteBackTests : BaseTestClass
 
         exception.Message.ShouldContain("Fixed");
     }
+
+    private class CollectionsViewModel : ViewModel
+    {
+        public Position[] PositionArray { get; } = new Position[2];
+
+        public System.Collections.ObjectModel.ObservableCollection<Position> ObservablePositions { get; } = new();
+
+        public List<Outer> Outers { get; } = new();
+    }
+
+    [Fact]
+    public void TwoWayEdit_WritesBackToStructHeldInArray()
+    {
+        CollectionsViewModel vm = new();
+        vm.PositionArray[1] = new Position { X = 3, Y = 4 };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), "PositionArray[1].X");
+        textBox.Text.ShouldBe("3");
+
+        textBox.Text = "7";
+
+        vm.PositionArray[1].X.ShouldBe(7);
+        vm.PositionArray[1].Y.ShouldBe(4);
+        _reports.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void TwoWayEdit_WritesBackToStructHeldInObservableCollection_TargetKeepsEdit()
+    {
+        CollectionsViewModel vm = new();
+        vm.ObservablePositions.Add(new Position { X = 3, Y = 4 });
+        int collectionChanges = 0;
+        vm.ObservablePositions.CollectionChanged += (_, _) => collectionChanges++;
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), "ObservablePositions[0].X");
+
+        textBox.Text = "7";
+
+        vm.ObservablePositions[0].X.ShouldBe(7);
+        vm.ObservablePositions[0].Y.ShouldBe(4);
+        collectionChanges.ShouldBe(1);
+        textBox.Text.ShouldBe("7");
+        _reports.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void TwoWayEdit_WritesBackThroughStructInStructHeldInList()
+    {
+        CollectionsViewModel vm = new();
+        vm.Outers.Add(new Outer { Inner = new Inner { X = 3, Y = 4 } });
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), "Outers[0].Inner.X");
+
+        textBox.Text = "7";
+
+        vm.Outers[0].Inner.X.ShouldBe(7);
+        vm.Outers[0].Inner.Y.ShouldBe(4);
+        _reports.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void TwoWayEdits_ToTwoMembersOfOneStruct_KeepBoth()
+    {
+        PlayerViewModel vm = new() { Position = new Position { X = 1, Y = 2 } };
+        TextBox xBox = new() { BindingContext = vm };
+        xBox.SetBinding(nameof(TextBox.Text), "Position.X");
+        TextBox yBox = new() { BindingContext = vm };
+        yBox.SetBinding(nameof(TextBox.Text), "Position.Y");
+
+        xBox.Text = "7";
+        yBox.Text = "8";
+
+        vm.Position.X.ShouldBe(7);
+        vm.Position.Y.ShouldBe(8);
+        xBox.Text.ShouldBe("7");
+        yBox.Text.ShouldBe("8");
+    }
+
+    [Fact]
+    public void TwoWayEdit_NullableStructHolderIsNull_LeavesItNullWithoutThrowing()
+    {
+        WorldViewModel vm = new() { NullablePosition = null };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), "NullablePosition.X");
+
+        Should.NotThrow(() => textBox.Text = "7");
+
+        vm.NullablePosition.ShouldBeNull();
+    }
+
+    private class PositionRuntime : Gum.GueDeriving.ContainerRuntime
+    {
+        private float _offset;
+
+        public float Offset
+        {
+            get => _offset;
+            set
+            {
+                _offset = value;
+                PushValueToViewModel();
+            }
+        }
+    }
+
+    [Fact]
+    public void VisualPush_WritesStructBack_ThroughPropertySetter()
+    {
+        PlayerViewModel vm = new() { Position = new Position { X = 3, Y = 4 } };
+        PositionRuntime visual = new() { BindingContext = vm };
+        visual.SetBinding(nameof(PositionRuntime.Offset), "Position.X");
+        visual.Offset.ShouldBe(3);
+
+        visual.Offset = 7;
+
+        vm.Position.X.ShouldBe(7);
+        vm.Position.Y.ShouldBe(4);
+        _reports.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void VisualPush_ToStructBehindGetOnlyProperty_IsReportedOnce()
+    {
+        WorldViewModel vm = new();
+        PositionRuntime visual = new() { BindingContext = vm };
+        visual.SetBinding(nameof(PositionRuntime.Offset), "Fixed.X");
+
+        visual.Offset = 7;
+        visual.Offset = 8;
+
+        vm.Fixed.X.ShouldBe(0);
+        _reports.Count.ShouldBe(1);
+        _reports[0].ShouldContain("Fixed");
+    }
 }
