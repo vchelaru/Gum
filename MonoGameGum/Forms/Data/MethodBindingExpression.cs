@@ -38,13 +38,29 @@ internal class MethodBindingExpression : BindingExpressionBase
     }
 
     [RequiresUnreferencedCode("Calls " + nameof(AttachToSource) + ".")]
-    public void Start() => AttachToSource(_target.BindingContext);
+    public void Start()
+    {
+        if (!_target.AreBindingsPaused)
+        {
+            AttachToSource(_target.BindingContext);
+        }
+    }
+
+    public override void Pause() => DetachFromSource();
+
+    [RequiresUnreferencedCode("Calls " + nameof(AttachToSource) + ".")]
+    public override void Resume() => Start();
 
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "Automatic relay when an already-bound target's BindingContext changes. The trim risk " +
             "is already surfaced wherever SetBinding was actually called to create this binding.")]
-    private void OnTargetBindingContextChanged(object? sender, BindingContextChangedEventArgs e) =>
-        AttachToSource(e.NewBindingContext);
+    private void OnTargetBindingContextChanged(object? sender, BindingContextChangedEventArgs e)
+    {
+        if (!_target.AreBindingsPaused)
+        {
+            AttachToSource(e.NewBindingContext);
+        }
+    }
 
     [RequiresUnreferencedCode(
         "Looks up the event on the source's own type by name (GetEvent) and the method on the target's type. " +

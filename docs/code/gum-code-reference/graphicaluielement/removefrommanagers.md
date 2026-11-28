@@ -4,8 +4,6 @@
 
 RemoveFromManagers removes the calling GraphicalUiElement from the SystemManagers. It is the older counterpart to AddToManagers and is typically not called. Use `RemoveFromRoot()` instead, or clear the root.
 
-RemoveFromManagers sets the element's own `BindingContext` to null. Children given their own `BindingContext` keep it.
-
 ## Code Example
 
 The following code shows how to add and remove a GraphicalUiElement.

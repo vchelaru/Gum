@@ -118,8 +118,13 @@ internal class NpcBindingExpression : UntypedBindingExpression
         Justification = "Automatic relay when an inherited BindingContext changes further up the visual " +
             "tree. The trim risk is already surfaced wherever SetBinding was actually called to create " +
             "this binding.")]
-    private void OnInheritedBindingContextChanged(object? sender, BindingContextChangedEventArgs e) =>
-        AttachToSource(e.NewBindingContext);
+    private void OnInheritedBindingContextChanged(object? sender, BindingContextChangedEventArgs e)
+    {
+        if (!TargetElement.AreBindingsPaused)
+        {
+            AttachToSource(e.NewBindingContext);
+        }
+    }
 
     private void HookUpdateSource(UpdateSourceTrigger trigger)
     {

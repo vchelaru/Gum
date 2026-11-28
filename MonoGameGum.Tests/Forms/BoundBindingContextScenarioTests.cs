@@ -318,19 +318,32 @@ public class BoundBindingContextScenarioTests : BaseTestClass
     }
 
     [Fact]
-    public void ScreenLeavesRoot_BoundDescendantContextIsNull()
+    public void ScreenLeavesRoot_BoundDescendantKeepsContextAndResumesOnReAdd()
     {
         PlayerVm player = new() { Name = "a" };
-        StackPanel screen = new() { BindingContext = new GameVm { Player = player } };
+        GameVm game = new() { Player = player };
+        StackPanel screen = new() { BindingContext = game };
         StackPanel playerPanel = new();
         playerPanel.SetBinding(nameof(FrameworkElement.BindingContext), nameof(GameVm.Player));
         screen.AddChild(playerPanel);
+        Label nameLabel = new();
+        nameLabel.SetBinding(nameof(Label.Text), nameof(PlayerVm.Name));
+        playerPanel.AddChild(nameLabel);
         screen.AddToRoot();
         playerPanel.BindingContext.ShouldBe(player);
 
+        // Pausing never resets a target, so the bound context is not set to null or FallbackValue.
         screen.RemoveFromRoot();
+        PlayerVm nextPlayer = new() { Name = "b" };
+        game.Player = nextPlayer;
+        player.Name = "a2";
 
-        playerPanel.BindingContext.ShouldBeNull();
+        playerPanel.BindingContext.ShouldBe(player);
+        nameLabel.Text.ShouldBe("a");
+
+        screen.AddToRoot();
+        playerPanel.BindingContext.ShouldBe(nextPlayer);
+        nameLabel.Text.ShouldBe("b");
     }
 
     [Fact]

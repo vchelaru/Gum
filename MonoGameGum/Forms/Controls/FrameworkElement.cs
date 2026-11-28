@@ -390,8 +390,8 @@ public class FrameworkElement : INotifyPropertyChanged, IBindingTarget
     /// <summary>
     /// The object this control's bindings read from and write to, stored on its
     /// <see cref="Visual"/>. Children inherit it unless they are given their own. Leaving the root,
-    /// by any path, sets this control's own BindingContext to null, so children that inherit it lose it
-    /// too; a child given its own keeps it. Moving between other parents keeps it.
+    /// by any path, keeps it but pauses this control's bindings and its children's until the control
+    /// rejoins the root.
     /// </summary>
     public object? BindingContext
     {
@@ -426,9 +426,34 @@ public class FrameworkElement : INotifyPropertyChanged, IBindingTarget
 #if FRB
     object? IBindingTarget.InheritedBindingContext => BindingContext;
 
+    bool IBindingTarget.AreBindingsPaused => false;
+
     void IBindingTarget.SetIsBindingContextBound(bool isBound) { }
 #else
     object? IBindingTarget.InheritedBindingContext => ((IBindingTarget?)Visual)?.InheritedBindingContext;
+
+    // GraphicalUiElement.SetBindingsPaused pauses this control's bindings along with its Visual's.
+    bool IBindingTarget.AreBindingsPaused => Visual?.AreBindingsPaused == true;
+
+    // Whether PropertyRegistry is paused, which can differ from the Visual's state only while the Visual is replaced.
+    bool _isPropertyRegistryPaused;
+
+    /// <summary>
+    /// Pauses or resumes this control's bindings to match its Visual. Called by GraphicalUiElement.SetBindingsPaused
+    /// and when the Visual is replaced.
+    /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Resuming re-resolves bindings the app already set up; their trim risk was surfaced at " +
+            "SetBinding or BindingContext.")]
+    internal void SyncBindingsPausedToVisual()
+    {
+        bool isPaused = Visual?.AreBindingsPaused == true;
+        if (isPaused != _isPropertyRegistryPaused)
+        {
+            _isPropertyRegistryPaused = isPaused;
+            PropertyRegistry.SetPaused(isPaused);
+        }
+    }
 
     // Kept here as well as on the Visual so a replacement Visual is bound too.
     bool _isBindingContextBound;
@@ -804,6 +829,11 @@ public class FrameworkElement : INotifyPropertyChanged, IBindingTarget
                         visual.IsEnabled = false;
                     }
                 }
+
+#if !FRB
+                // The bindings follow where the new Visual sits: paused if it is out of the root tree, live otherwise.
+                SyncBindingsPausedToVisual();
+#endif
 
                 if (oldVisual?.BindingContext != value?.BindingContext)
                 {

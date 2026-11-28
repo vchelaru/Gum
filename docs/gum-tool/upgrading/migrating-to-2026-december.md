@@ -12,9 +12,9 @@ Available in December 2026, or now if building Gum from source.
 
 ### Bound Properties Reset When the BindingContext Becomes Null
 
-When a control's `BindingContext` becomes null, each bound property now shows the binding's `FallbackValue`, or the value the property held before it was bound when no `FallbackValue` is set. This happens when you set `BindingContext` to null and when the control leaves the root or the parent it inherited its context from. Previously the property kept the last value from the view model, so a `Label` bound to a player name kept showing that name. Assigning a `BindingContext` again shows the new view model's values. `OneWayToSource` bindings leave the control unchanged.
+When a control's `BindingContext` becomes null, each bound property now shows the binding's `FallbackValue`, or the value the property held before it was bound when no `FallbackValue` is set. This happens when you set `BindingContext` to null and when the control leaves the parent it inherited its context from. Previously the property kept the last value from the view model, so a `Label` bound to a player name kept showing that name. Assigning a `BindingContext` again shows the new view model's values. `OneWayToSource` bindings leave the control unchanged.
 
-You are affected if your game clears a `BindingContext` or removes a screen from the root while the screen is still visible, for example during a transition, and expects the old values to stay on screen. Clear the context after the screen is hidden, or set `FallbackValue` on the binding to choose what it shows.
+You are affected if your game clears a `BindingContext` while the screen is still visible, for example during a transition, and expects the old values to stay on screen. Clear the context after the screen is hidden, or set `FallbackValue` on the binding to choose what it shows.
 
 `ClearBinding` also sets the property back to the value it held before it was first bound. Previously it set the property to null, or to 0 or `false` for a number or `bool` property. If your code relied on that, assign the value you want after calling `ClearBinding`.
 
@@ -37,6 +37,12 @@ See [Properties Set by Forms Controls](../../code/styling/properties-set-by-form
 `RangeBase` now holds only `Minimum`, `Maximum`, `Value`, `ValueChanged` and `Orientation`. The thumb and track members (`SmallChange`, `LargeChange`, `IsMoveToPointEnabled`, `ValueChangeCompleted`, `ValueChangedByUi`, `Track` and the thumb drag methods) are on the new `ThumbRangeBase` class, which `Slider` and `ScrollBar` derive from.
 
 You are affected if a variable of type `RangeBase` reads one of those members, or if you subclass `RangeBase` directly. Change the type to `ThumbRangeBase`. Code that uses `Slider` or `ScrollBar` does not change.
+
+### Removed Screens Stop Updating Until Added Again
+
+A screen removed from the root (with `RemoveFromRoot`, `Root.Children.Clear()` or any other way) keeps its `BindingContext`, but its bindings stop updating from and writing to the view model. Calling `AddToRoot` again shows the view model's current values. Previously a removed screen kept updating, which kept the view model holding on to it.
+
+You are affected if a hidden screen must keep up with its view model while it is out of the root. Keep it in the root and set `Visible` to `false` instead.
 
 ### Bound Items Empty When BindingContext Becomes Null
 

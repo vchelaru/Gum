@@ -569,7 +569,7 @@ public abstract class GumServiceSkiaBase : IGumService
             Name = "Main Root",
             HasEvents = false,
         };
-        Root.ClearsBindingContextOfRemovedChildren = true;
+        Root.PausesBindingsOfRemovedChildren = true;
 
         DeferredQueue = new DeferredActionQueue();
 

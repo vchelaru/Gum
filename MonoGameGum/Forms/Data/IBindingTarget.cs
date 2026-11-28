@@ -19,6 +19,12 @@ internal interface IBindingTarget : INotifyPropertyChanged
     /// <summary>The object the target's bindings read from, its own or inherited from its parent.</summary>
     object? BindingContext { get; }
 
+    /// <summary>
+    /// Whether the target is in a subtree that left the root. Its bindings stay detached from their source,
+    /// without resetting the target, until the subtree rejoins the root (<see cref="PropertyRegistry.SetPaused"/>).
+    /// </summary>
+    bool AreBindingsPaused { get; }
+
     /// <summary>Raised when the effective <see cref="BindingContext"/> changes.</summary>
     event EventHandler<BindingContextChangedEventArgs>? BindingContextChanged;
 
