@@ -55,6 +55,17 @@ Visuals and Forms controls share one binding engine, with one difference: a bind
 Available in December 2026, or now if building Gum from source.
 {% endhint %}
 
+`ClearBinding` removes a visual's binding and restores the value the property had before it was bound. Later ViewModel changes no longer reach the visual.
+
+```csharp
+// Initialize
+buttonVisual.ClearBinding(nameof(buttonVisual.Width));
+```
+
+{% hint style="info" %}
+`ClearBinding` on a visual is available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 If the property requires a specific type, then the Visual can be casted to access type-specific properties, as shown in the following code block:
 
 ```csharp
