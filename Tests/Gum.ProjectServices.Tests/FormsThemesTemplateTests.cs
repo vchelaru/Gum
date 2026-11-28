@@ -284,6 +284,27 @@ public class FormsThemesTemplateTests
             .ShouldBe(new[] { "Enabled", "Highlighted", "Selected", "Focused", "Disabled" }, ignoreOrder: true);
     }
 
+    // Every template offers the Standard template's text ladder in its Styles component, so a screen
+    // built against one theme's text styles keeps working in another (#8509). Theme extras (Icon, Body)
+    // come after the ladder. Emphasis and Strong are body variants, so only the other rungs must grow.
+    [Theory]
+    [MemberData(nameof(TemplateFolders))]
+    public void Styles_ShouldHaveTheFullTextStyleLadder(string templateFolder)
+    {
+        StandardElementsManager.Self.Initialize();
+        GumProjectSave project = LoadTemplate(templateFolder);
+        ComponentSave styles = project.Components.Single(c => c.Name == GetPrefix(templateFolder) + "Styles");
+
+        styles.Instances.Where(i => i.BaseType == "Text").Select(i => i.Name).Take(9)
+            .ShouldBe(new[] { "Tiny", "Small", "Normal", "Emphasis", "Strong", "H3", "H2", "H1", "Title" });
+
+        int[] growingSizes = new[] { "Tiny", "Small", "Normal", "H3", "H2", "H1", "Title" }
+            .Select(name => (int)styles.DefaultState!.GetValue(name + ".FontSize")!)
+            .ToArray();
+        growingSizes.Zip(growingSizes.Skip(1), (smaller, larger) => smaller < larger)
+            .ShouldAllBe(grows => grows, $"{templateFolder} sizes: {string.Join(", ", growingSizes)}");
+    }
+
     private static GumProjectSave LoadTemplate(string templateFolder) =>
         new ProjectLoader().Load(Path.Combine(GetTemplateDir(templateFolder), "GumProject.gumx")).Project!;
 

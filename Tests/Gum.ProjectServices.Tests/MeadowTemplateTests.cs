@@ -393,7 +393,7 @@ public class MeadowTemplateTests
             "Sage", "SageDark", "SageFocusRing",
             "Teal", "TealDark", "ThumbShadow", "White", "WindowShadow"
         };
-        string[] expectedTextStyles = { "Body", "Normal", "Strong" };
+        string[] expectedTextStyles = { "Tiny", "Small", "Normal", "Emphasis", "Strong", "H3", "H2", "H1", "Title", "Body" };
 
         GumProjectSave project = LoadMeadow();
         ComponentSave styles = project.Components.Single(c => c.Name == "Meadow/Styles");

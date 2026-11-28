@@ -30,6 +30,7 @@
     <Compile Include="..\Gum.Themes.Editor.MonoGame\**\*.cs" />
     <Compile Remove="..\Gum.Themes.Editor.MonoGame\obj\**" />
     <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeTextStyles.cs" Link="ThemeTextStyles.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- Color (Raylib_cs.Color) resolves through this package on the RAYLIB branch of the theme
