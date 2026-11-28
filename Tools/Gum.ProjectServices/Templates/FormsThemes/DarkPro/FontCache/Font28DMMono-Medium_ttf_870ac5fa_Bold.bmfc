@@ -3,10 +3,10 @@ fileVersion=1
 
 # font settings
 fontName=
-fontFile=..\Fonts\Fraunces-BoldItalic.ttf
-fontSize=-18
+fontFile=..\Fonts\DMMono-Medium.ttf
+fontSize=-28
 isBold=1
-isItalic=1
+isItalic=0
 useSmoothing=1
 aa=1
 useHinting=1
@@ -45,7 +45,7 @@ outlineThickness=0
 chars=32-126,160-255,9632-9727,10003-10007
 
 # output path
-outputPath=Font18Fraunces-BoldItalic_ttf_Italic_Bold
+outputPath=Font28DMMono-Medium_ttf_870ac5fa_Bold
 
 # kernsmith extensions
 autofit=1

@@ -270,13 +270,25 @@ public class BindingValueConversionTests : BaseTestClass
         exception.Message.ShouldContain("{0}");
     }
 
-    [Fact]
-    public void StringFormatWithOnlyEscapedPlaceholder_Throws()
+    [Theory]
+    [InlineData("{{0}}")]
+    [InlineData("")]
+    public void StringFormatWithOnlyEscapedOrNoText_Throws(string format)
     {
         Label label = new();
 
         Should.Throw<InvalidOperationException>(() =>
-            label.SetBinding(nameof(Label.Text), new Binding(nameof(ConversionViewModel.Number)) { StringFormat = "{{0}}" }));
+            label.SetBinding(nameof(Label.Text), new Binding(nameof(ConversionViewModel.Number)) { StringFormat = format }));
+    }
+
+    [Fact]
+    public void StringFormatWithoutPlaceholder_OnNonStringTarget_Throws()
+    {
+        // StringFormat only applies to a string target, but a format with no {0} is a mistake on any target.
+        SizeElement element = new();
+
+        Should.Throw<InvalidOperationException>(() =>
+            element.SetBinding(nameof(SizeElement.Size), new Binding(nameof(ConversionViewModel.Size)) { StringFormat = "$0" }));
     }
 
     [Theory]

@@ -444,7 +444,7 @@ public partial class GraphicalUiElement
         {
             // A binding always writes the VM value to the UI property. A name with no property may still be a
             // method bound to a VM event, so only a property with no setter is refused.
-            if (GetType().GetProperty(uiProperty) is { SetMethod: null })
+            if (GetType().GetProperty(uiProperty) is { } targetProperty && BinderHelpers.AsDeclared(targetProperty).SetMethod == null)
             {
                 throw new InvalidOperationException(
                     BinderHelpers.GetReadOnlyTargetMessage(GetType().Name, uiProperty, modeName: null));
@@ -653,7 +653,7 @@ public partial class GraphicalUiElement
     {
         var thisType = this.GetType();
 
-        PropertyInfo? uiProperty = thisType.GetProperty(binding.UiProperty);
+        PropertyInfo? uiProperty = thisType.GetProperty(binding.UiProperty) is { } found ? BinderHelpers.AsDeclared(found) : null;
 
         if (uiProperty == null)
         {

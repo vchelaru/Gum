@@ -387,7 +387,7 @@ public class DarkProTemplateTests
             "DisabledBorder", "DisabledFill", "DisabledText", "DisabledThumb", "HoverAccent",
             "Muted", "Placeholder", "PressedFill", "PressedText", "Surface1", "Surface2", "Text"
         };
-        string[] expectedTextStyles = { "Normal", "Strong" };
+        string[] expectedTextStyles = { "Tiny", "Small", "Normal", "Emphasis", "Strong", "H3", "H2", "H1", "Title" };
 
         GumProjectSave project = LoadDarkPro();
         ComponentSave styles = project.Components.Single(c => c.Name == "DarkPro/Styles");
