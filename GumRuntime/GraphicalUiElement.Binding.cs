@@ -462,11 +462,12 @@ public partial class GraphicalUiElement
         }
         else
         {
-            // A binding writes the VM value to a public property, or binds a VM event to a method of any
-            // visibility. Variables that only SetProperty knows (states, exposed variables) are not targets.
-            if (GetType().GetProperty(uiProperty) != null)
+            // A binding writes the VM value to a public property with a setter of any visibility, or binds a VM
+            // event to a method of any visibility. Variables that only SetProperty knows (states, exposed
+            // variables) are not targets.
+            if (GetType().GetProperty(uiProperty) is { } targetProperty)
             {
-                if (!BinderHelpers.CanWritePath(GetType(), uiProperty))
+                if (targetProperty.SetMethod == null)
                 {
                     throw new InvalidOperationException(
                         BinderHelpers.GetReadOnlyTargetMessage(GetType().Name, uiProperty, modeName: null));

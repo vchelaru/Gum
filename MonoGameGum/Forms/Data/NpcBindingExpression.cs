@@ -27,7 +27,6 @@ internal class NpcBindingExpression : UntypedBindingExpression
     [UnconditionalSuppressMessage("Trimming", "IL2072",
         Justification = "Only value types reach Activator.CreateInstance here, and every value type " +
             "has a parameterless constructor that the trimmer cannot remove.")]
-    [RequiresUnreferencedCode("Calls " + nameof(BinderHelpers.CanWritePath) + " on the target control's type.")]
     public NpcBindingExpression(
         FrameworkElement target,
         string targetPropertyName,
@@ -39,9 +38,9 @@ internal class NpcBindingExpression : UntypedBindingExpression
                 $"Property '{targetPropertyName}' not found on {target.GetType().Name}");
 
         // OneWay and TwoWay write the source value to the target, so refuse a target that cannot take it here
-        // rather than when a BindingContext arrives.
+        // rather than when a BindingContext arrives. SetValue reaches a non-public setter, so any setter will do.
         if (binding.Mode is not BindingMode.OneWayToSource &&
-            !BinderHelpers.CanWritePath(target.GetType(), targetPropertyName))
+            TargetProperty.SetMethod == null)
         {
             throw new InvalidOperationException(BinderHelpers.GetReadOnlyTargetMessage(
                 target.GetType().Name, targetPropertyName, binding.Mode.ToString()));

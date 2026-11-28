@@ -190,9 +190,10 @@ public abstract class TextBoxBase :
     }
 
     /// <summary>
-    /// A list of keys that should be ignored by this control.
+    /// A list of keys that should be ignored by this control. Empty by default.
     /// </summary>
-    public List<Keys>? IgnoredKeys => null;
+    public List<Keys> IgnoredKeys => _ignoredKeys ??= new List<Keys>();
+    List<Keys>? _ignoredKeys;
 
     /// <summary>
     /// Whether this control is currently capable of receiving input. Always true for TextBoxBase.

@@ -16,12 +16,45 @@ namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
 /// A binding whose mode writes the source value to the target (OneWay, TwoWay) needs a target property with a
-/// public setter. SetBinding refuses one without, at the SetBinding call, instead of failing later when a
-/// BindingContext arrives. OneWayToSource only reads the target, so it stays allowed.
+/// setter of any visibility, since the binding writes through reflection. SetBinding refuses one without, at the
+/// SetBinding call, instead of failing later when a BindingContext arrives. OneWayToSource only reads the target,
+/// so it stays allowed.
 /// </summary>
 public class ReadOnlyBindingTargetTests : BaseTestClass
 {
     private readonly ITestOutputHelper _output;
+
+    public class PrivateSetterButton : Button
+    {
+        public object? Marker { get; private set; }
+    }
+
+    public class PrivateSetterTextRuntime : TextRuntime
+    {
+        public object? Marker { get; private set; }
+    }
+
+    [Fact]
+    public void SetBinding_FormsTargetWithPrivateSetter_StillBinds()
+    {
+        PrivateSetterButton button = new();
+
+        button.SetBinding(nameof(PrivateSetterButton.Marker), nameof(ShopViewModel.Value));
+        button.BindingContext = new ShopViewModel { Value = "bound" };
+
+        button.Marker.ShouldBe("bound");
+    }
+
+    [Fact]
+    public void SetBinding_RuntimeTargetWithPrivateSetter_StillBinds()
+    {
+        PrivateSetterTextRuntime text = new();
+
+        text.SetBinding(nameof(PrivateSetterTextRuntime.Marker), nameof(ShopViewModel.Value));
+        text.BindingContext = new ShopViewModel { Value = "bound" };
+
+        text.Marker.ShouldBe("bound");
+    }
 
     public ReadOnlyBindingTargetTests(ITestOutputHelper output)
     {
@@ -54,7 +87,7 @@ public class ReadOnlyBindingTargetTests : BaseTestClass
 
     private static IEnumerable<PropertyInfo> ReadOnlyProperties(Type type) =>
         type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(property => property.CanRead && property.GetSetMethod() == null
+            .Where(property => property.CanRead && property.SetMethod == null
                 && property.GetIndexParameters().Length == 0
                 && property.GetCustomAttribute<ObsoleteAttribute>() == null)
             .GroupBy(property => property.Name)
@@ -70,7 +103,7 @@ public class ReadOnlyBindingTargetTests : BaseTestClass
             () => listBox.SetBinding(nameof(ListBox.SelectedItems), nameof(ShopViewModel.SelectedItems)));
 
         exception.Message.ShouldBe(
-            "ListBox.SelectedItems has no public setter, so it cannot be the target of a TwoWay binding, which " +
+            "ListBox.SelectedItems has no setter, so it cannot be the target of a TwoWay binding, which " +
             "writes the view model's value to it. Bind a property that has a public setter.");
     }
 

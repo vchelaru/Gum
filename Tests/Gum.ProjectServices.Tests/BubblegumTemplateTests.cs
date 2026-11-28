@@ -390,7 +390,7 @@ public class BubblegumTemplateTests
             "Disabled", "DisabledFill", "HoverOption", "HoverRow", "Muted", "Placeholder",
             "Surface1", "Text", "White"
         };
-        string[] expectedTextStyles = { "Normal", "Strong" };
+        string[] expectedTextStyles = { "Tiny", "Small", "Normal", "Emphasis", "Strong", "H3", "H2", "H1", "Title" };
 
         GumProjectSave project = LoadBubblegum();
         ComponentSave styles = project.Components.Single(c => c.Name == "Bubblegum/Styles");
