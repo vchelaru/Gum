@@ -293,16 +293,28 @@ public partial class GraphicalUiElement : IBindingTarget
     /// model event named by <paramref name="vmProperty"/> is raised.</param>
     /// <param name="vmProperty">The path of the view model member.</param>
     /// <param name="toStringFormat">A .NET format specifier such as "N0", applied when the target is a
-    /// string. Equivalent to a <see cref="Binding.StringFormat"/> of "{0:N0}".</param>
+    /// string and equivalent to a <see cref="Binding.StringFormat"/> of "{0:N0}", or a composite format with a
+    /// {0} placeholder such as "{0:N0}", used as is.</param>
     [RequiresUnreferencedCode(
         "vmProperty is resolved by name against the BindingContext's own type. That member may be " +
         "removed under PublishTrimmed if nothing else in the app references it. Prefer the " +
         "SetBinding<TVm> overload that takes an expression instead of a string.")]
     public void SetBinding(string uiProperty, string vmProperty, string? toStringFormat = null)
     {
+        string? stringFormat = string.IsNullOrEmpty(toStringFormat) ? null
+            : BinderHelpers.GetStringFormatErrorMessage(toStringFormat) == null ? toStringFormat
+            : "{0:" + toStringFormat + "}";
+        if (BinderHelpers.GetStringFormatErrorMessage(stringFormat) != null)
+        {
+            throw new ArgumentException(
+                $"toStringFormat '{toStringFormat}' is neither a format specifier such as \"N0\" nor a composite " +
+                "format with a {0} placeholder such as \"{0:N0}\".",
+                nameof(toStringFormat));
+        }
+
         SetBinding(uiProperty, new Binding(vmProperty)
         {
-            StringFormat = string.IsNullOrEmpty(toStringFormat) ? null : "{0:" + toStringFormat + "}"
+            StringFormat = stringFormat
         });
     }
 

@@ -164,7 +164,7 @@ The following properties are available on the Binding class:
 * `Mode` - the direction of data flow in binding. This can be used to create one-way binding.
 * `UpdateSourceTrigger` - controls when binding is applied. See [Enter and Binding](../controls/textbox.md#enter-and-binding) for a `TextBox`-specific example, including how the Enter key interacts with `UpdateSourceTrigger.LostFocus`.
 * `FallbackValue` - the value to apply when binding cannot retrieve a value from the source, or the value cannot convert to the target's type
-* `TargetNullValue` - the value to use when the source property value is null
+* `TargetNullValue` - the value to use when the source property value is null. A two-way binding writes `null` back when the UI value equals `TargetNullValue`
 * `Converter` - a converter to transform values between the source and target
 * `ConverterParameter` - an optional parameter to pass to the Converter
 * `StringFormat` - a format string to apply to the value
@@ -216,6 +216,8 @@ label.SetBinding(nameof(Label.Text), binding);
 
 When `IsActive` is `true`, the label displays "Yes". If the binding is two-way and the label text is set to "No", the converter's `ConvertBack` method sets `IsActive` to `false`.
 
+A converter that throws does not crash the game. Gum writes one `[Gum]` warning per direction for that binding, naming the converter and the exception: one the first time `Convert` throws and one the first time `ConvertBack` throws. A `Convert` that throws shows the binding's `FallbackValue`, or the property type's default. A `ConvertBack` that throws leaves the source unchanged.
+
 ### StringFormat Example
 
 The `StringFormat` property applies a format string when displaying source values. This is useful for formatting numbers, dates, or adding prefix text:
@@ -229,10 +231,12 @@ Binding binding = new(nameof(MyViewModel.Health))
 label.SetBinding(nameof(Label.Text), binding);
 ```
 
-`StringFormat` must contain a `{0}` placeholder where the value goes, or `SetBinding` throws, whatever the target property's type. Write it as a plain string: an interpolated `$"HP: {0:N0}"` fills in `{0}` before the binding sees it.
+`StringFormat` must contain a `{0}` placeholder where the value goes, or `SetBinding` throws, whatever the target property's type. `SetBinding` also throws for a format `string.Format` rejects, such as `"{0} of {1}"` (a binding formats one value) or an unclosed brace. Write it as a plain string: an interpolated `$"HP: {0:N0}"` fills in `{0}` before the binding sees it.
+
+A two-way binding with a `StringFormat` writes the UI value back without removing the format. A TextBox bound with `"Name: {0}"` that holds `"Name: Bob"` sets a `string` source to `"Name: Bob"`. A number keeps working because the text converts back to the source type: a TextBox bound to an `int` of `1234` with `"{0:N0}"` shows `"1,234"`, and editing it to `"1,235"` sets the source to `1235`.
 
 {% hint style="info" %}
-When `StringFormat` is set, the binding effectively becomes one-way for display purposes. Setting the target value does not attempt to parse the formatted string back to the source.
+`SetBinding` refusing a format `string.Format` rejects is available in December 2026, or now if building Gum from source. Before that, the format threw later, when the `BindingContext` was assigned.
 {% endhint %}
 
 ### FallbackValue Example
@@ -281,7 +285,7 @@ A `string` or integer source also converts to an enum target property, such as `
 
 ### Conversion Failures
 
-If `Convert.ChangeType` cannot convert a value, no exception is thrown. A value typed into the UI that does not convert, such as `"hello"` in a TextBox bound to `int`, leaves the source unchanged. This includes empty strings: clearing the text in a TextBox bound to `int` does **not** reset the source to `0`.
+If a value cannot convert, no exception is thrown. A value typed into the UI that does not convert, such as `"hello"` or `"$1,235"` in a TextBox bound to `int`, leaves the source unchanged. If the text still does not convert when editing ends (the TextBox loses focus or Enter is pressed), Gum writes one `[Gum]` warning for that binding naming the value and the source property, so partly typed text such as `"-"` raises no warning. This includes empty strings: clearing the text in a TextBox bound to `int` does **not** reset the source to `0`. Group separators in the current culture, such as the `,` in `"1,235"`, are accepted.
 
 A source value that does not convert to the UI property's type shows the binding's `FallbackValue`. With no `FallbackValue`, the UI property gets its type's default, such as `0` for a Slider's `Value` bound to a `string` holding `"hello"`.
 

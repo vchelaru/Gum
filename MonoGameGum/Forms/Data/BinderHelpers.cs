@@ -48,11 +48,12 @@ internal static class BinderHelpers
     }
 
     /// <summary>
-    /// The message for a <see cref="Binding.StringFormat"/> with no <c>{0}</c> placeholder, whose output never
-    /// shows the value, or null when the format has one (any <c>{0:...}</c> or <c>{0,n}</c> form counts; an
-    /// escaped <c>{{0}}</c> does not). A format string.Format rejects outright is left to fail when it is used.
+    /// The message for a <see cref="Binding.StringFormat"/> that can never show the value: one string.Format
+    /// rejects with a single argument (a <c>{1}</c>, an unclosed or unescaped brace), or one with no <c>{0}</c>
+    /// placeholder (any <c>{0:...}</c> or <c>{0,n}</c> form counts; an escaped <c>{{0}}</c> does not). Null when
+    /// the format is usable. A specifier the value's type rejects (<c>{0:Q}</c> on a number) is not caught here.
     /// </summary>
-    public static string? GetMissingPlaceholderMessage(string? stringFormat)
+    public static string? GetStringFormatErrorMessage(string? stringFormat)
     {
         if (stringFormat is null)
         {
@@ -64,9 +65,10 @@ internal static class BinderHelpers
         {
             formatted = string.Format(System.Globalization.CultureInfo.InvariantCulture, stringFormat, PlaceholderProbe.Instance);
         }
-        catch (FormatException)
+        catch (FormatException ex)
         {
-            return null;
+            return $"Binding.StringFormat '{stringFormat}' is not a valid format for one value: {ex.Message} " +
+                "Use {0} for the value, optionally with a specifier such as {0:N0}, and write a literal brace twice ({{ or }}).";
         }
 
         if (formatted.Contains(PlaceholderProbe.Token))

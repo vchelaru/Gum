@@ -54,6 +54,8 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     private PropertyPathObserver PathObserver { get; }
     private readonly string _targetPropertyName;
     private bool _hasReportedMissingPath;
+    private bool _hasReportedConvertException;
+    private bool _hasReportedConvertBackException;
     // Set when a write must assign a struct back to a member that cannot take it; reported on the first dropped write,
     // since a binding that only displays the value never writes.
     private string? _unassignableStructMessage;
@@ -63,9 +65,9 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     protected UntypedBindingExpression(IBindingTarget targetElement, string targetPropertyName, Binding binding)
     {
         // Checked before anything subscribes, so a refused binding leaves nothing attached to the target.
-        if (BinderHelpers.GetMissingPlaceholderMessage(binding.StringFormat) is { } missingPlaceholderMessage)
+        if (BinderHelpers.GetStringFormatErrorMessage(binding.StringFormat) is { } stringFormatErrorMessage)
         {
-            throw new InvalidOperationException(missingPlaceholderMessage);
+            throw new InvalidOperationException(stringFormatErrorMessage);
         }
 
         _targetPropertyName = targetPropertyName;
@@ -303,29 +305,53 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         GumRuntime.ElementSaveExtensions.ReportDiagnostic(message);
     }
 
+    // A converter that throws is caught so a bug in it cannot throw mid-frame, and reported once per direction
+    // per binding so it does not look like an empty value.
     protected object? Convert(IValueConverter converter, object? value, Type targetType)
     {
         try
         {
             return converter.Convert(value, targetType, Binding.ConverterParameter);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            if (!_hasReportedConvertException)
+            {
+                _hasReportedConvertException = true;
+                string shown = Binding.FallbackValue is null ? "default" : nameof(Binding.FallbackValue);
+                ReportConverterException(converter, nameof(IValueConverter.Convert), ex,
+                    $"so the property shows its {shown}.");
+            }
             return GumProperty.UnsetValue;
         }
     }
 
+    /// <summary>
+    /// Runs <see cref="IValueConverter.ConvertBack"/>. Returns <see cref="GumProperty.UnsetValue"/> when it throws,
+    /// which leaves the source unchanged, as WPF does.
+    /// </summary>
     protected object? ConvertBack(IValueConverter converter, object? value, Type targetType)
     {
         try
         {
             return converter.ConvertBack(value, targetType, Binding.ConverterParameter);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            if (!_hasReportedConvertBackException)
+            {
+                _hasReportedConvertBackException = true;
+                ReportConverterException(converter, nameof(IValueConverter.ConvertBack), ex,
+                    $"so {Binding.Path} was not changed.");
+            }
             return GumProperty.UnsetValue;
         }
     }
+
+    private void ReportConverterException(IValueConverter converter, string methodName, Exception ex, string outcome) =>
+        GumRuntime.ElementSaveExtensions.ReportDiagnostic(
+            $"Binding for {TargetElement.GetType().Name}.{_targetPropertyName}: {converter.GetType().Name}.{methodName} " +
+            $"threw {ex.GetType().Name} ('{ex.Message}'), {outcome}");
 
     public override void Dispose()
     {
