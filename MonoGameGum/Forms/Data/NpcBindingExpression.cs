@@ -18,6 +18,12 @@ internal class NpcBindingExpression : UntypedBindingExpression
 {
     private PropertyInfo TargetProperty { get; }
     internal PropertyInfo GetTargetProperty() => TargetProperty;
+
+    /// <summary>
+    /// Whether the target property has a setter of any visibility; SetValue reaches a non-public one.
+    /// </summary>
+    internal bool HasTargetSetter => TargetProperty.SetMethod != null;
+
     private object? DefaultTargetValue { get; }
     private object? LastTargetValue { get; set; }
     private bool _isUpdatingTarget;
@@ -40,7 +46,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
         // OneWay and TwoWay write the source value to the target, so refuse a target that cannot take it here
         // rather than when a BindingContext arrives. SetValue reaches a non-public setter, so any setter will do.
         if (binding.Mode is not BindingMode.OneWayToSource &&
-            TargetProperty.SetMethod == null)
+            !HasTargetSetter)
         {
             throw new InvalidOperationException(BinderHelpers.GetReadOnlyTargetMessage(
                 target.GetType().Name, targetPropertyName, binding.Mode.ToString()));

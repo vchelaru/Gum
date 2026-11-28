@@ -70,8 +70,8 @@ internal class PropertyRegistry
         {
             PropertyInfo targetProperty = npcExpression.GetTargetProperty();
             npcExpression.Dispose();
-            // Only a OneWayToSource binding can target a property with no public setter, and it never wrote it.
-            if (targetProperty.GetSetMethod() is not null)
+            // Only a OneWayToSource binding can target a property with no setter, and it never wrote it.
+            if (npcExpression.HasTargetSetter)
             {
                 targetProperty.SetValue(Owner, null);
             }
