@@ -74,4 +74,44 @@ public class TargetNullValueWriteBackTests : BaseTestClass
 
         vm.Name.ShouldBeNull();
     }
+
+    private class CountViewModel : ViewModel
+    {
+        public int Count
+        {
+            get => Get<int>();
+            set => Set(value);
+        }
+    }
+
+    [Fact]
+    public void IntSource_TargetHoldsTargetNullValue_LeavesSourceUnchanged()
+    {
+        CountViewModel vm = new() { Count = 4 };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), new Binding(nameof(CountViewModel.Count))
+        {
+            TargetNullValue = "-"
+        });
+
+        Should.NotThrow(() => textBox.Text = "-");
+
+        vm.Count.ShouldBe(4);
+    }
+
+    [Fact]
+    public void NullSourceShowingTargetNullValue_TextEdited_WritesText()
+    {
+        NameViewModel vm = new() { Name = null };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), new Binding(nameof(NameViewModel.Name))
+        {
+            TargetNullValue = "(none)"
+        });
+        textBox.Text.ShouldBe("(none)");
+
+        textBox.Text = "Ada";
+
+        vm.Name.ShouldBe("Ada");
+    }
 }
