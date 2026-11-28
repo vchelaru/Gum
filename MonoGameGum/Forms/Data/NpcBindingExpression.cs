@@ -133,9 +133,13 @@ internal class NpcBindingExpression : UntypedBindingExpression
             return;
         }
 
+        // Compared by value: a getter may build a new string or box a number on every read.
         object? targetValue = TargetProperty.GetValue(TargetElement);
-        if (targetValue != LastTargetValue)
+        if (!Equals(targetValue, LastTargetValue))
         {
+            // Remembered first, so a source that raises no PropertyChanged is not written again on the next
+            // focus loss; a value the source sends back replaces it through UpdateTarget.
+            LastTargetValue = targetValue;
             SetValueToSource(targetValue);
         }
     }
@@ -184,6 +188,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
         // A resolved null shows TargetNullValue; a broken path (or a null with no TargetNullValue) shows
         // FallbackValue. Neither runs through the converter.
+        bool isFallback = false;
         if (value is null && !isPathBroken && Binding.TargetNullValue is not null)
         {
             value = Binding.TargetNullValue;
@@ -191,6 +196,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
         else if (value is null && Binding.FallbackValue is not null)
         {
             value = Binding.FallbackValue;
+            isFallback = true;
         }
         else if (Binding.Converter is not null && value != Binding.DoNothing) // we don't run fallbacks through the converter
         {
@@ -202,27 +208,14 @@ internal class NpcBindingExpression : UntypedBindingExpression
             return;
         }
 
-        if (value != GumProperty.UnsetValue)
+        // A value that cannot reach the target (a converter that failed or returned the wrong type, a
+        // StringFormat the value cannot take, a name no enum member has) shows FallbackValue when one is set,
+        // as WPF does. Without one, each failure keeps its own outcome: the default, or a throw.
+        bool canFallBack = !isFallback && Binding.FallbackValue is not null;
+        value = ToTargetValue(value, canFallBack);
+        if (value == GumProperty.UnsetValue && canFallBack)
         {
-            if (TargetProperty.PropertyType == typeof(string) && 
-                Binding.StringFormat is not null && 
-                value is not null)
-            {
-                value = string.Format(Binding.StringFormat, value);
-            }
-            else if (!IsValidForType(value, TargetProperty.PropertyType))
-            {
-                object? sourceValue = value;
-                value = TryConvert(value, TargetProperty.PropertyType);
-
-                // An enum target refuses a value that names no member rather than showing its default.
-                if (value == GumProperty.UnsetValue && sourceValue is not null &&
-                    GetEnumType(TargetProperty.PropertyType) is { } enumType)
-                {
-                    throw new InvalidOperationException(BinderHelpers.GetUnmatchedEnumMessage(
-                        sourceValue, enumType, TargetElement.GetType().Name, TargetProperty.Name));
-                }
-            }
+            value = ToTargetValue(Binding.FallbackValue, canFallBack: false);
         }
 
         if (value == GumProperty.UnsetValue)
@@ -244,6 +237,49 @@ internal class NpcBindingExpression : UntypedBindingExpression
             _isUpdatingTarget = false;
         }
         LastTargetValue = value;
+    }
+
+    /// <summary>
+    /// Formats or converts a value for the target property. Returns <see cref="GumProperty.UnsetValue"/> when
+    /// it cannot; with <paramref name="canFallBack"/> false, a format or enum-name failure throws instead.
+    /// </summary>
+    private object? ToTargetValue(object? value, bool canFallBack)
+    {
+        if (value == GumProperty.UnsetValue)
+        {
+            return value;
+        }
+
+        if (TargetProperty.PropertyType == typeof(string) &&
+            Binding.StringFormat is not null &&
+            value is not null)
+        {
+            try
+            {
+                return string.Format(Binding.StringFormat, value);
+            }
+            catch (FormatException) when (canFallBack)
+            {
+                return GumProperty.UnsetValue;
+            }
+        }
+
+        if (IsValidForType(value, TargetProperty.PropertyType))
+        {
+            return value;
+        }
+
+        object? converted = TryConvert(value, TargetProperty.PropertyType);
+
+        // An enum target refuses a value that names no member rather than showing its default.
+        if (converted == GumProperty.UnsetValue && !canFallBack && value is not null &&
+            GetEnumType(TargetProperty.PropertyType) is { } enumType)
+        {
+            throw new InvalidOperationException(BinderHelpers.GetUnmatchedEnumMessage(
+                value, enumType, TargetElement.GetType().Name, TargetProperty.Name));
+        }
+
+        return converted;
     }
 
     public override void UpdateSource()
@@ -298,7 +334,20 @@ internal class NpcBindingExpression : UntypedBindingExpression
             return;
         }
 
-        SetSourceValue(value);
+        if (!SetSourceValue(value))
+        {
+            return;
+        }
+
+        // A setter may keep another value (clamping to the value it already holds) without raising
+        // PropertyChanged, so read the source back and show it when it differs, as WPF does since .NET 4.
+        // Read once, never written again. Skipped while a BindingContext change is flushing a pending edit:
+        // the incoming context refreshes the target.
+        if (IsAttachedToCurrentBindingContext &&
+            !Equals(GetRootSourceValue(), value))
+        {
+            UpdateTarget();
+        }
     }
 
     public override void Dispose()
