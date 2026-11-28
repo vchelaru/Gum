@@ -81,6 +81,69 @@ internal static class BinderHelpers
     }
 
     /// <summary>
+    /// The message for a <see cref="Binding.StringFormat"/> whose specifier <paramref name="valueType"/> rejects
+    /// (<c>{0:Q}</c> on an int), found by formatting a default instance; a nullable type is checked as its
+    /// underlying type. Null when the format works, and also for a type whose formatting can depend on the value
+    /// (anything but the built-in numbers, enums, dates, times and Guid), so a format a real value might take is
+    /// never refused.
+    /// </summary>
+    public static string? GetStringFormatValueTypeErrorMessage(string stringFormat, Type valueType, string source)
+    {
+        Type type = Nullable.GetUnderlyingType(valueType) ?? valueType;
+        if (GetFormatProbeValue(type) is not { } probe)
+        {
+            return null;
+        }
+
+        try
+        {
+            string.Format(stringFormat, probe);
+            return null;
+        }
+        catch (FormatException ex)
+        {
+            return $"Binding.StringFormat '{stringFormat}' cannot format {source}, a {type.Name}: {ex.Message} " +
+                $"Use a format specifier {type.Name} accepts.";
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            // A default date outside the current culture's calendar says nothing about the format.
+            return null;
+        }
+    }
+
+    private static object? GetFormatProbeValue(Type type)
+    {
+        if (type.IsEnum)
+        {
+            return Enum.ToObject(type, 0);
+        }
+
+        switch (Type.GetTypeCode(type))
+        {
+            case TypeCode.Boolean: return false;
+            case TypeCode.Char: return '\0';
+            case TypeCode.SByte: return (sbyte)0;
+            case TypeCode.Byte: return (byte)0;
+            case TypeCode.Int16: return (short)0;
+            case TypeCode.UInt16: return (ushort)0;
+            case TypeCode.Int32: return 0;
+            case TypeCode.UInt32: return 0u;
+            case TypeCode.Int64: return 0L;
+            case TypeCode.UInt64: return 0ul;
+            case TypeCode.Single: return 0f;
+            case TypeCode.Double: return 0d;
+            case TypeCode.Decimal: return 0m;
+            case TypeCode.DateTime: return default(DateTime);
+        }
+
+        if (type == typeof(TimeSpan)) return TimeSpan.Zero;
+        if (type == typeof(DateTimeOffset)) return default(DateTimeOffset);
+        if (type == typeof(Guid)) return Guid.Empty;
+        return null;
+    }
+
+    /// <summary>
     /// Formats as a token no real format string contains, whatever format item it fills.
     /// </summary>
     private sealed class PlaceholderProbe : IFormattable
@@ -437,6 +500,37 @@ internal static class BinderHelpers
         return $"Binding path '{path}' for {targetTypeName}.{targetPropertyName} does not resolve: " +
             $"{owner.Name} has no property '{missingName}' (BindingContext: {contextType.Name}).";
     }
+
+    /// <summary>
+    /// The declared type of the member <paramref name="path"/> ends at, walking declared member types from
+    /// <paramref name="rootType"/>. False when a segment is not declared on the type before it (past an
+    /// object-typed member, say), since the type is then known only from a runtime value.
+    /// </summary>
+    [RequiresUnreferencedCode("Calls " + nameof(TryWalkToLeafOwner) + " and " + nameof(TryGetMember) + ".")]
+    public static bool TryGetDeclaredLeafType(Type rootType, string path, [NotNullWhen(true)] out Type? leafType)
+    {
+        leafType = null;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        PathSegment[] segments = ParseSegments(path);
+        if (!TryWalkToLeafOwner(rootType, segments, out Type owner, out _) ||
+            !TryGetMember(owner, segments[^1].Name, out _, out Type memberType))
+        {
+            return false;
+        }
+
+        leafType = segments[^1].Index.HasValue ? GetElementType(memberType) : memberType;
+        return true;
+    }
+
+    /// <summary>The type of the member a binding lambda (<c>vm => vm.Gold</c>) reads, before any boxing.</summary>
+    public static Type GetLeafType(LambdaExpression expression) =>
+        expression.Body is UnaryExpression { NodeType: ExpressionType.Convert } unary
+            ? unary.Operand.Type
+            : expression.Body.Type;
 
     [RequiresUnreferencedCode(
         "Looks up a property or field on declaringType by name. That member may be removed under " +

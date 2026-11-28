@@ -288,7 +288,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
         // A value that cannot reach the target (a converter that failed or returned the wrong type, a
         // StringFormat the value cannot take, a name no enum member has) shows FallbackValue when one is set,
-        // as WPF does. Without one, each failure keeps its own outcome: the default, or a throw.
+        // as WPF does. Without one, a name no enum member has throws and every other failure shows the default.
         bool canFallBack = !isFallback && Binding.FallbackValue is not null;
         value = ToTargetValue(value, canFallBack);
         if (value == GumProperty.UnsetValue && canFallBack)
@@ -343,7 +343,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     /// <summary>
     /// Formats or converts a value for the target property. Returns <see cref="GumProperty.UnsetValue"/> when
-    /// it cannot; with <paramref name="canFallBack"/> false, a format or enum-name failure throws instead.
+    /// it cannot; with <paramref name="canFallBack"/> false, an enum-name failure throws instead.
     /// </summary>
     private object? ToTargetValue(object? value, bool canFallBack)
     {
@@ -360,8 +360,10 @@ internal class NpcBindingExpression : UntypedBindingExpression
             {
                 return string.Format(Binding.StringFormat, value);
             }
-            catch (FormatException) when (canFallBack)
+            catch (FormatException ex)
             {
+                // A specifier the value's type rejects; SetBinding refuses it only when the type is known there.
+                ReportFailedFormatOnce(value, ex, canFallBack);
                 return GumProperty.UnsetValue;
             }
         }
@@ -401,6 +403,42 @@ internal class NpcBindingExpression : UntypedBindingExpression
         GumRuntime.ElementSaveExtensions.ReportDiagnostic(
             $"Binding for {TargetElement.GetType().Name}.{TargetProperty.Name} could not convert the value " +
             $"'{value}' ({value.GetType().Name}) to {TargetProperty.PropertyType.Name}, so the property shows its {shown}.");
+    }
+
+    private void ReportFailedFormatOnce(object value, FormatException ex, bool showsFallback)
+    {
+        if (!ShouldReport(nameof(ReportFailedFormatOnce), CurrentRoot?.GetType()))
+        {
+            return;
+        }
+        string shown = showsFallback ? nameof(Binding.FallbackValue) : "default";
+        GumRuntime.ElementSaveExtensions.ReportDiagnostic(
+            $"Binding for {TargetElement.GetType().Name}.{TargetProperty.Name}: StringFormat '{Binding.StringFormat}' " +
+            $"cannot format the value '{value}' ({value.GetType().Name}): {ex.Message} The property shows its {shown}.");
+    }
+
+    /// <summary>
+    /// The message for a StringFormat that the source member's declared type rejects, when the target's
+    /// BindingContext is already set so that type is known at SetBinding. Null when the format works, when the type
+    /// is not known (no context, a path past an object-typed member), when a converter decides the formatted
+    /// value's type, and when a FallbackValue is set, which the binding shows instead.
+    /// </summary>
+    [RequiresUnreferencedCode("Calls " + nameof(BinderHelpers.TryGetDeclaredLeafType) + ".")]
+    internal string? GetStringFormatSourceTypeErrorMessage()
+    {
+        if (Binding.StringFormat is not { } stringFormat ||
+            Binding.Converter is not null ||
+            Binding.FallbackValue is not null ||
+            Mode is BindingMode.OneWayToSource ||
+            TargetProperty.PropertyType != typeof(string) ||
+            TargetElement.BindingContext is not { } context ||
+            !BinderHelpers.TryGetDeclaredLeafType(context.GetType(), Binding.Path, out Type? leafType))
+        {
+            return null;
+        }
+
+        return BinderHelpers.GetStringFormatValueTypeErrorMessage(stringFormat, leafType,
+            $"{context.GetType().Name}.{Binding.Path}");
     }
 
     // An edit the source cannot take is dropped, so it is reported once per binding and source type rather than
