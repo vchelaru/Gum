@@ -28,21 +28,31 @@ jobs:
           SHA: ${{ github.event.pull_request.head.sha }}
           PR: ${{ github.event.pull_request.number }}
         run: |
-          id="$(gh run list --workflow build-and-test.yaml --event pull_request --commit "$SHA" --limit 1 --json databaseId --jq '.[0].databaseId')"
+          # GitHub's API sometimes answers 5xx; retry each gh call a few times before failing the job.
+          retry() {
+            local attempt
+            for attempt in 1 2 3 4; do
+              if "$@"; then return 0; fi
+              echo "Attempt $attempt of 4 failed: $1 $2 $3" >&2
+              if [ "$attempt" -lt 4 ]; then sleep $((attempt * 5)); fi
+            done
+            return 1
+          }
+          id="$(retry gh run list --workflow build-and-test.yaml --event pull_request --commit "$SHA" --limit 1 --json databaseId --jq '.[0].databaseId')"
           if [ -z "$id" ]; then echo "No run on $SHA yet; its Changes job will read the label itself."; exit 0; fi
-          status="$(gh run view "$id" --json status --jq .status)"
+          status="$(retry gh run view "$id" --json status --jq .status)"
           if [ "$status" != completed ]; then
             # A run opened together with the label (gh pr create --label) reads the label live in its Scope
             # step. If that step starts after the label was added (or has not started), it already sees the
             # label and there is nothing to redo.
-            label_at="$(gh api "repos/$GH_REPO/issues/$PR/events" --jq '[.[] | select(.event == "labeled" and .label.name == "fast-ci")] | last | .created_at')"
-            started="$(gh run view "$id" --json jobs --jq '[.jobs[] | select(.name == "Changes") | .steps[] | select(.name | startswith("Scope")) | .startedAt] | first // empty')"
+            label_at="$(retry gh api "repos/$GH_REPO/issues/$PR/events" --jq '[.[] | select(.event == "labeled" and .label.name == "fast-ci")] | last | .created_at')"
+            started="$(retry gh run view "$id" --json jobs --jq '[.jobs[] | select(.name == "Changes") | .steps[] | select(.name | startswith("Scope")) | .startedAt] | first // empty')"
             if [ -z "$started" ] || [[ "$started" == 0001* ]] || [[ "$started" > "$label_at" ]]; then
               echo "Run $id reads the scope after the label was added ($started vs $label_at); nothing to redo."
               exit 0
             fi
             echo "Cancelling in-flight run $id so the new scope applies."
-            gh run cancel "$id"
+            retry gh run cancel "$id"
           fi
           # A cancelled run can take minutes to finish cancelling, and a rerun is refused until it has.
           for i in $(seq 1 40); do
