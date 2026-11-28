@@ -78,6 +78,7 @@ public class UpdateSourceTriggerTests : BaseTestClass
 
     [Theory]
     [InlineData(nameof(TextBox))]
+    [InlineData(nameof(PasswordBox))]
     public void LostFocusTrigger_FocusLeavesWithoutEdit_DoesNotWriteSource(string control)
     {
         CountingViewModel vm = new() { Text = "initial" };
