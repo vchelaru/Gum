@@ -284,15 +284,24 @@ internal static class BinderHelpers
     }
 
     /// <summary>
-    /// Whether the leaf of <paramref name="path"/> is a member of a struct (Position.X), judged on declared types.
-    /// Such a leaf may be a field: the write changes a copy that goes back to the view model through a property.
+    /// Whether the leaf of <paramref name="path"/> is a member of a struct (Position.X), judged on declared types and,
+    /// past a segment the declared type lacks, on the object <paramref name="source"/> holds there now. Such a leaf
+    /// may be a field: the write changes a copy that goes back to the view model through a property.
     /// </summary>
-    [RequiresUnreferencedCode("Calls " + nameof(TryWalkToLeafOwner) + ".")]
-    public static bool IsLeafInStruct(Type sourceType, string path)
+    [RequiresUnreferencedCode("Calls " + nameof(TryWalkToLeafOwner) + " and " + nameof(TryWalkRuntime) + ".")]
+    public static bool IsLeafInStruct(object source, string path)
     {
         PathSegment[] segments = ParseSegments(path);
-        return segments.Length > 1 && TryWalkToLeafOwner(sourceType, segments, out Type owner, out _) &&
-            owner.IsValueType;
+        if (segments.Length < 2)
+        {
+            return false;
+        }
+        if (TryWalkToLeafOwner(source.GetType(), segments, out Type owner, out _))
+        {
+            return owner.IsValueType;
+        }
+        return TryWalkRuntime(source, segments, segments.Length - 1, out object? holder) &&
+            holder!.GetType().IsValueType;
     }
 
     // A leaf held in a struct is written to a copy, so each struct on the way back must be assigned to the member
@@ -547,6 +556,14 @@ internal static class BinderHelpers
     private static Action<object, object?> BuildRuntimeTypeSetter(Expression holder, PathSegment[] segments,
         int startIndex, ParameterExpression instanceParam, ParameterExpression valueParam)
     {
+        if (holder.Type.IsValueType)
+        {
+            // A struct (or Nullable<T>) held here would be a copy, so the path is walked from the root, letting
+            // SetOnRuntimeType assign it back to its holder.
+            holder = instanceParam;
+            startIndex = 0;
+        }
+
         Expression call = Expression.Call(SetOnRuntimeTypeMethod,
             Expression.Convert(holder, typeof(object)), Expression.Constant(segments), Expression.Constant(startIndex),
             valueParam);
@@ -576,13 +593,18 @@ internal static class BinderHelpers
     }
 
     // Writes value to the leaf of segments[startIndex..], resolving each segment on the runtime type of the
-    // object that holds it. Does nothing when the path is broken or the leaf is read-only.
+    // object that holds it. Does nothing when the path is broken or the leaf is read-only. A struct read along the
+    // way is a boxed copy, so after the leaf is set each one is assigned back to the member holding it; one that
+    // cannot be throws StructWriteBackException.
     [RequiresUnreferencedCode("Looks up members by name on runtime types.")]
     private static void SetOnRuntimeType(object? holder, PathSegment[] segments, int startIndex, object? value)
     {
+        // owners[i] holds segments[i].
+        object?[] owners = new object?[segments.Length];
         object? owner = holder;
         for (int i = startIndex; i < segments.Length - 1; i++)
         {
+            owners[i] = owner;
             if (owner == null || !TryGetRuntimeValue(owner, segments[i], out owner))
             {
                 return;
@@ -594,20 +616,78 @@ internal static class BinderHelpers
             return;
         }
 
-        PathSegment leaf = segments[^1];
+        if (SetLeafOnRuntimeType(owner, segments[^1], value))
+        {
+            for (int i = segments.Length - 2; i >= startIndex && owner!.GetType().IsValueType; i--)
+            {
+                AssignStructBack(owners[i]!, segments[i], owner, segments);
+                if (segments[i].Index.HasValue)
+                {
+                    break;
+                }
+                owner = owners[i];
+            }
+        }
+    }
+
+    // A struct that a binding cannot assign back to its holder, so the write would change only a copy.
+    internal sealed class StructWriteBackException : InvalidOperationException
+    {
+        public StructWriteBackException(string message) : base(message) { }
+    }
+
+    [RequiresUnreferencedCode("Looks up members by name on runtime types.")]
+    private static void AssignStructBack(object parent, PathSegment segment, object box, PathSegment[] segments)
+    {
+        if (TryGetMember(parent.GetType(), segment.Name, out MemberInfo? member, out _))
+        {
+            if (segment.Index is int index)
+            {
+                if (GetMemberValue(member!, parent) is IList { IsReadOnly: false } list)
+                {
+                    list[index] = box;
+                    return;
+                }
+            }
+            else if (member is PropertyInfo property && AsDeclared(property) is { SetMethod: not null } declared)
+            {
+                declared.SetValue(parent, box);
+                return;
+            }
+            // Only a field inside a struct: a view model's own fields are never written.
+            else if (member is FieldInfo { IsInitOnly: false, IsLiteral: false } field && parent.GetType().IsValueType)
+            {
+                field.SetValue(parent, box);
+                return;
+            }
+        }
+
+        string holderName = $"{parent.GetType().Name}.{FormatSegment(segment)}";
+        string path = string.Join(".", Array.ConvertAll(segments, FormatSegment));
+        throw new StructWriteBackException(
+            $"{holderName} holds a struct, so a write to '{path}' changes a copy that must be assigned back to " +
+            $"{holderName}, but {holderName} cannot be assigned (no setter, readonly, or a view model field).");
+    }
+
+    // Returns whether the leaf was written.
+    [RequiresUnreferencedCode("Looks up members by name on runtime types.")]
+    private static bool SetLeafOnRuntimeType(object owner, PathSegment leaf, object? value)
+    {
+
         if (leaf.Index is int index)
         {
+            // A collection is a reference that holds the element, so nothing is assigned back after it.
             if (TryGetMember(owner.GetType(), leaf.Name, out MemberInfo? collectionMember, out _) &&
                 GetMemberValue(collectionMember!, owner) is IList list && index >= 0 && index < list.Count)
             {
                 list[index] = value;
             }
-            return;
+            return false;
         }
 
         if (!TryGetMember(owner.GetType(), leaf.Name, out MemberInfo? member, out Type memberType))
         {
-            return;
+            return false;
         }
 
         if (value == null && memberType.IsValueType && Nullable.GetUnderlyingType(memberType) == null)
@@ -619,11 +699,12 @@ internal static class BinderHelpers
         {
             case PropertyInfo property when AsDeclared(property) is { SetMethod: not null } declared:
                 declared.SetValue(owner, value);
-                break;
+                return true;
             case FieldInfo { IsInitOnly: false, IsLiteral: false } field:
                 field.SetValue(owner, value);
-                break;
+                return true;
         }
+        return false;
     }
 
     [RequiresUnreferencedCode("Looks up members by name on runtime types.")]

@@ -105,6 +105,77 @@ public class StructMemberPathWriteBackTests : BaseTestClass
             get => Get<System.Numerics.Vector2>();
             set => Set(value);
         }
+
+        public Microsoft.Xna.Framework.Vector2? NullablePosition
+        {
+            get => Get<Microsoft.Xna.Framework.Vector2?>();
+            set => Set(value);
+        }
+
+        // Declared as object, so the rest of a path through it is resolved on the held object's runtime type.
+        public object? Holder
+        {
+            get => Get<object?>();
+            set => Set(value);
+        }
+    }
+
+    private class Player
+    {
+        public Position Position { get; set; }
+        public Microsoft.Xna.Framework.Vector2 Velocity { get; set; }
+        public Position Fixed => default;
+    }
+
+    [Fact]
+    public void TwoWayEdit_WritesNullableStructBack_ThroughPropertySetter()
+    {
+        WorldViewModel vm = new() { NullablePosition = new Microsoft.Xna.Framework.Vector2(3, 4) };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), "NullablePosition.X");
+        textBox.Text.ShouldBe("3");
+
+        textBox.Text = "7";
+
+        vm.NullablePosition.ShouldBe(new Microsoft.Xna.Framework.Vector2(7, 4));
+        _reports.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void TwoWayEdit_PastRuntimeResolvedHolder_WritesStructBack()
+    {
+        Player player = new()
+        {
+            Position = new Position { X = 3, Y = 4 },
+            Velocity = new Microsoft.Xna.Framework.Vector2(5, 6)
+        };
+        WorldViewModel vm = new() { Holder = player };
+        TextBox positionBox = new() { BindingContext = vm };
+        positionBox.SetBinding(nameof(TextBox.Text), "Holder.Position.X");
+        TextBox velocityBox = new() { BindingContext = vm };
+        velocityBox.SetBinding(nameof(TextBox.Text), "Holder.Velocity.X");
+
+        positionBox.Text = "7";
+        velocityBox.Text = "8";
+
+        player.Position.X.ShouldBe(7);
+        player.Position.Y.ShouldBe(4);
+        player.Velocity.ShouldBe(new Microsoft.Xna.Framework.Vector2(8, 6));
+        _reports.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void TwoWayEdit_PastRuntimeResolvedHolder_ToStructBehindGetOnlyProperty_IsReportedOnce()
+    {
+        WorldViewModel vm = new() { Holder = new Player() };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), "Holder.Fixed.X");
+
+        textBox.Text = "7";
+        textBox.Text = "8";
+
+        _reports.Count.ShouldBe(1);
+        _reports[0].ShouldContain("Player.Fixed");
     }
 
     [Fact]

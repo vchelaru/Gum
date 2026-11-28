@@ -158,7 +158,7 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         }
 
         PathObserver.Attach(newSource);
-        _isLeafInStruct = BinderHelpers.IsLeafInStruct(newSource.GetType(), Binding.Path);
+        _isLeafInStruct = BinderHelpers.IsLeafInStruct(newSource, Binding.Path);
 
         bool shouldBuildSourceSetter =
             CanWriteSource;
@@ -249,17 +249,36 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         // A view model field is read, never written.
         if (SourceSetter is null || !PathObserver.HasResolution || IsLeafViewModelField || CurrentRoot is null)
         {
-            if (_unassignableStructMessage is { } message && !_hasReportedUnassignableStruct &&
-                PathObserver.HasResolution && !IsLeafViewModelField)
+            if (_unassignableStructMessage is { } message && PathObserver.HasResolution && !IsLeafViewModelField)
             {
-                _hasReportedUnassignableStruct = true;
-                GumRuntime.ElementSaveExtensions.ReportDiagnostic(message);
+                ReportUnassignableStructOnce(message);
             }
             // binding error: broken path
             return false;
         }
-        SourceSetter(CurrentRoot, value);
+
+        try
+        {
+            SourceSetter(CurrentRoot, value);
+        }
+        catch (BinderHelpers.StructWriteBackException exception)
+        {
+            // A struct past a segment resolved on the runtime type, whose holder turned out not to be assignable.
+            ReportUnassignableStructOnce($"{exception.Message} The {Mode} binding of " +
+                $"{TargetElement.GetType().Name}.{_targetPropertyName} cannot write to the view model.");
+            return false;
+        }
         return true;
+    }
+
+    private void ReportUnassignableStructOnce(string message)
+    {
+        if (_hasReportedUnassignableStruct)
+        {
+            return;
+        }
+        _hasReportedUnassignableStruct = true;
+        GumRuntime.ElementSaveExtensions.ReportDiagnostic(message);
     }
 
     protected object? Convert(IValueConverter converter, object? value, Type targetType)
