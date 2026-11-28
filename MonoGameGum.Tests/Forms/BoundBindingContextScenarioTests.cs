@@ -31,6 +31,11 @@ public class BoundBindingContextScenarioTests : BaseTestClass
         public PlayerVm? Player { get => Get<PlayerVm?>(); set => Set(value); }
     }
 
+    public class TeamVm : ViewModel
+    {
+        public GameVm? Game { get => Get<GameVm?>(); set => Set(value); }
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     static WeakReference BuildDeep(GameVm vm, out TextRuntime leaf, out StackPanel middle)
     {
@@ -277,6 +282,44 @@ public class BoundBindingContextScenarioTests : BaseTestClass
         parent.BindingContext = null;
 
         playerPanel.BindingContext.ShouldBe(fallback);
+    }
+
+    [Fact]
+    public void NestedBoundContexts_OuterSourceBecomesNull_InnerContextIsNull()
+    {
+        PlayerVm player = new() { Name = "a" };
+        TeamVm team = new() { Game = new GameVm { Player = player } };
+        StackPanel screen = new() { BindingContext = team };
+        StackPanel gamePanel = new();
+        gamePanel.SetBinding(nameof(FrameworkElement.BindingContext), nameof(TeamVm.Game));
+        screen.AddChild(gamePanel);
+        StackPanel playerPanel = new();
+        playerPanel.SetBinding(nameof(FrameworkElement.BindingContext), nameof(GameVm.Player));
+        gamePanel.AddChild(playerPanel);
+        playerPanel.BindingContext.ShouldBe(player);
+
+        team.Game = null;
+
+        gamePanel.BindingContext.ShouldBeNull();
+        playerPanel.BindingContext.ShouldBeNull();
+    }
+
+    [Fact]
+    public void OwnContextThenBound_RemovedFromParent_IsNullAndClearBindingRestoresOwn()
+    {
+        PlayerVm own = new() { Name = "own" };
+        PlayerVm fromParent = new() { Name = "parent" };
+        StackPanel parent = new() { BindingContext = new GameVm { Player = fromParent } };
+        StackPanel playerPanel = new() { BindingContext = own };
+        playerPanel.SetBinding(nameof(FrameworkElement.BindingContext), nameof(GameVm.Player));
+        parent.AddChild(playerPanel);
+        playerPanel.BindingContext.ShouldBe(fromParent);
+
+        parent.RemoveChild(playerPanel);
+
+        playerPanel.BindingContext.ShouldBeNull();
+        playerPanel.ClearBinding(nameof(FrameworkElement.BindingContext));
+        playerPanel.BindingContext.ShouldBe(own);
     }
 
     [Fact]
