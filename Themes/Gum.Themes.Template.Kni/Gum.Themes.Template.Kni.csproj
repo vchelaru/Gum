@@ -35,6 +35,7 @@
     <Compile Remove="..\Gum.Themes.Template.MonoGame\bin\**" />
     <!-- Shared platform shims (live outside the MonoGame project folder, so the glob misses them). -->
     <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeTextStyles.cs" Link="ThemeTextStyles.cs" />
     <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
   </ItemGroup>
   <ItemGroup>

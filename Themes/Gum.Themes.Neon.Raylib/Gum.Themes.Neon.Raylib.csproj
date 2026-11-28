@@ -33,6 +33,7 @@
     <Compile Include="..\Gum.Themes.Neon.MonoGame\**\*.cs" />
     <Compile Remove="..\Gum.Themes.Neon.MonoGame\obj\**" />
     <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeTextStyles.cs" Link="ThemeTextStyles.cs" />
     <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
   </ItemGroup>
   <ItemGroup>

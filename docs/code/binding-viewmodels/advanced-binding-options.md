@@ -4,6 +4,8 @@
 
 Gum provides multiple options to control how binding behaves using the `Binding` type.
 
+A binding connects two properties. The source is the ViewModel property, found on the control's `BindingContext`. The target is the UI property, such as a TextBox's `Text`.
+
 ## Lambda Binding
 
 The recommended way to set up a binding is with a lambda expression, which provides compile-time checking, refactoring support, and (unlike a string path) safety under `PublishTrimmed` -- see the hint below. Lambda expressions are extension methods available on `FrameworkElement`.
@@ -17,7 +19,7 @@ textBox.SetBinding<MyViewModel>(
     vm => vm.PlayerName);
 ```
 
-A parameterless lambda captures the ViewModel from a local variable:
+A parameterless lambda supplies only the property path. Gum reads the value from the control's `BindingContext`, not from the variable in the lambda, so `BindingContext` must be set:
 
 ```csharp
 // Initialize
@@ -140,7 +142,7 @@ The following fiddle demonstrates index-based binding with a team of players. Th
 
 ## Available Binding Properties
 
-The following properties are available on the Binding class. Note that the term "source" typically refers to the ViewModel:
+The following properties are available on the Binding class:
 
 * `Path` - the property path on the source. This can be a simple name like `LabelText`, a dotted path like `Player.Name`, or an indexed path like `Items[0].Text`.
 * `Mode` - the direction of data flow in binding. This can be used to create one-way binding.
