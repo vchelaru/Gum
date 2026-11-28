@@ -25,6 +25,18 @@ internal interface IBindingTarget : INotifyPropertyChanged
     /// <summary>Raised when the context the target would inherit from its parent changes.</summary>
     event EventHandler<BindingContextChangedEventArgs>? InheritedBindingContextChanged;
 
+    /// <summary>
+    /// The context the target would inherit from its parent. A binding of <see cref="BindingContext"/> reads its
+    /// path from it.
+    /// </summary>
+    object? InheritedBindingContext { get; }
+
+    /// <summary>
+    /// Set while a binding sets <see cref="BindingContext"/>. The value it resolves, null included, is then the
+    /// target's context, as WPF does for a bound DataContext; once the binding is cleared, the target inherits again.
+    /// </summary>
+    void SetIsBindingContextBound(bool isBound);
+
     /// <summary>Raised when the target loses focus, for <see cref="UpdateSourceTrigger.LostFocus"/>.</summary>
     event EventHandler? LostFocus;
 
