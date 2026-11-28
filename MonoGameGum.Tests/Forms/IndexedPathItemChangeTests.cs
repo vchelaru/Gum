@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
@@ -212,5 +214,171 @@ public class IndexedPathItemChangeTests : BaseTestClass
         replacement.Name = "broken shield";
 
         text.Text.ShouldBe("broken shield");
+    }
+
+    [Fact]
+    public void NestedIndexedSegments_OuterInsert_OldInnerCollectionNoLongerDrivesTarget()
+    {
+        PartyViewModel party = new();
+        party.Members.Add(InventoryOf("x0", "x1"));
+        Label label = new() { BindingContext = party };
+        label.SetBinding(nameof(Label.Text), "Members[0].Slots[1].Name");
+
+        InventoryViewModel old = party.Members[0];
+        party.Members.Insert(0, InventoryOf("y0", "y1"));
+        label.Text.ShouldBe("y1");
+
+        old.Slots.Insert(0, new SlotViewModel { Name = "stale" });
+        old.Slots[1].Name = "stale2";
+        label.Text.ShouldBe("y1");
+
+        party.Members[0].Slots.RemoveAt(0);
+        label.Text.ShouldBeNull();
+    }
+
+    [Fact]
+    public void NestedIndexedSegments_InnerMove_DisplacedItemNoLongerDrivesTarget()
+    {
+        PartyViewModel party = new();
+        party.Members.Add(InventoryOf("x0", "x1", "x2"));
+        Label label = new() { BindingContext = party };
+        label.SetBinding(nameof(Label.Text), "Members[0].Slots[1].Name");
+
+        party.Members[0].Slots.Move(2, 1);
+        label.Text.ShouldBe("x2");
+
+        party.Members[0].Slots[2].Name = "should-not-show";
+        label.Text.ShouldBe("x2");
+
+        party.Members[0].Slots[1].Name = "renamed";
+        label.Text.ShouldBe("renamed");
+    }
+
+    [Fact]
+    public void PlainListSegment_ListReplaced_FollowsNewItem()
+    {
+        ListInventoryViewModel vm = new()
+        {
+            Slots = new() { new SlotViewModel { Name = "a" }, new SlotViewModel { Name = "b" } }
+        };
+        Label label = new() { BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), "Slots[1].Name");
+
+        vm.Slots[1].Name = "b2";
+        label.Text.ShouldBe("b2");
+
+        vm.Slots = new() { new SlotViewModel { Name = "z0" }, new SlotViewModel { Name = "z1" } };
+        label.Text.ShouldBe("z1");
+
+        vm.Slots[1].Name = "z1b";
+        label.Text.ShouldBe("z1b");
+    }
+
+    [Fact]
+    public void ContextReplaced_OldContextAndCollectionsAreCollected()
+    {
+        Label label = new();
+        label.SetBinding(nameof(Label.Text), "Members[0].Slots[0].Name");
+
+        (WeakReference party, WeakReference members, WeakReference slots) = BindThenReplaceContext(label);
+        for (int i = 0; i < 3; i++)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        party.IsAlive.ShouldBeFalse();
+        members.IsAlive.ShouldBeFalse();
+        slots.IsAlive.ShouldBeFalse();
+        label.Text.ShouldBe("new");
+    }
+
+    [Fact]
+    public void ClearBinding_LaterCollectionChange_LeavesTarget()
+    {
+        InventoryViewModel vm = InventoryOf("a");
+        Label label = new() { BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), "Slots[0].Name");
+
+        label.ClearBinding(nameof(Label.Text));
+        label.Text = "manual";
+        vm.Slots.Insert(0, new SlotViewModel { Name = "x" });
+        vm.Slots[0].Name = "y";
+
+        label.Text.ShouldBe("manual");
+    }
+
+    [Fact]
+    public void ForwardedCollection_RepeatedInserts_FollowsItemWithoutSubscriberGrowth()
+    {
+        ForwardingInventoryViewModel vm = new() { Slots = new() };
+        for (int i = 0; i < 3; i++)
+        {
+            vm.Slots.Add(new SlotViewModel { Name = "s" + i });
+        }
+        Label label = new() { BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), "Slots[1].Name");
+        int subscribersBefore = CollectionChangedSubscriberCount(vm.Slots);
+
+        for (int i = 0; i < 20; i++)
+        {
+            vm.Slots.Insert(0, new SlotViewModel { Name = "ins" + i });
+        }
+        label.Text.ShouldBe("ins18");
+
+        vm.Slots[1].Name = "renamed";
+        vm.Slots[2].Name = "not-shown";
+        label.Text.ShouldBe("renamed");
+        CollectionChangedSubscriberCount(vm.Slots).ShouldBe(subscribersBefore);
+    }
+
+    private class ListInventoryViewModel : ViewModel
+    {
+        public List<SlotViewModel> Slots
+        {
+            get => Get<List<SlotViewModel>>();
+            set => Set(value);
+        }
+    }
+
+    // Stored through ViewModel.Set, so the view model also forwards the collection's changes as PropertyChanged.
+    private class ForwardingInventoryViewModel : ViewModel
+    {
+        public ObservableCollection<SlotViewModel> Slots
+        {
+            get => Get<ObservableCollection<SlotViewModel>>();
+            set => Set(value);
+        }
+    }
+
+    private static InventoryViewModel InventoryOf(params string[] names)
+    {
+        InventoryViewModel vm = new();
+        foreach (string name in names)
+        {
+            vm.Slots.Add(new SlotViewModel { Name = name });
+        }
+        return vm;
+    }
+
+    private static int CollectionChangedSubscriberCount(ObservableCollection<SlotViewModel> collection)
+    {
+        FieldInfo field = typeof(ObservableCollection<SlotViewModel>).GetField(
+            nameof(ObservableCollection<SlotViewModel>.CollectionChanged), BindingFlags.NonPublic | BindingFlags.Instance)!;
+        return (field.GetValue(collection) as Delegate)?.GetInvocationList().Length ?? 0;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static (WeakReference, WeakReference, WeakReference) BindThenReplaceContext(Label label)
+    {
+        PartyViewModel old = new();
+        old.Members.Add(InventoryOf("old"));
+        label.BindingContext = old;
+        old.Members[0].Slots.Insert(0, new SlotViewModel { Name = "old2" });
+
+        PartyViewModel fresh = new();
+        fresh.Members.Add(InventoryOf("new"));
+        label.BindingContext = fresh;
+        return (new WeakReference(old), new WeakReference(old.Members), new WeakReference(old.Members[0].Slots));
     }
 }
