@@ -53,6 +53,12 @@ internal class PropertyRegistry
         if (ownerType.GetProperty(uiPropertyName) != null)
         {
             NpcBindingExpression npcExpression = new(Owner, uiPropertyName, binding);
+            // Refused before Replace, so the property's previous binding keeps working.
+            if (npcExpression.GetStringFormatSourceTypeErrorMessage() is { } stringFormatMessage)
+            {
+                npcExpression.Dispose();
+                throw new InvalidOperationException(stringFormatMessage);
+            }
             // Captured once, the first time the property is bound, so a rebind does not take a view model's value
             // as the value to reset to.
             if (UnboundValues.TryGetValue(uiPropertyName, out object? unboundValue))

@@ -374,6 +374,14 @@ public partial class GraphicalUiElement : IBindingTarget
         "SetBinding<TVm> overload that takes an expression instead of a string.")]
     public void SetBinding(string uiProperty, string vmProperty, string? toStringFormat = null)
     {
+        SetBinding(uiProperty, new Binding(vmProperty)
+        {
+            StringFormat = ToCompositeFormat(toStringFormat)
+        });
+    }
+
+    private static string? ToCompositeFormat(string? toStringFormat)
+    {
         string? stringFormat = string.IsNullOrEmpty(toStringFormat) ? null
             : BinderHelpers.GetStringFormatErrorMessage(toStringFormat) == null ? toStringFormat
             : "{0:" + toStringFormat + "}";
@@ -384,11 +392,7 @@ public partial class GraphicalUiElement : IBindingTarget
                 "format with a {0} placeholder such as \"{0:N0}\".",
                 nameof(toStringFormat));
         }
-
-        SetBinding(uiProperty, new Binding(vmProperty)
-        {
-            StringFormat = stringFormat
-        });
+        return stringFormat;
     }
 
     /// <summary>
@@ -413,14 +417,27 @@ public partial class GraphicalUiElement : IBindingTarget
     /// Binds <paramref name="uiProperty"/> to the VM member referenced by <paramref name="vmPropertyExpression"/>.
     /// Prefer this over the string-path overload: the expression is a compile-time reference to the VM
     /// member, which keeps that member from being removed under <c>PublishTrimmed</c>. See
-    /// <see cref="SetBinding(string, string, string?)"/> for the trim-safety caveat this avoids.
+    /// <see cref="SetBinding(string, string, string?)"/> for the trim-safety caveat this avoids. A
+    /// <paramref name="toStringFormat"/> the member's type rejects throws here, with or without a BindingContext.
     /// </summary>
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "vmPropertyExpression is a compiler-built expression tree that references the " +
             "VM member directly, which keeps the trimmer from removing it. The string-path overload this " +
             "forwards to can therefore always resolve that member by name at runtime.")]
-    public void SetBinding<TVm>(string uiProperty, Expression<Func<TVm, object?>> vmPropertyExpression, string? toStringFormat = null) =>
-        SetBinding(uiProperty, BinderHelpers.ExtractPath(vmPropertyExpression), toStringFormat);
+    public void SetBinding<TVm>(string uiProperty, Expression<Func<TVm, object?>> vmPropertyExpression, string? toStringFormat = null)
+    {
+        string path = BinderHelpers.ExtractPath(vmPropertyExpression);
+        string? stringFormat = ToCompositeFormat(toStringFormat);
+        if (stringFormat != null &&
+            GetType().GetProperty(uiProperty)?.PropertyType == typeof(string) &&
+            BinderHelpers.GetStringFormatValueTypeErrorMessage(stringFormat,
+                BinderHelpers.GetLeafType(vmPropertyExpression), $"{typeof(TVm).Name}.{path}") is { } message)
+        {
+            throw new InvalidOperationException(message);
+        }
+
+        SetBinding(uiProperty, new Binding(path) { StringFormat = stringFormat });
+    }
 
     /// <summary>
     /// Removes the binding on <paramref name="uiProperty"/> and restores the value the property held before it
