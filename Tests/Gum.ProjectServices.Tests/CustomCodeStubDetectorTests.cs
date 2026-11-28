@@ -241,7 +241,7 @@ public class CustomCodeStubDetectorTests : BaseTestClass
         component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
 
         Mock<INameVerifier> nameVerifier = new();
-        string whyNotValid;
+        string? whyNotValid;
         CommonValidationError error;
         nameVerifier
             .Setup(v => v.IsValidCSharpName(It.IsAny<string>(), out whyNotValid, out error))

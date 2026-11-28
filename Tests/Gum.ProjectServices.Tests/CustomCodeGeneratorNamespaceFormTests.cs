@@ -93,7 +93,7 @@ public class CustomCodeGeneratorNamespaceFormTests : BaseTestClass
         };
 
         Mock<INameVerifier> mockNameVerifier = new Mock<INameVerifier>();
-        string whyNotValid;
+        string? whyNotValid;
         CommonValidationError error;
         mockNameVerifier
             .Setup(v => v.IsValidCSharpName(It.IsAny<string>(), out whyNotValid, out error))
