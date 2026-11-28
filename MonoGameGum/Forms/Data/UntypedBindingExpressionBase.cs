@@ -124,7 +124,15 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
             return;
         }
 
-        UpdateTarget();
+        // OneWayToSource hands the new source the value the control already holds, as WPF does.
+        if (Binding.Mode is BindingMode.OneWayToSource)
+        {
+            UpdateSource();
+        }
+        else
+        {
+            UpdateTarget();
+        }
     }
 
     [RequiresUnreferencedCode("Calls " + nameof(BinderHelpers.GetMissingPathMessage) + ".")]
