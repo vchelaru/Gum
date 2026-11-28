@@ -48,16 +48,15 @@
       "depth": 0,
       "source": "local",
       "dependencies": {
-        "com.unity.inputsystem": "1.11.0",
         "com.unity.modules.imgui": "1.0.0"
       }
     },
     "com.vchelaru.skiagamerendering": {
-      "version": "https://github.com/vchelaru/SkiaGameRendering.git#upm/v0.20.0",
+      "version": "https://github.com/vchelaru/SkiaGameRendering.git#upm/v0.27.1",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "38dd353681fc9bca48aca38b90844d685aab5a34"
+      "hash": "3bc6c31b34dfe003468a94bf0c252d6fed346819"
     },
     "com.unity.modules.animation": {
       "version": "1.0.0",
