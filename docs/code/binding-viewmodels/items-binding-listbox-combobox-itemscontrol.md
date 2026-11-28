@@ -20,7 +20,7 @@ Available in December 2026, or now if building Gum from source.
 
 ## ItemsControl Binding
 
-`ItemsControl` is similar to `ListBox`, but it does not have any restrictions on visual types since `ItemControl` does not support the concept of selection. This makes `ItemsControl` suitable for general usage.
+`ItemsControl` is similar to `ListBox`, but it does not have any restrictions on visual types since `ItemsControl` does not support the concept of selection. This makes `ItemsControl` suitable for general usage.
 
 The following code shows how to bind an `ItemsControl` to a `ViewModel`'s `ObservableCollection`:
 
@@ -181,7 +181,7 @@ var stackPanel = new StackPanel();
 stackPanel.AddToRoot();
 stackPanel.Anchor(Anchor.Center);
 
-itemsControl = new ItemsControl();
+var itemsControl = new ItemsControl();
 stackPanel.AddChild(itemsControl);
 //itemsControl.Height = 70;
 itemsControl.Width = 250;
@@ -266,11 +266,9 @@ public class WeaponViewModel : ViewModel
     }
 }
 
-// A special button which includes text and subtext
+// A ListBoxItem which shows the weapon name and its details
 public class WeaponDisplay : ListBoxItem
 {
-    TextRuntime subText;
-
     public WeaponDisplay() : base()
     {
         Visual.Height = 10;
@@ -279,23 +277,18 @@ public class WeaponDisplay : ListBoxItem
         text.Anchor(Gum.Wireframe.Anchor.TopLeft);
 
         // add a 2nd Text instance under the main text:
-        subText = new TextRuntime();
+        var subText = new TextRuntime();
         subText.Y = 22;
         subText.Color = new Color(220, 220, 200);
         subText.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
         this.AddChild(subText);
-    }
 
-    public override void UpdateToObject(object o)
-    {
-        var asWeaponViewModel = o as WeaponViewModel;
-
-        if(asWeaponViewModel != null)
-        {
-            coreText.RawText = asWeaponViewModel.WeaponName;
-            subText.Text = asWeaponViewModel.WeaponDetails;
-        }
+        // Each item's BindingContext is its WeaponViewModel.
+        // The main text shows WeaponName through DisplayMemberPath.
+        subText.SetBinding(
+            nameof(subText.Text),
+            nameof(WeaponViewModel.WeaponDetails));
     }
 }
 

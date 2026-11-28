@@ -55,7 +55,7 @@ public class TaskScreenViewModel : ViewModel
 }
 ```
 
-This view model includes an `ObservableCollection` property called `Tasks`. By making this inherit from `ObservableCollection`, a bound `ListBox` automatically updates its items whenever items are added or removed.
+This view model includes an `ObservableCollection` property called `Tasks`. Because `Tasks` is an `ObservableCollection`, a bound `ListBox` automatically updates its items whenever items are added or removed.
 
 The `ViewModel` also includes methods for adding or removing tasks. These methods perform their own validation, using the `ViewModel`'s properties to determine if actions can be performed.
 
@@ -151,11 +151,11 @@ public class TaskScreen : FrameworkElement
 {% tab title="Gum UI tool (with code generation)" %}
 
 ```csharp
-class TaskScreen
+partial class TaskScreen
 {
     TaskScreenViewModel ViewModel => (TaskScreenViewModel)BindingContext!;
     
-    private void CustomInitialize()
+    partial void CustomInitialize()
     {
         TaskListBox.SetBinding(
             nameof(TaskListBox.Items), 
