@@ -189,14 +189,18 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     }
 
 
-    protected void SetSourceValue(object? value)
+    /// <summary>
+    /// Writes the value to the source. Returns false when nothing was written (no setter or a broken path).
+    /// </summary>
+    protected bool SetSourceValue(object? value)
     {
         if (SourceSetter is null || !PathObserver.HasResolution || CurrentRoot is null)
         {
             // binding error: broken path
-            return;
+            return false;
         }
         SourceSetter(CurrentRoot, value);
+        return true;
     }
 
     protected object? Convert(IValueConverter converter, object? value, Type targetType)
