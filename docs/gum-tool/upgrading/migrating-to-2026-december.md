@@ -63,6 +63,7 @@ No change is needed unless code caught that exception.
 `PushValueToViewModel` in a derived visual follows the Forms rules when it writes to the ViewModel:
 
 * A ViewModel property with no setter is left alone instead of throwing, and Gum writes one `[Gum]` warning for that binding.
+* A ViewModel field is never written. Gum writes the same one-time warning, where the old engine skipped it without a message.
 * A path that ends in an index, such as `Names[0]`, writes that item. Previously nothing was written.
 * A binding whose `Mode` is `OneWay` is not written.
 

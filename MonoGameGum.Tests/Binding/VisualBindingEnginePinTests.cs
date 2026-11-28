@@ -1515,15 +1515,20 @@ public class VisualBindingEnginePinTests : BaseTestClass
     }
 
     [Fact]
-    public void PushValueToViewModel_ViewModelField_DoesNotReport()
+    public void PushValueToViewModel_ViewModelField_ReportsOncePerBinding()
     {
         PinViewModel viewModel = new() { Field = 1 };
         PinRuntime sut = new() { BindingContext = viewModel };
         sut.SetBinding(nameof(PinRuntime.PushedInt), nameof(PinViewModel.Field));
 
         sut.PushedInt = 5;
+        sut.PushedInt = 6;
 
-        _reports.ShouldBeEmpty();
+        viewModel.Field.ShouldBe(1);
+        _reports.ShouldBe(new[]
+        {
+            "PinRuntime.PushedInt pushed its value, but PinViewModel.Field is a field, which bindings never write, so the view model was not changed."
+        });
     }
 
     #endregion

@@ -41,6 +41,9 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     protected bool IsSourceResolvedWithoutSetter =>
         PathObserver.HasResolution && !PathObserver.IsLeafField && SourceSetter is null;
 
+    /// <summary>Whether the path resolved to a source field, which a binding reads but never writes.</summary>
+    protected bool IsSourceField => PathObserver.HasResolution && PathObserver.IsLeafField;
+
     private Func<object, object?>? SourceGetter { get; set; }
     private Action<object, object?>? SourceSetter { get; set; }
     private PropertyPathObserver PathObserver { get; }

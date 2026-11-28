@@ -30,7 +30,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
     private bool _isUpdatingSource;
     private bool _isLostFocusTrigger;
     private bool _hasReportedFailedConversion;
-    private bool _hasReportedPushWithoutSetter;
+    private bool _hasReportedIgnoredPush;
 
     [UnconditionalSuppressMessage("Trimming", "IL2072",
         Justification = "Only value types reach Activator.CreateInstance here, and every value type " +
@@ -321,13 +321,15 @@ internal class NpcBindingExpression : UntypedBindingExpression
         {
             return;
         }
-        // A source member with no setter ignores the push; the target asked for the write, so say why once.
-        if (!_isUpdatingTarget && CurrentRoot != null && IsSourceResolvedWithoutSetter && !_hasReportedPushWithoutSetter)
+        // A field or a property with no setter ignores the push; the target asked for the write, so say why once.
+        if (!_isUpdatingTarget && CurrentRoot != null && !_hasReportedIgnoredPush &&
+            (IsSourceField || IsSourceResolvedWithoutSetter))
         {
-            _hasReportedPushWithoutSetter = true;
+            _hasReportedIgnoredPush = true;
+            string reason = IsSourceField ? "is a field, which bindings never write" : "has no setter";
             GumRuntime.ElementSaveExtensions.ReportDiagnostic(
                 $"{TargetElement.GetType().Name}.{TargetProperty.Name} pushed its value, but " +
-                $"{CurrentRoot.GetType().Name}.{Binding.Path} has no setter, so the view model was not changed.");
+                $"{CurrentRoot.GetType().Name}.{Binding.Path} {reason}, so the view model was not changed.");
         }
         WriteTargetToSource();
     }
