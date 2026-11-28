@@ -32,6 +32,12 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
     protected UntypedBindingExpression(FrameworkElement targetElement, string targetPropertyName, Binding binding)
     {
+        // Checked before anything subscribes, so a refused binding leaves nothing attached to the target.
+        if (BinderHelpers.GetMissingPlaceholderMessage(binding.StringFormat) is { } missingPlaceholderMessage)
+        {
+            throw new InvalidOperationException(missingPlaceholderMessage);
+        }
+
         _targetPropertyName = targetPropertyName;
         _hasReportedMissingPath = false;
         TargetElement = targetElement;

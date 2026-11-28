@@ -212,7 +212,16 @@ internal class NpcBindingExpression : UntypedBindingExpression
             }
             else if (!IsValidForType(value, TargetProperty.PropertyType))
             {
+                object? sourceValue = value;
                 value = TryConvert(value, TargetProperty.PropertyType);
+
+                // An enum target refuses a value that names no member rather than showing its default.
+                if (value == GumProperty.UnsetValue && sourceValue is not null &&
+                    GetEnumType(TargetProperty.PropertyType) is { } enumType)
+                {
+                    throw new InvalidOperationException(BinderHelpers.GetUnmatchedEnumMessage(
+                        sourceValue, enumType, TargetElement.GetType().Name, TargetProperty.Name));
+                }
             }
         }
 
@@ -314,8 +323,17 @@ internal class NpcBindingExpression : UntypedBindingExpression
         return value.GetType() == targetType ||
                targetType.IsInstanceOfType(value);
     }
+    static Type? GetEnumType(Type type) =>
+        (Nullable.GetUnderlyingType(type) ?? type) is { IsEnum: true } enumType ? enumType : null;
+
     static object? TryConvert(object? source, Type targetType)
     {
+        // Convert.ChangeType does not reach enums; names and numbers convert as WPF's binding does.
+        if (source is not null && GetEnumType(targetType) is { } enumType)
+        {
+            return BinderHelpers.ConvertToEnum(source, enumType);
+        }
+
         try
         {
             return System.Convert.ChangeType(source, targetType);

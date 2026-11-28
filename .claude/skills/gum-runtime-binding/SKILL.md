@@ -33,7 +33,7 @@ String-path binding (plus a `SetBinding<TVm>` lambda overload that extracts the 
 
 ```csharp
 element.SetBinding("X", nameof(vm.Position));           // basic
-element.SetBinding("Text", nameof(vm.Name), "{0:N0}");  // with format string
+element.SetBinding("Text", nameof(vm.Gold), "N0");      // numeric format specifier, not "{0:N0}"
 ```
 
 `PushValueToViewModel()` is called from property setters to write back to the VM (always two-way implicitly).
@@ -134,6 +134,10 @@ All binding features work with indexed paths: modes, converters, StringFormat, F
 **A null or empty `PropertyChanged` name means every property changed.** `PropertyPathObserver` re-reads the path from the level that raised it, and the GUE root handler refreshes every flat binding and every descendant's `BindingContext` binding. Tests: `BindingSourceNotificationTests`.
 
 **Weak listeners in PropertyPathObserver.** Forms binding uses weak references to avoid memory leaks on deep paths. GUE binding does not — callers should unsubscribe when disposing.
+
+**Forms `StringFormat` is a composite format and must contain `{0}`.** `SetBinding` throws on one without it (`BinderHelpers.GetMissingPlaceholderMessage`), which is what a C# `$"..."` interpolated format leaves behind. The visual overload's format is a numeric specifier (`"N0"`) and is not checked.
+
+**Forms bindings convert strings and integers to enum targets.** `BinderHelpers.ConvertToEnum` parses names ignoring case (as WPF's `EnumConverter` does) and maps numbers with `Enum.ToObject`; a value naming no member throws in `UpdateTarget`, while an unmatched edit written back to an enum source leaves the source unchanged.
 
 **A setter-only target property binds OneWay on both systems.** Nothing may read the target without checking `CanRead` (`NpcBindingExpression.ShouldUpdateSource`, `GraphicalUiElement.PushValueToViewModel`); a default TwoWay binding only pushes source values, and `OneWayToSource` on a setter-only target throws.
 
