@@ -27,6 +27,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
     [UnconditionalSuppressMessage("Trimming", "IL2072",
         Justification = "Only value types reach Activator.CreateInstance here, and every value type " +
             "has a parameterless constructor that the trimmer cannot remove.")]
+    [RequiresUnreferencedCode("Calls " + nameof(BinderHelpers.CanWritePath) + " on the target control's type.")]
     public NpcBindingExpression(
         FrameworkElement target,
         string targetPropertyName,
