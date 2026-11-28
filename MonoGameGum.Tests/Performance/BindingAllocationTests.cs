@@ -67,4 +67,39 @@ public class BindingAllocationTests : BaseTestClass
         // reintroducing them (#1934).
         result.BytesPerIteration.ShouldBeLessThanOrEqualTo(104);
     }
+
+    private class AttachViewModel : ViewModel
+    {
+        public string? Name { get => Get<string?>(); set => Set(value); }
+        public int Score { get => Get<int>(); set => Set(value); }
+        public bool Shown { get => Get<bool>(); set => Set(value); }
+    }
+
+    [Fact]
+    public void BindingContextSwap_OnVisualWithThreeBindings_DoesNotCompileGettersPerAttach()
+    {
+        AttachViewModel first = new() { Name = "a", Score = 1, Shown = true };
+        AttachViewModel second = new() { Name = "b", Score = 2, Shown = false };
+        TextRuntime text = new();
+        text.SetBinding(nameof(TextRuntime.Text), nameof(AttachViewModel.Name));
+        text.SetBinding(nameof(TextRuntime.Width), nameof(AttachViewModel.Score));
+        text.SetBinding(nameof(TextRuntime.Visible), nameof(AttachViewModel.Shown));
+        bool useFirst = false;
+
+        // Every assignment re-attaches all three bindings to the new view model.
+        AllocationResult result = AllocationMeasurer.Measure(
+            () =>
+            {
+                useFirst = !useFirst;
+                text.BindingContext = useFirst ? first : second;
+            },
+            warmupIterations: 20,
+            measuredIterations: 200);
+
+        _output.WriteLine($"BindingContext swap with three bindings: {result.BytesPerIteration:N0} bytes/swap");
+        text.Text.ShouldBe("b");
+
+        // Compiling a getter allocates several KB, so a per-attach compile of three of them lands far above this.
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(4096);
+    }
 }
