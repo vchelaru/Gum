@@ -17,8 +17,6 @@ public class TwoWayBindingCoercionTests : BaseTestClass
     {
         public double Rounded { get => Get<double>(); set => Set(Math.Round(value)); }
 
-        public double Clamped { get => Get<double>(); set => Set(Math.Min(value, 10)); }
-
         public string? Trimmed { get => Get<string?>(); set => Set(value?.Trim()); }
 
         public string? Name

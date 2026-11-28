@@ -7,9 +7,8 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
-/// How a bound Forms control reacts to the change notifications its source raises: a null or empty
-/// property name (every property changed, as in WPF), changes to an intermediate of a dotted path, and
-/// sources that raise no notifications at all.
+/// How a bound Forms control reacts to the change notifications its source raises: changes to an
+/// intermediate of a dotted path, unrelated property names, and sources that raise no notifications at all.
 /// </summary>
 public class BindingSourceNotificationTests : BaseTestClass
 {
@@ -24,7 +23,6 @@ public class BindingSourceNotificationTests : BaseTestClass
         public Node? Child { get => _child; set { _child = value; Raise(nameof(Child)); } }
 
         public void SetTextSilently(string? value) => _text = value;
-        public void SetChildSilently(Node? value) => _child = value;
         public void Raise(string? propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
