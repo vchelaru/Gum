@@ -159,6 +159,55 @@ public class GraphicalUiElementClearBindingTests
         sut.BindingContext.ShouldBe(second);
     }
 
+    [Fact]
+    public void ClearBinding_DottedPath_StopsFollowingIntermediateAndLeaf()
+    {
+        ClearViewModel child = new() { Name = "bound" };
+        ClearViewModel viewModel = new() { Child = child };
+        ClearRuntime sut = new() { Label = "before", BindingContext = viewModel };
+        sut.SetBinding(nameof(ClearRuntime.Label), "Child.Name");
+        sut.Label.ShouldBe("bound");
+
+        sut.ClearBinding(nameof(ClearRuntime.Label));
+        child.Name = "renamed";
+        viewModel.Child = new ClearViewModel { Name = "replaced" };
+
+        sut.Label.ShouldBe("before");
+        child.PropertyChangedSubscriberCount.ShouldBe(0);
+        viewModel.PropertyChangedSubscriberCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void ClearBinding_ThenSetBindingAgain_FollowsViewModel()
+    {
+        ClearViewModel viewModel = new() { Name = "bound" };
+        ClearRuntime sut = new() { Label = "before", BindingContext = viewModel };
+        sut.SetBinding(nameof(ClearRuntime.Label), nameof(ClearViewModel.Name));
+        sut.ClearBinding(nameof(ClearRuntime.Label));
+
+        sut.SetBinding(nameof(ClearRuntime.Label), nameof(ClearViewModel.Name));
+        viewModel.Name = "changed";
+
+        sut.Label.ShouldBe("changed");
+        sut.IsDataBound(nameof(ClearRuntime.Label)).ShouldBeTrue();
+        viewModel.PropertyChangedSubscriberCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ClearBinding_ThenBindingContextChanged_PropertyKeepsRestoredValue()
+    {
+        ClearViewModel viewModel = new() { Name = "bound" };
+        ContainerRuntime parent = new() { BindingContext = viewModel };
+        ClearRuntime sut = new() { Label = "before" };
+        parent.Children.Add(sut);
+        sut.SetBinding(nameof(ClearRuntime.Label), nameof(ClearViewModel.Name));
+
+        sut.ClearBinding(nameof(ClearRuntime.Label));
+        parent.BindingContext = new ClearViewModel { Name = "second" };
+
+        sut.Label.ShouldBe("before");
+    }
+
     public class PushingRuntime : ContainerRuntime
     {
         private string? _label;
@@ -172,6 +221,38 @@ public class GraphicalUiElementClearBindingTests
                 PushValueToViewModel();
             }
         }
+    }
+
+    [Fact]
+    public void ClearBinding_ThenPropertyChangedOnVisual_DoesNotWriteViewModel()
+    {
+        ClearViewModel viewModel = new() { Name = "bound" };
+        PushingRuntime sut = new() { BindingContext = viewModel };
+        sut.SetBinding(nameof(PushingRuntime.Label), nameof(ClearViewModel.Name));
+        sut.ClearBinding(nameof(PushingRuntime.Label));
+        viewModel.Name = "kept";
+
+        sut.Label = "after clear";
+
+        viewModel.Name.ShouldBe("kept");
+    }
+
+    [Fact]
+    public void ClearBinding_OnClone_LeavesOriginalBound()
+    {
+        ClearViewModel viewModel = new() { Name = "bound" };
+        ClearRuntime original = new() { Label = "before" };
+        original.SetBinding(nameof(ClearRuntime.Label), nameof(ClearViewModel.Name));
+        ClearRuntime clone = (ClearRuntime)original.Clone();
+        original.BindingContext = viewModel;
+        clone.BindingContext = viewModel;
+
+        clone.ClearBinding(nameof(ClearRuntime.Label));
+        viewModel.Name = "changed";
+
+        original.Label.ShouldBe("changed");
+        original.IsDataBound(nameof(ClearRuntime.Label)).ShouldBeTrue();
+        clone.IsDataBound(nameof(ClearRuntime.Label)).ShouldBeFalse();
     }
 
     [Fact]

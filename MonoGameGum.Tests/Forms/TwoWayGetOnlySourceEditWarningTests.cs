@@ -185,4 +185,40 @@ public class TwoWayGetOnlySourceEditWarningTests : BeginnerDriverTestBase
 
         _reports.ShouldBeEmpty();
     }
+
+    [Fact]
+    public void CheckBox_ClickedWithPrivateSetterSource_WritesWithoutReporting()
+    {
+        CheckBox checkBox = AddToRoot(new CheckBox(), "Mute");
+        checkBox.SetBinding(nameof(CheckBox.IsChecked), nameof(MuteViewModel.IsMuted));
+        MuteViewModel viewModel = new();
+        checkBox.BindingContext = viewModel;
+        Driver.Step();
+
+        Driver.Click("Mute");
+
+        viewModel.IsMuted.ShouldBeTrue();
+        _reports.ShouldBeEmpty();
+    }
+
+    public class MuteViewModel
+    {
+        public bool IsMuted { get; private set; }
+    }
+
+    [Fact]
+    public void TextBox_TypedAfterCodeSet_ReportsTheUserEdit()
+    {
+        TextBox textBox = AddToRoot(new TextBox { Width = 200 }, "Tb");
+        textBox.SetBinding(nameof(TextBox.Text), nameof(ComputedViewModel.FullName));
+        textBox.BindingContext = new ComputedViewModel();
+        textBox.Text = "from code";
+        _reports.ShouldBeEmpty();
+        Driver.Click("Tb");
+
+        Driver.Type("x");
+
+        _reports.Count.ShouldBe(1);
+        _reports[0].ShouldStartWith("TextBox.Text was changed by the user");
+    }
 }
