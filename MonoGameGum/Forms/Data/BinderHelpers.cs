@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -342,6 +343,25 @@ internal static class BinderHelpers
         return false;
     }
 
+    // A built delegate depends only on the type and the path, and compiling one is the main cost of attaching a
+    // binding, so each (type, path) pair is compiled once and shared by every binding that attaches to it.
+    private static readonly ConcurrentDictionary<(Type, string), Func<object, object?>> _getterCache = new();
+    private static readonly ConcurrentDictionary<(Type, string), Action<object, object?>> _setterCache = new();
+
+    /// <inheritdoc cref="CompileGetter(Type, string)"/>
+    [RequiresUnreferencedCode("Calls " + nameof(CompileGetter) + ".")]
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "The factory lambda only forwards to CompileGetter; the requirement is surfaced here.")]
+    public static Func<object, object?> BuildGetter(Type targetType, string path) =>
+        _getterCache.GetOrAdd((targetType, path), key => CompileGetter(key.Item1, key.Item2));
+
+    /// <inheritdoc cref="CompileSetter(Type, string)"/>
+    [RequiresUnreferencedCode("Calls " + nameof(CompileSetter) + ".")]
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "The factory lambda only forwards to CompileSetter; the requirement is surfaced here.")]
+    public static Action<object, object?> BuildSetter(Type targetType, string path) =>
+        _setterCache.GetOrAdd((targetType, path), key => CompileSetter(key.Item1, key.Item2));
+
     /// <summary>
     /// Builds a getter for <paramref name="path"/>. It returns <see cref="GumProperty.UnsetValue"/> when the
     /// path is broken (a null intermediate or collection, or a member the held object does not have) and null
@@ -353,7 +373,7 @@ internal static class BinderHelpers
         "Walks the path on targetType by name (Expression.PropertyOrField), and on runtime types by " +
         "reflection past a segment the declared type lacks. Those members may be removed under " +
         "PublishTrimmed if nothing else in the app references them.")]
-    public static Func<object, object?> BuildGetter(Type targetType, string path)
+    private static Func<object, object?> CompileGetter(Type targetType, string path)
     {
         ParameterExpression instanceParam = Expression.Parameter(typeof(object), "instance");
         LabelTarget returnTarget = Expression.Label(typeof(object), "result");
@@ -553,7 +573,7 @@ internal static class BinderHelpers
     [RequiresUnreferencedCode(
         "Walks the path on targetType by name (Expression.PropertyOrField). Those members may be " +
         "removed under PublishTrimmed if nothing else in the app references them.")]
-    public static Action<object, object?> BuildSetter(Type targetType, string path)
+    private static Action<object, object?> CompileSetter(Type targetType, string path)
     {
         // parameters: (object instance, object? value)
         ParameterExpression instanceParam = Expression.Parameter(typeof(object), "instance");

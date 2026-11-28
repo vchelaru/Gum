@@ -113,7 +113,7 @@ public delegate void KeyEventHandler(object? sender, KeyEventArgs e);
 /// all resolve those properties by name through reflection.
 /// </remarks>
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-public class FrameworkElement : INotifyPropertyChanged
+public class FrameworkElement : INotifyPropertyChanged, IBindingTarget
 {
     #region Fields/Properties
 
@@ -414,6 +414,14 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public event EventHandler<BindingContextChangedEventArgs>? BindingContextChanged;
     internal event EventHandler<BindingContextChangedEventArgs>? InheritedBindingContextChanged;
+
+    event EventHandler<BindingContextChangedEventArgs>? IBindingTarget.InheritedBindingContextChanged
+    {
+        add => InheritedBindingContextChanged += value;
+        remove => InheritedBindingContextChanged -= value;
+    }
+
+    BindingMode IBindingTarget.DefaultBindingMode => BindingMode.TwoWay;
 
     /// <summary>
     /// The height in pixels. This is a calculated value considering HeightUnits and Height.

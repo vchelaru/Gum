@@ -37,16 +37,18 @@ internal class NpcBindingExpression : UntypedBindingExpression
     private bool _isUpdatingTarget;
     private bool _isUpdatingSource;
     private bool _isLostFocusTrigger;
+    private bool _hasReportedFailedConversion;
+    private bool _hasReportedIgnoredPush;
     // A TextBox/PasswordBox edit is being written to the source with the PropertyChanged trigger.
     private bool _isPushingTextEdit;
     // The source sent a value back during that edit; shown when the edit ends.
     private bool _hasDeferredTargetUpdate;
-    
+
     [UnconditionalSuppressMessage("Trimming", "IL2072",
         Justification = "Only value types reach Activator.CreateInstance here, and every value type " +
             "has a parameterless constructor that the trimmer cannot remove.")]
     public NpcBindingExpression(
-        FrameworkElement target,
+        IBindingTarget target,
         string targetPropertyName,
         Binding binding) : base(target, targetPropertyName, binding)
     {
@@ -58,11 +60,11 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
         // OneWay and TwoWay write the source value to the target, so refuse a target that cannot take it here
         // rather than when a BindingContext arrives. SetValue reaches a non-public setter, so any setter will do.
-        if (binding.Mode is not BindingMode.OneWayToSource &&
+        if (Mode is not BindingMode.OneWayToSource &&
             !HasTargetSetter)
         {
             throw new InvalidOperationException(BinderHelpers.GetReadOnlyTargetMessage(
-                target.GetType().Name, targetPropertyName, binding.Mode.ToString()));
+                target.GetType().Name, targetPropertyName, Mode.ToString()));
         }
 
         DefaultTargetValue = TargetProperty.PropertyType.IsValueType
@@ -74,7 +76,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
         // TwoWay (the default). OneWayToSource would never do anything, so it is refused.
         if (!TargetProperty.CanRead)
         {
-            if (binding.Mode is BindingMode.OneWayToSource)
+            if (Mode is BindingMode.OneWayToSource)
             {
                 throw new InvalidOperationException(
                     $"Property '{targetPropertyName}' on {target.GetType().Name} has no getter, so it cannot be " +
@@ -87,7 +89,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
             UnboundTargetValue = LastTargetValue;
         }
 
-        if (binding.Mode is BindingMode.TwoWay or BindingMode.OneWayToSource)
+        if (Mode is BindingMode.TwoWay or BindingMode.OneWayToSource)
         {
             HookUpdateSource(binding.UpdateSourceTrigger);
         }
@@ -99,7 +101,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
     }
     
     private bool ShouldUpdateSource =>
-        Binding.Mode is not BindingMode.OneWay &&
+        Mode is not BindingMode.OneWay &&
         TargetProperty.CanRead &&
         TargetProperty.Name is not nameof(FrameworkElement.BindingContext);
 
@@ -125,10 +127,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
         switch (trigger)
         {
             case UpdateSourceTrigger.PropertyChanged:
-                if (TargetElement is INotifyPropertyChanged npc)
-                {
-                    npc.PropertyChanged += OnTargetPropertyChanged;
-                }
+                TargetElement.PropertyChanged += OnTargetPropertyChanged;
                 if (IsTextEditTarget && TargetElement is TextBoxBase textBox)
                 {
                     textBox.LostFocus += OnTextEditEnded;
@@ -174,7 +173,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
         // While the user types, a value the view model sends back for this edit (a re-entrant
         // PropertyChanged, or the post-write read-back) would rewrite the text mid-typing ("1." becoming
         // "1"), so it waits until the edit ends, as WPF does.
-        _isPushingTextEdit = IsTextEditTarget && TargetElement.IsFocused;
+        _isPushingTextEdit = TargetElement is TextBoxBase { IsFocused: true } && IsTextEditTarget;
         try
         {
             UpdateSource();
@@ -213,7 +212,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     public override void UpdateTarget()
     {
-        if (_isUpdatingTarget || Binding.Mode is BindingMode.OneWayToSource)
+        if (_isUpdatingTarget || Mode is BindingMode.OneWayToSource)
         {
             return;
         }
@@ -286,7 +285,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
     /// </summary>
     protected override void ResetTarget()
     {
-        if (Binding.Mode is BindingMode.OneWayToSource ||
+        if (Mode is BindingMode.OneWayToSource ||
             TargetProperty.Name is nameof(FrameworkElement.BindingContext))
         {
             return;
@@ -355,14 +354,67 @@ internal class NpcBindingExpression : UntypedBindingExpression
                 value, enumType, TargetElement.GetType().Name, TargetProperty.Name));
         }
 
+        if (converted == GumProperty.UnsetValue && value is not null)
+        {
+            ReportFailedConversionOnce(value, canFallBack);
+        }
+
         return converted;
+    }
+
+    // A value the target cannot take shows FallbackValue or the default instead of throwing, so it is reported
+    // once per binding rather than going unseen.
+    private void ReportFailedConversionOnce(object value, bool showsFallback)
+    {
+        if (_hasReportedFailedConversion)
+        {
+            return;
+        }
+        _hasReportedFailedConversion = true;
+        string shown = showsFallback ? nameof(Binding.FallbackValue) : "default";
+        GumRuntime.ElementSaveExtensions.ReportDiagnostic(
+            $"Binding for {TargetElement.GetType().Name}.{TargetProperty.Name} could not convert the value " +
+            $"'{value}' ({value.GetType().Name}) to {TargetProperty.PropertyType.Name}, so the property shows its {shown}.");
     }
 
     public override void UpdateSource()
     {
+        if (!ShouldUpdateSource)
+        {
+            return;
+        }
+        WriteTargetToSource();
+    }
+
+    /// <summary>
+    /// Writes the target's value to the source when the target asks for it (a visual's PushValueToViewModel).
+    /// Unlike a PropertyChanged trigger, this also writes for a binding that left its mode unset.
+    /// </summary>
+    public void PushTargetToSource()
+    {
+        if (!CanWriteSource || !TargetProperty.CanRead ||
+            TargetProperty.Name is nameof(FrameworkElement.BindingContext))
+        {
+            return;
+        }
+        // A field or a property with no setter ignores the push; the target asked for the write, so say why once.
+        if (!_isUpdatingTarget && CurrentRoot != null && !_hasReportedIgnoredPush &&
+            (IsSourceField || IsSourceResolvedWithoutSetter))
+        {
+            _hasReportedIgnoredPush = true;
+            string reason = IsSourceField ? "is a field, which bindings never write" : "has no setter";
+            GumRuntime.ElementSaveExtensions.ReportDiagnostic(
+                $"{TargetElement.GetType().Name}.{TargetProperty.Name} pushed its value, but " +
+                $"{CurrentRoot.GetType().Name}.{Binding.Path} {reason}, so the view model was not changed.");
+        }
+        WriteTargetToSource();
+    }
+
+    private void WriteTargetToSource()
+    {
         // During a BindingContext change, a binding that has not re-attached yet still points at the
         // outgoing view model; a target change raised by a sibling binding must not be written there (#7856).
-        if (_isUpdatingSource || _isUpdatingTarget || !ShouldUpdateSource || !IsAttachedToCurrentBindingContext)
+        if (_isUpdatingSource || _isUpdatingTarget || !IsAttachedToCurrentBindingContext)
         {
             return;
         }
@@ -428,10 +480,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     public override void Dispose()
     {
-        if (TargetElement is INotifyPropertyChanged npc)
-        {
-            npc.PropertyChanged -= OnTargetPropertyChanged;
-        }
+        TargetElement.PropertyChanged -= OnTargetPropertyChanged;
         TargetElement.LostFocus -= OnLostFocus;
         TargetElement.LostFocus -= OnTextEditEnded;
         if (TargetElement is TextBoxBase textBox)

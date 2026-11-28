@@ -35,6 +35,26 @@ buttonVisual.SetBinding(
 The string-path overload resolves `ButtonWidth` by reflection when the binding is applied. Under `PublishTrimmed`, a VM member reached *only* through a string-path binding can be removed by the trimmer if nothing else in your code references it directly. The binding then stops updating instead of throwing. The lambda overload above avoids this: writing `vm => vm.ButtonWidth` gives the compiler a direct reference to the property, which keeps the trimmer from removing it. Prefer lambda binding for any project that publishes with `PublishTrimmed` enabled.
 {% endhint %}
 
+A visual also takes a `Binding` object, with the same options as a Forms control: `Mode`, `Converter`, `StringFormat`, `UpdateSourceTrigger`, `FallbackValue` and `TargetNullValue`. See [Advanced Binding Options](advanced-binding-options.md) for what each option does.
+
+```csharp
+// Initialize
+var buttonVisual = MyButton.Visual;
+buttonVisual.SetBinding(
+    nameof(buttonVisual.Width),
+    new Binding(nameof(MyViewModel.ButtonWidth))
+    {
+        Mode = BindingMode.OneWay,
+        FallbackValue = 100f
+    });
+```
+
+Visuals and Forms controls share one binding engine, with one difference: a binding on a visual that does not set `Mode` only copies the ViewModel value to the visual. States, `SetProperty` and localization change visual properties, and those changes stay out of the ViewModel. Set `Mode = BindingMode.TwoWay` to write the visual's changes back.
+
+{% hint style="info" %}
+Available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 If the property requires a specific type, then the Visual can be casted to access type-specific properties, as shown in the following code block:
 
 ```csharp

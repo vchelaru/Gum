@@ -197,17 +197,17 @@ public class BindingStateCategoryAndVisualTypeTests : BaseTestClass
         container.Visible.ShouldBeTrue();
     }
 
+    // A visual binds on the Forms engine, which sets the target's default when the source value cannot convert
+    // (VisualBindingEnginePinTests.Forms_StringToBool_SetsDefault).
     [Fact]
-    public void VisualBinding_SourceTypeCannotConvert_ThrowsNamingBoundProperties()
+    public void VisualBinding_SourceTypeCannotConvert_SetsTargetDefault()
     {
         ShopViewModel viewModel = new() { Label = "yes" };
-        ContainerRuntime container = new() { BindingContext = viewModel };
+        ContainerRuntime container = new() { Visible = true, BindingContext = viewModel };
 
-        Exception exception = Should.Throw<Exception>(() =>
-            container.SetBinding(nameof(ContainerRuntime.Visible), nameof(ShopViewModel.Label)));
+        container.SetBinding(nameof(ContainerRuntime.Visible), nameof(ShopViewModel.Label));
 
-        exception.Message.ShouldContain(nameof(ContainerRuntime.Visible));
-        exception.Message.ShouldContain(nameof(ShopViewModel.Label));
+        container.Visible.ShouldBeFalse();
     }
 
     [Fact]
@@ -229,19 +229,21 @@ public class BindingStateCategoryAndVisualTypeTests : BaseTestClass
         text.Text.ShouldBe("second changed");
     }
 
+    // #8543: losing the BindingContext resets the bound property to its pre-binding value, on a visual too.
     [Fact]
-    public void VisualBinding_InheritedContext_ChildUnparented_StopsFollowing()
+    public void VisualBinding_InheritedContext_ChildUnparented_StopsFollowingAndResets()
     {
         ShopViewModel viewModel = new() { Label = "start" };
         ContainerRuntime parent = new() { BindingContext = viewModel };
-        TextRuntime text = new();
+        TextRuntime text = new() { Text = "unbound" };
         text.SetBinding(nameof(TextRuntime.Text), nameof(ShopViewModel.Label));
         parent.AddChild(text);
+        text.Text.ShouldBe("start");
 
         text.Parent = null;
         viewModel.Label = "after";
 
-        text.Text.ShouldBe("start");
+        text.Text.ShouldBe(ContextResetExpectation.Of("unbound"));
     }
 
     [Fact]

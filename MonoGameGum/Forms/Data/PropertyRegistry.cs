@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
@@ -16,46 +17,107 @@ namespace Gum.Forms.Data;
 #endif
 
 
+/// <summary>
+/// The bindings of one target (a Forms control, or a visual outside FRB), keyed by the target member name.
+/// A target property gets a value binding; a target method gets a view model event binding.
+/// </summary>
 internal class PropertyRegistry
 {
-    private FrameworkElement Owner { get; }
+    private IBindingTarget Owner { get; }
 
-    private Dictionary<string, NpcBindingExpression> NpcBindingExpressions { get; } = [];
+    private Dictionary<string, BindingExpressionBase> BindingExpressions { get; } = [];
+
+    private Dictionary<string, Binding> Bindings { get; } = [];
 
     // What each property held before it was first bound: the value a cleared binding or BindingContext shows.
     private Dictionary<string, object?> UnboundValues { get; } = [];
 
-    public PropertyRegistry(FrameworkElement frameworkElement)
+    public PropertyRegistry(IBindingTarget owner)
     {
-        Owner = frameworkElement;
+        Owner = owner;
     }
 
     public BindingExpressionBase? GetBindingExpression(string uiPropertyName)
     {
-        NpcBindingExpressions.TryGetValue(uiPropertyName, out NpcBindingExpression? npcExpression);
-        return npcExpression;
+        BindingExpressions.TryGetValue(uiPropertyName, out BindingExpressionBase? expression);
+        return expression;
     }
+
+    /// <summary>The bindings set on the owner, by target member name, for replaying them on a copy.</summary>
+    public IEnumerable<KeyValuePair<string, Binding>> GetBindings() => Bindings;
 
     [RequiresUnreferencedCode("Calls " + nameof(NpcBindingExpression) + "." + nameof(NpcBindingExpression.Start) + ".")]
     public void SetBinding(string uiPropertyName, Binding binding)
     {
-        NpcBindingExpression npcExpression = new (Owner, uiPropertyName, binding);
-        // Captured once, the first time the property is bound, so a rebind does not take a view model's value
-        // as the value to reset to.
-        if (UnboundValues.TryGetValue(uiPropertyName, out object? unboundValue))
+        Type ownerType = Owner.GetType();
+        if (ownerType.GetProperty(uiPropertyName) != null)
         {
-            npcExpression.UnboundTargetValue = unboundValue;
+            NpcBindingExpression npcExpression = new(Owner, uiPropertyName, binding);
+            // Captured once, the first time the property is bound, so a rebind does not take a view model's value
+            // as the value to reset to.
+            if (UnboundValues.TryGetValue(uiPropertyName, out object? unboundValue))
+            {
+                npcExpression.UnboundTargetValue = unboundValue;
+            }
+            else
+            {
+                UnboundValues[uiPropertyName] = npcExpression.UnboundTargetValue;
+            }
+            Replace(uiPropertyName, npcExpression, binding);
+            npcExpression.Start();
+        }
+        else if (HasInstanceMethod(ownerType, uiPropertyName))
+        {
+            MethodBindingExpression methodExpression = new(Owner, uiPropertyName, binding.Path);
+            Replace(uiPropertyName, methodExpression, binding);
+            methodExpression.Start();
         }
         else
         {
-            UnboundValues[uiPropertyName] = npcExpression.UnboundTargetValue;
+            throw new InvalidOperationException(
+                $"{ownerType.Name} has no public property and no method named '{uiPropertyName}', so it cannot be " +
+                "the target of a binding. Bind a public property, or a method for a view model event.");
         }
-        if (NpcBindingExpressions.TryGetValue(uiPropertyName, out NpcBindingExpression? existing))
+    }
+
+    private void Replace(string uiPropertyName, BindingExpressionBase expression, Binding binding)
+    {
+        if (BindingExpressions.TryGetValue(uiPropertyName, out BindingExpressionBase? existing))
         {
             existing.Dispose();
         }
-        NpcBindingExpressions[uiPropertyName] = npcExpression;
-        npcExpression.Start();
+        BindingExpressions[uiPropertyName] = expression;
+        Bindings[uiPropertyName] = binding;
+    }
+
+    // Accepts any instance method in the hierarchy, of any visibility, so no method that
+    // Delegate.CreateDelegate(type, target, name) can bind is refused.
+    [RequiresUnreferencedCode("Looks up methods on the target's type by name.")]
+    private static bool HasInstanceMethod(Type type, string name)
+    {
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic |
+            BindingFlags.DeclaredOnly;
+        for (Type? current = type; current != null; current = current.BaseType)
+        {
+            foreach (MethodInfo method in current.GetMethods(flags))
+            {
+                if (method.Name == name)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /// <summary>Writes the owner's <paramref name="uiPropertyName"/> to its binding's source, if it is bound.</summary>
+    public void PushTargetToSource(string uiPropertyName)
+    {
+        if (BindingExpressions.TryGetValue(uiPropertyName, out BindingExpressionBase? expression) &&
+            expression is NpcBindingExpression npcExpression)
+        {
+            npcExpression.PushTargetToSource();
+        }
     }
 
     /// <summary>
@@ -64,32 +126,36 @@ internal class PropertyRegistry
     /// </summary>
     public void RefreshTargets()
     {
-        if (NpcBindingExpressions.Count == 0)
+        if (BindingExpressions.Count == 0)
         {
             return;
         }
 
         // A target setter can run user code that adds or clears bindings.
-        List<NpcBindingExpression> expressions = new (NpcBindingExpressions.Values);
-        foreach (NpcBindingExpression expression in expressions)
+        List<BindingExpressionBase> expressions = new(BindingExpressions.Values);
+        foreach (BindingExpressionBase expression in expressions)
         {
-            expression.RefreshTarget();
+            if (expression is NpcBindingExpression npcExpression)
+            {
+                npcExpression.RefreshTarget();
+            }
         }
     }
 
     public void ClearBinding(string uiPropertyName)
     {
-        if (NpcBindingExpressions.TryGetValue(uiPropertyName, out NpcBindingExpression? npcExpression))
+        if (!BindingExpressions.TryGetValue(uiPropertyName, out BindingExpressionBase? expression))
         {
-            PropertyInfo targetProperty = npcExpression.GetTargetProperty();
-            npcExpression.Dispose();
-            // Only a OneWayToSource binding can target a property with no setter, and it never wrote it.
-            if (npcExpression.HasTargetSetter)
-            {
-                targetProperty.SetValue(Owner, npcExpression.UnboundTargetValue);
-            }
-            NpcBindingExpressions.Remove(uiPropertyName);
+            return;
         }
+
+        expression.Dispose();
+        // Only a OneWayToSource binding can target a property with no setter, and it never wrote it.
+        if (expression is NpcBindingExpression { HasTargetSetter: true } npcExpression)
+        {
+            npcExpression.GetTargetProperty().SetValue(Owner, npcExpression.UnboundTargetValue);
+        }
+        BindingExpressions.Remove(uiPropertyName);
+        Bindings.Remove(uiPropertyName);
     }
-    
 }

@@ -235,16 +235,16 @@ public class BindingContextNullResetTests : BaseTestClass
     }
 
     [Fact]
-    public void BindingContextSetToNull_VisualBinding_KeepsLastValue()
+    public void BindingContextSetToNull_VisualBinding_ResetsToUnboundValue()
     {
-        // Visual (GraphicalUiElement) bindings are a separate engine; they keep the last value today.
+        // Visual (GraphicalUiElement) bindings share the Forms engine, so they reset the same way (#8530).
         TestViewModel vm = new() { Text = "Bob" };
-        GraphicalUiElement element = new() { BindingContext = vm };
+        GraphicalUiElement element = new() { Name = "unbound", BindingContext = vm };
         element.SetBinding(nameof(GraphicalUiElement.Name), nameof(TestViewModel.Text));
         element.Name.ShouldBe("Bob");
 
         element.BindingContext = null;
 
-        element.Name.ShouldBe("Bob");
+        element.Name.ShouldBe(ContextResetExpectation.Of("unbound"));
     }
 }

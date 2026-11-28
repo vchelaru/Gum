@@ -176,11 +176,21 @@ public class Binding(string path)
     /// </summary>
     public string Path { get; } = path;
 
+    private readonly BindingMode? _mode;
+
     /// <summary>
-    /// Gets or sets the direction of data flow in the binding.
-    /// Default is <see cref="BindingMode.TwoWay"/>.
+    /// Gets or sets the direction of data flow in the binding. When it is not set, a binding on a Forms control is
+    /// <see cref="BindingMode.TwoWay"/>, and a binding on a visual is <see cref="BindingMode.OneWay"/> except that
+    /// the visual's PushValueToViewModel still writes to the source. Reads as TwoWay when not set.
     /// </summary>
-    public BindingMode Mode { get; init; } = BindingMode.TwoWay;
+    public BindingMode Mode
+    {
+        get => _mode ?? BindingMode.TwoWay;
+        init => _mode = value;
+    }
+
+    /// <summary>Whether <see cref="Mode"/> was set, rather than left to the target's default.</summary>
+    internal bool IsModeSet => _mode.HasValue;
 
     /// <summary>
     /// Gets or sets when the source (the ViewModel property) is updated in a binding.

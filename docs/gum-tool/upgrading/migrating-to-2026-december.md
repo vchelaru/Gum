@@ -44,6 +44,75 @@ A `ListBox`, `ComboBox` or other items control whose `Items` is bound now shows 
 
 You are affected if you move a control with bound `Items` by removing it from one parent's `Children` and adding it to another. The control briefly has no `BindingContext`, so it loses its selection and scroll position. To keep both, move the control by assigning its `Parent` directly. To keep only the selection, bind `SelectedObject` to a view model property.
 
+## Binding
+
+Visuals (`GraphicalUiElement` and every `*Runtime`) now bind through the same engine as Forms controls. A visual binding still copies the ViewModel value to the visual only, and writes back only through `PushValueToViewModel`, unless its `Binding` sets `Mode`. The entries below are the places where a visual binding used to behave differently.
+
+### Visual Properties Reset When the BindingContext Becomes Null
+
+A bound visual property resets when its `BindingContext` becomes null, the same way a Forms control's does (see [Bound Properties Reset When the BindingContext Becomes Null](#bound-properties-reset-when-the-bindingcontext-becomes-null)). This includes a visual removed from the parent it inherited its context from. Previously the visual kept the last value from the view model.
+
+You are affected if a visual must keep showing the last view model value after its context is cleared or it leaves its parent. Keep the context assigned until the visual is hidden, or set `FallbackValue` on the `Binding` to the value it should show.
+
+### One ViewModel Property Can Feed Several Visual Properties
+
+Binding two properties of one visual to the same ViewModel property now keeps both bindings. Previously the second binding removed the first.
+
+You are affected if code relied on the second `SetBinding` replacing the first. Bind the first property to a different path, or stop binding it.
+
+### Missing ViewModel Property Resets the Visual Property
+
+A path that names a member the `BindingContext` does not have now sets the visual property to the binding's `FallbackValue`, or to the property's default when none is set. Previously the visual kept its current value. The `[Gum]` warning is unchanged.
+
+You are affected if a visual showed a value from the tool or from code while its binding path was wrong. Fix the path, or set `FallbackValue` to the value to show.
+
+### Values the Target Cannot Take Set Its Default
+
+A ViewModel value that does not convert to the visual property's type, such as the string `"yes"` bound to `Visible`, now sets the property's default (or `FallbackValue`) instead of throwing, and Gum writes one `[Gum]` warning for that binding. A `decimal` bound to an `int` property now rounds instead of truncating. A number outside a `byte` property's range sets `0` instead of clamping to `0` or `255`, with the same warning, so an alpha computed slightly above 255 makes the element invisible. A Forms control binding writes the same warning.
+
+You are affected if you relied on the exception or on the old rounding or clamping. Convert or clamp the value in the ViewModel, or use a `Converter`.
+
+### The toStringFormat Argument Formats Every Value
+
+The `toStringFormat` argument of a visual's `SetBinding` now formats any value, and a value that has no format of its own, such as a `bool`, shows its text. Previously only number types were formatted and other values threw. `SetBinding(ui, path, "N0")` is the same as `new Binding(path) { StringFormat = "{0:N0}" }`.
+
+No change is needed unless code caught that exception.
+
+### PushValueToViewModel
+
+`PushValueToViewModel` in a derived visual follows the Forms rules when it writes to the ViewModel:
+
+* A ViewModel property with no setter is left alone instead of throwing, and Gum writes one `[Gum]` warning for that binding.
+* A ViewModel field is never written. Gum writes the same one-time warning, where the old engine skipped it without a message.
+* A path that ends in an index, such as `Names[0]`, writes that item. Previously nothing was written.
+* A binding whose `Mode` is `OneWay` is not written.
+
+You are affected if a ViewModel relied on the exception or on the indexed item staying unchanged. Bind that property with `Mode = BindingMode.OneWay`.
+
+### Forms Controls Read ViewModel Fields
+
+A Forms control binding now reads a public ViewModel field, as a visual binding already did. Previously a path to a field was treated as missing, so the control showed its `FallbackValue`. A field is never written back, on a Forms control or a visual, and it raises no change notification.
+
+You are affected if a ViewModel has a field whose name matches a binding path that used to fall back. Rename the field, or bind to a property.
+
+### BindingContext Bindings
+
+A `SetBinding(nameof(BindingContext), path)` call made before the visual has a parent now resolves the path once the visual is added to one. It also follows changes to that ViewModel property even when the parent has no binding of its own. Previously the visual kept the parent's `BindingContext` in the first case and missed the change in the second.
+
+No change is needed unless code set `BindingContext` by hand to work around this. Remove that code.
+
+### ViewModel Events Follow BindingContext Changes
+
+A ViewModel event bound to a method now unsubscribes from the old `BindingContext` and subscribes to the new one whenever it changes. Previously the method stayed subscribed to a `BindingContext` that does not implement `INotifyPropertyChanged`, and was not subscribed to the new one. A Forms control can now bind a ViewModel event to a method too.
+
+You are affected if code subscribed to the new ViewModel's event by hand after changing `BindingContext`. Remove that code, or the method runs twice.
+
+### Error Messages and Obsolete Members
+
+The error for a visual property with no setter now names the binding mode (`OneWay` unless the `Binding` sets one). Binding a Forms control to a name that is neither a property nor a method now throws the same message as a visual. `GraphicalUiElement.PropertyUnsubscribeCallCount` and `GraphicalUiElement.GetTypeCallCount` are obsolete and always `0`, and `GraphicalUiElement.ConvertValue` is obsolete because bindings no longer call it.
+
+You are affected if code compares the message text or uses one of these members. Update the comparison, delete the counter references, and replace `ConvertValue` with a `Converter` on the `Binding`.
+
 ## Raylib
 
 ### Gum Draws With Normal Blending
