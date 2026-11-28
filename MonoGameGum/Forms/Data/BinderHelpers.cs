@@ -93,7 +93,7 @@ internal static class BinderHelpers
     /// <summary>
     /// Converts a string (a member name, any case, as WPF's EnumConverter does) or an integral number to
     /// <paramref name="enumType"/>. Returns <see cref="GumProperty.UnsetValue"/> when the value matches no member;
-    /// a number on a [Flags] enum only has to be a combination of bits.
+    /// a [Flags] enum accepts any number, including bits no member defines.
     /// </summary>
     public static object ConvertToEnum(object value, Type enumType)
     {
