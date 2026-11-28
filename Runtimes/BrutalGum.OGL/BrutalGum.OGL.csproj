@@ -28,7 +28,7 @@
 	<ItemGroup>
 		<PackageReference Include="Ahwoo.Brutal.Glfw" Version="2026.10.5" />
 		<!-- Skia on OpenGL. Never reference SkiaGameRendering.Brutal (Vulkan) here: both declare SkiaRenderTarget2D. -->
-		<PackageReference Include="SkiaGameRendering.Brutal.OGL" Version="0.26.0" />
+		<PackageReference Include="SkiaGameRendering.Brutal.OGL" Version="0.27.0" />
 	</ItemGroup>
 
 	<ItemGroup>
