@@ -1457,6 +1457,28 @@ public class VisualBindingEnginePinTests : BaseTestClass
         });
     }
 
+    public class OtherPinViewModel : ViewModel
+    {
+        public string? Value { get => Get<string?>(); set => Set(value); }
+    }
+
+    [Fact]
+    public void InvalidStringToInt_OnContextsOfTwoTypes_ReportsOncePerType()
+    {
+        PinRuntime sut = new();
+        sut.SetBinding(nameof(PinRuntime.IntValue), nameof(PinViewModel.Value));
+
+        sut.BindingContext = new PinViewModel { Value = "abc" };
+        sut.BindingContext = new OtherPinViewModel { Value = "def" };
+        sut.BindingContext = new PinViewModel { Value = "ghi" };
+
+        _reports.ShouldBe(new[]
+        {
+            "Binding for PinRuntime.IntValue could not convert the value 'abc' (String) to Int32, so the property shows its default.",
+            "Binding for PinRuntime.IntValue could not convert the value 'def' (String) to Int32, so the property shows its default."
+        });
+    }
+
     [Fact]
     public void Forms_InvalidStringToInt_ReportsOncePerBinding()
     {

@@ -28,14 +28,12 @@ internal class MethodBindingExpression : BindingExpressionBase
     private object? _source;
     private EventInfo? _sourceEvent;
     private Delegate? _handler;
-    private bool _hasReportedMissingPath;
 
     public MethodBindingExpression(IBindingTarget target, string methodName, string path)
     {
         _target = target;
         _methodName = methodName;
         _path = path;
-        _hasReportedMissingPath = false;
         _target.BindingContextChanged += OnTargetBindingContextChanged;
     }
 
@@ -176,16 +174,10 @@ internal class MethodBindingExpression : BindingExpressionBase
     [RequiresUnreferencedCode("Calls " + nameof(BinderHelpers.GetMissingPathMessage) + ".")]
     private void ReportMissingPathOnce(object source)
     {
-        if (_hasReportedMissingPath)
-        {
-            return;
-        }
-
         string? message = BinderHelpers.GetMissingPathMessage(source, _path, allowEventLeaf: true,
             _target.GetType().Name, _methodName);
-        if (message != null)
+        if (message != null && ShouldReport(nameof(ReportMissingPathOnce), source.GetType()))
         {
-            _hasReportedMissingPath = true;
             GumRuntime.ElementSaveExtensions.ReportDiagnostic(message);
         }
     }

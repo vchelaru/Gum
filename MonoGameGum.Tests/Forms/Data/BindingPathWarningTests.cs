@@ -159,6 +159,46 @@ public class BindingPathWarningTests : BaseTestClass
             customMessage: "because the miss against the view model the binding is meant for must not be hidden by a report against a transient inherited context");
     }
 
+    private class MethodTarget : FrameworkElement
+    {
+        public MethodTarget() : base(new ContainerRuntime())
+        {
+        }
+
+        public void HandleWave() { }
+    }
+
+    [Fact]
+    public void MethodBinding_MissingEventOnContextsOfTwoTypes_ReportsOncePerType()
+    {
+        MethodTarget target = new MethodTarget();
+        target.SetBinding(nameof(MethodTarget.HandleWave), "WaveStartedd");
+
+        target.BindingContext = new GameViewModel();
+        target.BindingContext = new PlayerViewModel();
+        target.BindingContext = new GameViewModel();
+
+        _reports.Count.ShouldBe(2);
+        _reports[0].ShouldContain("GameViewModel has no");
+        _reports[1].ShouldContain("PlayerViewModel has no");
+    }
+
+    [Fact]
+    public void FrameworkElementSetBinding_ContextTypesAlternating_ReportsOncePerType()
+    {
+        StackPanel screen = new StackPanel();
+        Label label = new Label();
+        screen.AddChild(label);
+        label.SetBinding(nameof(Label.Text), "Nmae");
+
+        screen.BindingContext = new GameViewModel();
+        label.BindingContext = new PlayerViewModel();
+        label.BindingContext = new GameViewModel();
+        label.BindingContext = new PlayerViewModel();
+
+        _reports.Count.ShouldBe(2);
+    }
+
     [Fact]
     public void GraphicalUiElementSetBinding_MissingNestedSegment_ReportsSegmentAndItsType()
     {

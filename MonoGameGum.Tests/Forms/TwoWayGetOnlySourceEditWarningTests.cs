@@ -42,6 +42,30 @@ public class TwoWayGetOnlySourceEditWarningTests : BeginnerDriverTestBase
         public readonly string Id = "fixed";
     }
 
+    public class OtherComputedViewModel
+    {
+        public string FullName => "Grace Hopper";
+    }
+
+    [Fact]
+    public void TextBox_TypedIntoGetOnlySourcesOfTwoTypes_ReportsOncePerType()
+    {
+        TextBox textBox = AddToRoot(new TextBox { Width = 200 }, "Tb");
+        textBox.SetBinding(nameof(TextBox.Text), nameof(ComputedViewModel.FullName));
+        textBox.BindingContext = new ComputedViewModel();
+        Driver.Click("Tb");
+
+        Driver.Type("x");
+        textBox.BindingContext = new OtherComputedViewModel();
+        Driver.Type("y");
+        textBox.BindingContext = new ComputedViewModel();
+        Driver.Type("z");
+
+        _reports.Count.ShouldBe(2);
+        _reports[0].ShouldStartWith("TextBox.Text was changed by the user, but ComputedViewModel.FullName has no setter");
+        _reports[1].ShouldStartWith("TextBox.Text was changed by the user, but OtherComputedViewModel.FullName has no setter");
+    }
+
     public class PrivateSetterViewModel
     {
         public string Nickname { get; private set; } = "start";

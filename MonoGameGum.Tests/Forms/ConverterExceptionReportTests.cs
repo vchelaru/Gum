@@ -78,4 +78,29 @@ public class ConverterExceptionReportTests : BaseTestClass
         label.Text.ShouldBe("?");
         _reports.Count.ShouldBe(1);
     }
+
+    private class OtherNameViewModel : ViewModel
+    {
+        public string? Name
+        {
+            get => Get<string?>();
+            set => Set(value);
+        }
+    }
+
+    [Fact]
+    public void Convert_Throws_OnContextsOfTwoTypes_ReportsOncePerType()
+    {
+        Label label = new();
+        label.SetBinding(nameof(Label.Text), new Binding(nameof(NameViewModel.Name))
+        {
+            Converter = new ThrowingConverter()
+        });
+
+        label.BindingContext = new NameViewModel { Name = "a" };
+        label.BindingContext = new OtherNameViewModel { Name = "b" };
+        label.BindingContext = new NameViewModel { Name = "c" };
+
+        _reports.Count.ShouldBe(2);
+    }
 }
