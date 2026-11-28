@@ -16,6 +16,14 @@ When a control's `BindingContext` becomes null, each bound property now shows th
 
 You are affected if your game clears a `BindingContext` or removes a screen from the root while the screen is still visible, for example during a transition, and expects the old values to stay on screen. Clear the context after the screen is hidden, or set `FallbackValue` on the binding to choose what it shows.
 
+`ClearBinding` also sets the property back to the value it held before it was first bound. Previously it set the property to null, or to 0 or `false` for a number or `bool` property. If your code relied on that, assign the value you want after calling `ClearBinding`.
+
+### TextBox Text Is Not Reformatted While the User Types
+
+A `TextBox` or `PasswordBox` bound with `UpdateSourceTrigger.PropertyChanged` now keeps the text the user types until editing ends. Previously the view model's value replaced the text after every keystroke, so typing `1.50` into a box bound to a `float` ended as `1.5`, and a trailing `.` disappeared. The view model's value now shows when the control loses focus or the user presses Enter. A change the view model makes on its own still shows immediately.
+
+You are affected if your view model reformats or clamps the value and you expect the box to show that result while the user is still typing. The result now shows when editing ends.
+
 ### Multi-Line TextBox Selection Height Follows the Line Height
 
 In a multi-line `TextBox`, the selection highlight's `Height` is now set to the font's line height whenever the selection instance's `HeightUnits` is `Absolute`. Previously the highlight kept the height from the Visual, which is 20 in the default Visual, so it did not match the text when the font was larger or smaller than the default. Single-line `TextBox` controls and selection instances with any other `HeightUnits` are unchanged.

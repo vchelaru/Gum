@@ -90,6 +90,46 @@ public class BindingContextNullResetTests : BaseTestClass
     }
 
     [Fact]
+    public void SetBindingTwice_ContextCleared_ShowsValueFromBeforeTheFirstBinding()
+    {
+        TestViewModel vm = new() { Text = "Bob" };
+        Label label = new() { Text = "Player name", BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), nameof(TestViewModel.Text));
+        label.SetBinding(nameof(Label.Text), nameof(TestViewModel.Text));
+
+        label.BindingContext = null;
+
+        label.Text.ShouldBe(ContextResetExpectation.Of("Player name"));
+    }
+
+    [Fact]
+    public void ClearBindingThenRebind_ContextCleared_ShowsValueFromBeforeTheFirstBinding()
+    {
+        TestViewModel vm = new() { Text = "Bob" };
+        Label label = new() { Text = "Player name", BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), nameof(TestViewModel.Text));
+        label.ClearBinding(nameof(Label.Text));
+        label.SetBinding(nameof(Label.Text), nameof(TestViewModel.Text));
+
+        label.BindingContext = null;
+
+        label.Text.ShouldBe(ContextResetExpectation.Of("Player name"));
+    }
+
+    [Fact]
+    public void ClearBinding_ResetsToValueFromBeforeTheBinding()
+    {
+        TestViewModel vm = new() { Text = "Bob" };
+        Label label = new() { Text = "Player name", BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), nameof(TestViewModel.Text));
+        label.Text.ShouldBe("Bob");
+
+        label.ClearBinding(nameof(Label.Text));
+
+        label.Text.ShouldBe(ContextResetExpectation.Of("Player name"));
+    }
+
+    [Fact]
     public void BindingContextSetToNull_ValueTypeTarget_ResetsToUnboundValue()
     {
         TestViewModel vm = new() { IntValue = 7 };

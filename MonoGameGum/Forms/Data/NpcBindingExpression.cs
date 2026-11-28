@@ -28,11 +28,12 @@ internal class NpcBindingExpression : UntypedBindingExpression
     private object? LastTargetValue { get; set; }
 
     /// <summary>
-    /// What the target held when this binding was created (default(T) for a write-only target). A cleared
-    /// BindingContext resets to it: Gum has no per-property default metadata, and this is the control's own
-    /// value without a view model (an unchecked CheckBox, SelectedIndex -1, a visual's authored Text).
+    /// What the target held before the property was first bound (default(T) for a write-only target);
+    /// <see cref="PropertyRegistry"/> carries it across rebinds. A cleared BindingContext or ClearBinding resets
+    /// to it: Gum has no per-property default metadata, and this is the control's own value without a view model
+    /// (an unchecked CheckBox, SelectedIndex -1, a visual's authored Text).
     /// </summary>
-    private object? UnboundTargetValue { get; }
+    internal object? UnboundTargetValue { get; set; }
     private bool _isUpdatingTarget;
     private bool _isUpdatingSource;
     private bool _isLostFocusTrigger;
