@@ -915,6 +915,8 @@ public class BitmapFont : IDisposable
         var widths = sMeasuredLineWidths;
         widths.Clear();
         GetRequiredWidthAndHeight(lines, out requiredWidth, out requiredHeight, widths);
+        requiredWidth = System.Math.Min(requiredWidth, MaxRenderTargetSize);
+        requiredHeight = System.Math.Min(requiredHeight, MaxRenderTargetSize);
 
         if (requiredWidth != 0)
         {
@@ -974,6 +976,12 @@ public class BitmapFont : IDisposable
 
         return renderTarget;
     }
+
+    /// <summary>
+    /// The largest width or height of the texture <see cref="RenderToTexture2D(List{string}, HorizontalAlignment, SystemManagers?, Texture2D?, object, int?, float)"/>
+    /// makes, since a render target has a GPU size limit. Text measurement has no such limit.
+    /// </summary>
+    internal const int MaxRenderTargetSize = 4096;
 
     static List<LetterRenderInfo> letterInfos = new List<LetterRenderInfo>();
 
@@ -1473,10 +1481,10 @@ public class BitmapFont : IDisposable
         GetRequiredWidthAndHeight(lines, out requiredWidth, out requiredHeight, null);
     }
 
-    // This sucks, but if we pass an IEnumerable, it allocates memory like crazy. Duplicate code to handle List to reduce alloc
-    //public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<int>? widths)
     /// <summary>
-    /// Returns the width and height required to render the argument line of text.
+    /// Returns the width and height required to render the argument line of text, with no upper limit.
+    /// Only the texture <see cref="RenderToTexture2D(List{string}, HorizontalAlignment, SystemManagers?, Texture2D?, object, int?, float)"/>
+    /// makes is limited to <see cref="MaxRenderTargetSize"/>.
     /// </summary>
     /// <param name="lines">The lines of text, where each entry is one line of text.</param>
     /// <param name="requiredWidth">The required width returned by this method.</param>
@@ -1484,56 +1492,31 @@ public class BitmapFont : IDisposable
     /// <param name="widths">The widths of the individual lines.</param>
     public void GetRequiredWidthAndHeight(List<string> lines, out int requiredWidth, out int requiredHeight, List<int>? widths)
     {
-
-        requiredWidth = 0;
-        requiredHeight = 0;
-
-        for (int i = 0; i < lines.Count; i++)
-        {
-            string line = lines[i];
-            requiredHeight += LineHeightInPixels;
-            int lineWidth = 0;
-
-            lineWidth = MeasureString(line);
-            if (widths != null)
-            {
-                widths.Add(lineWidth);
-            }
-            requiredWidth = System.Math.Max(lineWidth, requiredWidth);
-        }
-
-        const int MaxWidthAndHeight = 4096; // change this later?
-        requiredWidth = System.Math.Min(requiredWidth, MaxWidthAndHeight);
-        requiredHeight = System.Math.Min(requiredHeight, MaxWidthAndHeight);
-        if (requiredWidth != 0 && mOutlineThickness != 0)
-        {
-            requiredWidth += mOutlineThickness * 2;
-        }
+        GetRequiredWidthAndHeight((IReadOnlyList<string>)lines, out requiredWidth, out requiredHeight, widths);
     }
 
     /// <inheritdoc cref="GetRequiredWidthAndHeight(List{string}, out int, out int, List{int}?)"/>
     public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<int>? widths)
     {
+        GetRequiredWidthAndHeight(lines as IReadOnlyList<string> ?? new List<string>(lines),
+            out requiredWidth, out requiredHeight, widths);
+    }
 
+    // Indexes the list rather than using foreach, which would box the enumerator on every call.
+    private void GetRequiredWidthAndHeight(IReadOnlyList<string> lines, out int requiredWidth, out int requiredHeight, List<int>? widths)
+    {
         requiredWidth = 0;
         requiredHeight = 0;
 
-        foreach (string line in lines)
+        for (int i = 0; i < lines.Count; i++)
         {
             requiredHeight += LineHeightInPixels;
-            int lineWidth = 0;
 
-            lineWidth = MeasureString(line);
-            if (widths != null)
-            {
-                widths.Add(lineWidth);
-            }
+            int lineWidth = MeasureString(lines[i]);
+            widths?.Add(lineWidth);
             requiredWidth = System.Math.Max(lineWidth, requiredWidth);
         }
 
-        const int MaxWidthAndHeight = 4096; // change this later?
-        requiredWidth = System.Math.Min(requiredWidth, MaxWidthAndHeight);
-        requiredHeight = System.Math.Min(requiredHeight, MaxWidthAndHeight);
         if (requiredWidth != 0 && mOutlineThickness != 0)
         {
             requiredWidth += mOutlineThickness * 2;
