@@ -453,6 +453,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
     internal override void OnBindingContextRelayed()
     {
+        base.OnBindingContextRelayed();
         if (ApplySelectionBindingsAfterRebind())
         {
             // The new view model may hold either value from before, so push both unconditionally.
