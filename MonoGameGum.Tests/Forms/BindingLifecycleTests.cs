@@ -163,6 +163,34 @@ public class BindingLifecycleTests : BaseTestClass
     }
 
     [Fact]
+    public void BoundListBox_RemovedFromRoot_IsCollectedWhileViewModelLives()
+    {
+        ListViewModel vm = new() { Items = new() { new ItemViewModel { Name = "one" } } };
+
+        WeakReference control = BindListBoxInRootRemoveAndDrop(vm);
+        CollectGarbage();
+
+        control.IsAlive.ShouldBeFalse("because the view model's collection must not keep a removed ListBox alive");
+        GC.KeepAlive(vm);
+    }
+
+    [Fact]
+    public void BoundListBox_RemovedFromRoot_LaterCollectionAddDoesNotReachIt()
+    {
+        ListViewModel vm = new() { Items = new() { new ItemViewModel { Name = "one" } } };
+        ListBox listBox = new();
+        listBox.SetBinding(nameof(ListBox.Items), nameof(ListViewModel.Items));
+        listBox.AddToRoot();
+        listBox.BindingContext = vm;
+        listBox.ListBoxItems.Count.ShouldBe(1);
+
+        listBox.RemoveFromRoot();
+        vm.Items.Add(new ItemViewModel { Name = "two" });
+
+        listBox.ListBoxItems.Count.ShouldBe(1, "because a control that left the root stops following its view model");
+    }
+
+    [Fact]
     public void ListBoxRow_ItemRemovedFromBoundCollection_RowIsCollectedWhileItemViewModelLives()
     {
         ItemViewModel kept = new() { Name = "kept" };
@@ -187,6 +215,18 @@ public class BindingLifecycleTests : BaseTestClass
         TextBox nested = new() { BindingContext = vm };
         nested.SetBinding(nameof(TextBox.Text), "AuxVm.Text");
         return new WeakReference(textBox);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static WeakReference BindListBoxInRootRemoveAndDrop(ListViewModel vm)
+    {
+        ListBox listBox = new();
+        listBox.SetBinding(nameof(ListBox.Items), nameof(ListViewModel.Items));
+        listBox.SetBinding(nameof(ListBox.SelectedObject), nameof(ListViewModel.Selected));
+        listBox.AddToRoot();
+        listBox.BindingContext = vm;
+        listBox.RemoveFromRoot();
+        return new WeakReference(listBox);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
