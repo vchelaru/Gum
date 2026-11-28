@@ -91,47 +91,7 @@ public class PropertyPathObserver : IDisposable
         _currentRoot = newRoot;
         LeafType = newRoot.GetType();
 
-        // walk each segment, hooking listeners on each INotifyPropertyChanged along the way
-        object? cursor = newRoot;
-        for (int i = 0; i < _segments.Length; i++)
-        {
-            if (cursor is INotifyPropertyChanged inpc)
-            {
-                WeakListener wl = new(this, inpc, i);
-                _listeners.Add(wl);
-            }
-            // move next
-            PropertyInfo? pi = cursor?.GetType().GetProperty(_segments[i].Name);
-
-            if (i == _segments.Length - 1)
-            {
-                LeafType = pi?.PropertyType ?? GetLeafFieldType(cursor, _segments[i]);
-                IsLeafField = pi == null && LeafType != null;
-                if (_segments[i].Index.HasValue && LeafType != null)
-                {
-                    LeafType = GetElementTypeForLeaf(LeafType);
-                }
-            }
-
-            cursor = pi?.GetValue(cursor);
-
-            // For indexed segments, subscribe to collection changes before indexing into it.
-            // PERF: Currently reacts to ALL collection changes, not just those affecting the
-            // bound index. This is intentionally broad to avoid subtle bugs from incorrect
-            // index-relevance logic. A future optimization could inspect
-            // NotifyCollectionChangedEventArgs to skip changes that don't affect the bound
-            // index (e.g. inserts/removes after the bound index position).
-            if (_segments[i].Index is int index && cursor != null)
-            {
-                if (cursor is INotifyCollectionChanged incc)
-                {
-                    WeakCollectionListener cl = new(this, incc);
-                    _collectionListeners.Add(cl);
-                }
-
-                cursor = GetIndexedValue(cursor, index);
-            }
-        }
+        HookFrom(0, newRoot, ownerHooked: false);
     }
 
     /// <summary>
@@ -184,33 +144,74 @@ public class PropertyPathObserver : IDisposable
             return;
         }
 
-        // detach all listeners below this level
-        for (int i = _listeners.Count - 1; i > level; i--)
+        // The owner of this segment stays; everything it leads to, including the collection an indexed
+        // segment holds, may have been replaced.
+        DetachDeeperThan(level, keepCollectionAtLevel: false);
+        HookFrom(level, WalkTo(level - 1), ownerHooked: true);
+        OnValueChanged();
+    }
+
+    [RequiresUnreferencedCode(
+        "Re-walks the path below the changed collection, resolving each segment by name (GetProperty) on " +
+        "the runtime type. Those members may be removed under PublishTrimmed if nothing else in the app " +
+        "references them.")]
+    private void OnCollectionChanged(int level)
+    {
+        // The collection instance stays; the item under the index, and everything below it, may differ.
+        DetachDeeperThan(level, keepCollectionAtLevel: true);
+        HookFrom(level + 1, WalkTo(level), ownerHooked: false);
+        OnValueChanged();
+    }
+
+    // Detaches listeners on objects reached through segment `level`, matched by the level each listener
+    // records. List positions are not levels: a level whose object is not INotifyPropertyChanged adds no
+    // listener.
+    private void DetachDeeperThan(int level, bool keepCollectionAtLevel)
+    {
+        _listeners.RemoveAll(listener =>
         {
-            _listeners[i].Detach();
-        }
-
-        _listeners.RemoveAll(x => x.Detached);
-
-        // detach all collection listeners and re-subscribe during the re-walk
-        DetachAllCollectionListeners();
-
-        // re-walk from here forward
-        object? cursor = WalkTo(level);
-        for (int next = level + 1; next < _segments.Length; next++)
-        {
-            if (cursor is INotifyPropertyChanged inpc)
+            bool remove = listener.Level > level;
+            if (remove)
             {
-                WeakListener wl = new(this, inpc, next);
-                _listeners.Add(wl);
+                listener.Detach();
             }
-            PropertyInfo? pi = cursor?.GetType().GetProperty(_segments[next].Name);
+            return remove;
+        });
 
-            if (next == _segments.Length - 1)
+        _collectionListeners.RemoveAll(listener =>
+        {
+            bool remove = keepCollectionAtLevel ? listener.Level > level : listener.Level >= level;
+            if (remove)
             {
-                LeafType = pi?.PropertyType ?? GetLeafFieldType(cursor, _segments[next]);
+                listener.Detach();
+            }
+            return remove;
+        });
+    }
+
+    // Walks from segment `start` to the leaf beginning on `owner` (the object holding segment `start`),
+    // subscribing to each INotifyPropertyChanged on the way and to the collection of each indexed segment.
+    // `ownerHooked` skips the listener on `owner` when it is already attached.
+    [RequiresUnreferencedCode(
+        "Walks the path on owner's runtime type, resolving each segment by name (GetProperty). Those " +
+        "members may be removed under PublishTrimmed if nothing else in the app references them.")]
+    private void HookFrom(int start, object? owner, bool ownerHooked)
+    {
+        object? cursor = owner;
+        for (int i = start; i < _segments.Length; i++)
+        {
+            if (cursor is INotifyPropertyChanged inpc && !(ownerHooked && i == start))
+            {
+                _listeners.Add(new WeakListener(this, inpc, i));
+            }
+
+            PropertyInfo? pi = cursor?.GetType().GetProperty(_segments[i].Name);
+
+            if (i == _segments.Length - 1)
+            {
+                LeafType = pi?.PropertyType ?? GetLeafFieldType(cursor, _segments[i]);
                 IsLeafField = pi == null && LeafType != null;
-                if (_segments[next].Index.HasValue && LeafType != null)
+                if (_segments[i].Index.HasValue && LeafType != null)
                 {
                     LeafType = GetElementTypeForLeaf(LeafType);
                 }
@@ -218,19 +219,19 @@ public class PropertyPathObserver : IDisposable
 
             cursor = pi?.GetValue(cursor);
 
-            if (_segments[next].Index is int index && cursor != null)
+            // PERF: reacts to every change of the indexed collection, not only those that move an item
+            // under the bound index. Filtering by NotifyCollectionChangedEventArgs is left out on purpose
+            // to avoid index-relevance bugs.
+            if (_segments[i].Index is int index && cursor != null)
             {
                 if (cursor is INotifyCollectionChanged incc)
                 {
-                    WeakCollectionListener cl = new(this, incc);
-                    _collectionListeners.Add(cl);
+                    _collectionListeners.Add(new WeakCollectionListener(this, incc, i));
                 }
 
                 cursor = GetIndexedValue(cursor, index);
             }
         }
-
-        OnValueChanged();
     }
 
     [RequiresUnreferencedCode(
@@ -372,21 +373,19 @@ public class PropertyPathObserver : IDisposable
     {
         private readonly WeakReference<PropertyPathObserver> _weakObs;
         private readonly INotifyPropertyChanged _source;
-        private readonly int _level;
-        public bool Detached { get; private set; }
+        public int Level { get; }
 
         public WeakListener(PropertyPathObserver obs, INotifyPropertyChanged src, int level)
         {
             _weakObs = new WeakReference<PropertyPathObserver>(obs);
             _source = src;
-            _level = level;
+            Level = level;
             _source.PropertyChanged += OnChanged;
         }
 
         public void Detach()
         {
             _source.PropertyChanged -= OnChanged;
-            Detached = true;
         }
 
         [UnconditionalSuppressMessage("Trimming", "IL2026",
@@ -396,7 +395,7 @@ public class PropertyPathObserver : IDisposable
         {
             if (_weakObs.TryGetTarget(out PropertyPathObserver? obs))
             {
-                obs.OnSegmentChanged(_level, e.PropertyName);
+                obs.OnSegmentChanged(Level, e.PropertyName);
             }
             else
             {
@@ -407,25 +406,20 @@ public class PropertyPathObserver : IDisposable
 
     /// <summary>
     /// Listens to <see cref="INotifyCollectionChanged"/> on a collection that an indexed
-    /// binding path passes through. On any collection change, fires
-    /// <see cref="PropertyPathObserver.ValueChanged"/> so the binding re-evaluates.
-    /// <para>
-    /// <b>PERF note:</b> This currently reacts to ALL collection changes regardless of
-    /// whether the specific bound index is affected. This is intentionally broad to avoid
-    /// bugs from incorrect index-relevance logic. A future optimization could inspect
-    /// <see cref="NotifyCollectionChangedEventArgs"/> to skip changes that cannot affect
-    /// the bound index (e.g. inserts/removes at positions after the bound index).
-    /// </para>
+    /// binding path passes through. On any collection change, re-walks the path below the indexed
+    /// segment so the binding follows the item now at the index, then re-evaluates.
     /// </summary>
     private class WeakCollectionListener
     {
         private readonly WeakReference<PropertyPathObserver> _weakObs;
         private readonly INotifyCollectionChanged _source;
+        public int Level { get; }
 
-        public WeakCollectionListener(PropertyPathObserver obs, INotifyCollectionChanged src)
+        public WeakCollectionListener(PropertyPathObserver obs, INotifyCollectionChanged src, int level)
         {
             _weakObs = new WeakReference<PropertyPathObserver>(obs);
             _source = src;
+            Level = level;
             _source.CollectionChanged += OnCollectionChanged;
         }
 
@@ -434,11 +428,14 @@ public class PropertyPathObserver : IDisposable
             _source.CollectionChanged -= OnCollectionChanged;
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2026",
+            Justification = "Automatic relay for an already-attached path observer's INotifyCollectionChanged " +
+                "subscription. The trim risk is already surfaced wherever Attach was actually called.")]
         private void OnCollectionChanged(object? _, NotifyCollectionChangedEventArgs e)
         {
             if (_weakObs.TryGetTarget(out PropertyPathObserver? obs))
             {
-                obs.OnValueChanged();
+                obs.OnCollectionChanged(Level);
             }
             else
             {
