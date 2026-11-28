@@ -38,13 +38,9 @@ internal class NpcBindingExpression : UntypedBindingExpression
     private bool _isUpdatingTarget;
     private bool _isUpdatingSource;
     private bool _isLostFocusTrigger;
-    private bool _hasReportedFailedConversion;
-    private bool _hasReportedFailedFormat;
-    private bool _hasReportedFailedSourceConversion;
     // Text typed mid-edit ("", "-") often does not convert yet; a failure is reported only if it is still the
     // last write when the edit ends.
     private (object Value, Type SourceType)? _pendingFailedSourceConversion;
-    private bool _hasReportedUnwritableSource;
     // The target's last change came from user input rather than from code; only such a change is reported
     // when the source cannot take it.
     private bool _isTargetValueFromInput;
@@ -292,7 +288,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
         // A value that cannot reach the target (a converter that failed or returned the wrong type, a
         // StringFormat the value cannot take, a name no enum member has) shows FallbackValue when one is set,
-        // as WPF does. Without one, each failure keeps its own outcome: the default, or a throw.
+        // as WPF does. Without one, a name no enum member has throws and every other failure shows the default.
         bool canFallBack = !isFallback && Binding.FallbackValue is not null;
         value = ToTargetValue(value, canFallBack);
         if (value == GumProperty.UnsetValue && canFallBack)
@@ -396,14 +392,13 @@ internal class NpcBindingExpression : UntypedBindingExpression
     }
 
     // A value the target cannot take shows FallbackValue or the default instead of throwing, so it is reported
-    // once per binding rather than going unseen.
+    // once per binding and source type rather than going unseen.
     private void ReportFailedConversionOnce(object value, bool showsFallback)
     {
-        if (_hasReportedFailedConversion)
+        if (!ShouldReport(nameof(ReportFailedConversionOnce), CurrentRoot?.GetType()))
         {
             return;
         }
-        _hasReportedFailedConversion = true;
         string shown = showsFallback ? nameof(Binding.FallbackValue) : "default";
         GumRuntime.ElementSaveExtensions.ReportDiagnostic(
             $"Binding for {TargetElement.GetType().Name}.{TargetProperty.Name} could not convert the value " +
@@ -412,11 +407,10 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     private void ReportFailedFormatOnce(object value, FormatException ex, bool showsFallback)
     {
-        if (_hasReportedFailedFormat)
+        if (!ShouldReport(nameof(ReportFailedFormatOnce), CurrentRoot?.GetType()))
         {
             return;
         }
-        _hasReportedFailedFormat = true;
         string shown = showsFallback ? nameof(Binding.FallbackValue) : "default";
         GumRuntime.ElementSaveExtensions.ReportDiagnostic(
             $"Binding for {TargetElement.GetType().Name}.{TargetProperty.Name}: StringFormat '{Binding.StringFormat}' " +
@@ -447,14 +441,14 @@ internal class NpcBindingExpression : UntypedBindingExpression
             $"{context.GetType().Name}.{Binding.Path}");
     }
 
-    // An edit the source cannot take is dropped, so it is reported once per binding rather than going unseen.
+    // An edit the source cannot take is dropped, so it is reported once per binding and source type rather than
+    // going unseen.
     private void ReportFailedSourceConversionOnce(object value, Type sourceType)
     {
-        if (_hasReportedFailedSourceConversion)
+        if (!ShouldReport(nameof(ReportFailedSourceConversionOnce), CurrentRoot?.GetType()))
         {
             return;
         }
-        _hasReportedFailedSourceConversion = true;
         string source = CurrentRoot is null ? Binding.Path : $"{CurrentRoot.GetType().Name}.{Binding.Path}";
         GumRuntime.ElementSaveExtensions.ReportDiagnostic(
             $"Binding for {TargetElement.GetType().Name}.{TargetProperty.Name} could not convert the value " +
@@ -490,16 +484,16 @@ internal class NpcBindingExpression : UntypedBindingExpression
     }
 
     /// <summary>
-    /// Reports once per binding that a value meant for the source was dropped because the source is a field or a
-    /// property with no setter. Does nothing when the source can be written.
+    /// Reports once per binding and source type that a value meant for the source was dropped because the source is
+    /// a field or a property with no setter. Does nothing when the source can be written.
     /// </summary>
     private void ReportUnwritableSourceOnce(string whatTargetDid, bool advise)
     {
-        if (_hasReportedUnwritableSource || CurrentRoot is null || !(IsSourceField || IsSourceResolvedWithoutSetter))
+        if (CurrentRoot is null || !(IsSourceField || IsSourceResolvedWithoutSetter) ||
+            !ShouldReport(nameof(ReportUnwritableSourceOnce), CurrentRoot.GetType()))
         {
             return;
         }
-        _hasReportedUnwritableSource = true;
         string reason = IsSourceField ? "is a field, which bindings never write" : "has no setter";
         string advice = !advise ? string.Empty
             : IsSourceField
@@ -624,10 +618,13 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     static object? TryConvert(object? source, Type targetType)
     {
+        // Convert.ChangeType refuses Nullable<T>, so convert to T. Only TargetNullValue writes null (SetValueToSource).
+        targetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
         // Convert.ChangeType does not reach enums; names and numbers convert as WPF's binding does.
-        if (source is not null && GetEnumType(targetType) is { } enumType)
+        if (source is not null && targetType.IsEnum)
         {
-            return BinderHelpers.ConvertToEnum(source, enumType);
+            return BinderHelpers.ConvertToEnum(source, targetType);
         }
 
         try

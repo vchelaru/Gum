@@ -45,6 +45,15 @@ public class FormattedNumberWriteBackTests : BaseTestClass
         }
     }
 
+    private class ScoreViewModel : ViewModel
+    {
+        public int Count
+        {
+            get => Get<int>();
+            set => Set(value);
+        }
+    }
+
     [Fact]
     public void IntSource_N0Format_EditedFormattedText_WritesNumber()
     {
@@ -153,5 +162,22 @@ public class FormattedNumberWriteBackTests : BaseTestClass
 
         vm.Count.ShouldBe(5);
         _reports.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void IntSource_TextThatDoesNotParse_OnSourcesOfTwoTypes_ReportsOncePerType()
+    {
+        TextBox textBox = new() { BindingContext = new CountViewModel() };
+        textBox.SetBinding(nameof(TextBox.Text), nameof(CountViewModel.Count));
+
+        textBox.Text = "abc";
+        textBox.BindingContext = new ScoreViewModel();
+        textBox.Text = "def";
+        textBox.BindingContext = new CountViewModel();
+        textBox.Text = "ghi";
+
+        _reports.Count.ShouldBe(2);
+        _reports[0].ShouldContain("for CountViewModel.Count");
+        _reports[1].ShouldContain("for ScoreViewModel.Count");
     }
 }

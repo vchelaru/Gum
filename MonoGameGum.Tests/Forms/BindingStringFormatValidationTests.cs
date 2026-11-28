@@ -311,4 +311,85 @@ public class BindingStringFormatValidationTests : BaseTestClass
         Should.NotThrow(() => vm.Gold = 6);
         _reports.Count.ShouldBe(1);
     }
+
+    private class PassThroughConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter) => value;
+
+        public object? ConvertBack(object? value, Type sourceType, object? parameter) => value;
+    }
+
+    [Fact]
+    public void SpecifierTheValueTypeRejects_WithConverter_ReportsOnceInsteadOfThrowingAtSetBinding()
+    {
+        GoldViewModel vm = new() { Gold = 5 };
+        Label label = new() { BindingContext = vm };
+
+        Should.NotThrow(() => label.SetBinding(nameof(Label.Text), new Binding(nameof(GoldViewModel.Gold))
+        {
+            StringFormat = "{0:Q}",
+            Converter = new PassThroughConverter()
+        }));
+        vm.Gold = 6;
+
+        label.Text.ShouldBeNullOrEmpty();
+        _reports.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void SpecifierTheValueTypeRejects_OneWayToSource_DoesNotThrowAtSetBinding()
+    {
+        Label label = new() { BindingContext = new GoldViewModel { Gold = 5 } };
+
+        Should.NotThrow(() => label.SetBinding(nameof(Label.Text), new Binding(nameof(GoldViewModel.Gold))
+        {
+            StringFormat = "{0:Q}",
+            Mode = BindingMode.OneWayToSource
+        }));
+    }
+
+    [Fact]
+    public void SpecifierTheValueTypeRejects_NonStringTarget_IsNotApplied()
+    {
+        Label label = new() { BindingContext = new GoldViewModel { Gold = 5 } };
+
+        label.SetBinding(nameof(Label.Width), new Binding(nameof(GoldViewModel.Gold)) { StringFormat = "{0:Q}" });
+
+        label.Width.ShouldBe(5);
+    }
+
+    [Fact]
+    public void VisualSetBinding_Lambda_NonStringTarget_DoesNotThrow()
+    {
+        TextRuntime text = new() { BindingContext = new GoldViewModel { Gold = 5 } };
+
+        text.SetBinding<GoldViewModel>(nameof(TextRuntime.Width), vm => vm.Gold, "Q");
+
+        text.Width.ShouldBe(5);
+    }
+
+    [Fact]
+    public void DateFormat_DefaultDateOutsideCultureCalendar_DoesNotThrowAtSetBinding()
+    {
+        // The probe formats default(DateTime), which the Um Al Qura calendar cannot show; that says nothing about
+        // the format, so SetBinding accepts it and the real date formats normally.
+        System.Globalization.CultureInfo previous = System.Globalization.CultureInfo.CurrentCulture;
+        System.Globalization.CultureInfo culture = (System.Globalization.CultureInfo)
+            new System.Globalization.CultureInfo("ar-SA").Clone();
+        culture.DateTimeFormat.Calendar = new System.Globalization.UmAlQuraCalendar();
+        Should.Throw<ArgumentOutOfRangeException>(() => string.Format(culture, "{0:d}", default(DateTime)));
+        try
+        {
+            System.Globalization.CultureInfo.CurrentCulture = culture;
+            Label label = new() { BindingContext = new GoldViewModel { When = new DateTime(2026, 12, 1) } };
+
+            Should.NotThrow(() =>
+                label.SetBinding(nameof(Label.Text), new Binding(nameof(GoldViewModel.When)) { StringFormat = "{0:d}" }));
+            label.Text.ShouldNotBeNullOrEmpty();
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = previous;
+        }
+    }
 }
