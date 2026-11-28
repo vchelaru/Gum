@@ -158,4 +158,34 @@ public class GraphicalUiElementClearBindingTests
         parent.BindingContext = second;
         sut.BindingContext.ShouldBe(second);
     }
+
+    public class PushingRuntime : ContainerRuntime
+    {
+        private string? _label;
+
+        public string? Label
+        {
+            get => _label;
+            set
+            {
+                _label = value;
+                PushValueToViewModel();
+            }
+        }
+    }
+
+    [Fact]
+    public void ClearBinding_PushingProperty_DoesNotWriteRestoredValueToViewModel()
+    {
+        ClearViewModel viewModel = new() { Name = "bound" };
+        PushingRuntime sut = new() { Label = "before", BindingContext = viewModel };
+        sut.SetBinding(nameof(PushingRuntime.Label), nameof(ClearViewModel.Name));
+        sut.Label = "pushed";
+        viewModel.Name.ShouldBe("pushed");
+
+        sut.ClearBinding(nameof(PushingRuntime.Label));
+
+        sut.Label.ShouldBe("before");
+        viewModel.Name.ShouldBe("pushed");
+    }
 }
