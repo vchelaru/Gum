@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Gum.Forms.Controls;
 using Gum.Mvvm;
@@ -25,8 +24,6 @@ public class LambdaBindingIndexerTests : BaseTestClass
     private class InventoryViewModel : ViewModel
     {
         public ObservableCollection<SlotViewModel> Slots { get; } = new();
-        public List<string> Names { get; } = new();
-        public string[] Tags { get; set; } = new[] { "t0", "t1", "t2" };
     }
 
     private static InventoryViewModel CreateInventory()
@@ -35,7 +32,6 @@ public class LambdaBindingIndexerTests : BaseTestClass
         for (int i = 0; i < 3; i++)
         {
             vm.Slots.Add(new SlotViewModel { Name = "slot" + i });
-            vm.Names.Add("name" + i);
         }
         return vm;
     }

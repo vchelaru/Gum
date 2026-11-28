@@ -95,7 +95,7 @@ public class EventBindingLifecycleTests : BaseTestClass
     {
         WaveWatcher watcher = new() { BindingContext = new WaveViewModel() };
 
-        Should.Throw<Exception>(() =>
+        Should.Throw<ArgumentException>(() =>
             watcher.SetBinding("HandleWithWrongSignature", nameof(WaveViewModel.WaveStarted)));
     }
 
