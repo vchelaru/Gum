@@ -288,6 +288,37 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         listBox.ListBoxItems[1].BindingContext.ShouldBe("second");
     }
 
+    [Fact]
+    public void LeavingRoot_ContextSetToNullWhileRemoved_BoundItemsLetGoOfCollectionUntilContextAssignedAgain()
+    {
+        ItemsViewModel viewModel = new();
+        viewModel.Names.Add("first");
+        StackPanel screen = new();
+        ListBox listBox = new();
+        listBox.SetBinding(nameof(ListBox.Items), nameof(ItemsViewModel.Names));
+        screen.AddChild(listBox);
+        ComboBox comboBox = new();
+        comboBox.SetBinding(nameof(ComboBox.Items), nameof(ItemsViewModel.Names));
+        screen.AddChild(comboBox);
+        screen.AddToRoot();
+        screen.BindingContext = viewModel;
+        screen.RemoveFromRoot();
+
+        // A paused screen keeps its bound collection; clearing the context is how to release it.
+        screen.BindingContext = null;
+
+        listBox.Items.ShouldNotBeSameAs(viewModel.Names);
+        comboBox.Items.ShouldNotBeSameAs(viewModel.Names);
+        viewModel.Names.Add("second");
+        listBox.ListBoxItems.Count.ShouldBe(0);
+
+        screen.AddToRoot();
+        screen.BindingContext = viewModel;
+        listBox.Items.ShouldBeSameAs(viewModel.Names);
+        comboBox.Items.ShouldBeSameAs(viewModel.Names);
+        listBox.ListBoxItems.Count.ShouldBe(2);
+    }
+
     private class ItemsViewModel : ViewModel
     {
         public System.Collections.ObjectModel.ObservableCollection<string> Names { get; } = new();
