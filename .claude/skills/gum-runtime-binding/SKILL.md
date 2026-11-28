@@ -139,7 +139,7 @@ All binding features work with indexed paths: modes, converters, StringFormat, F
 
 **A setter-only target property binds OneWay on both systems.** Nothing may read the target without checking `CanRead` (`NpcBindingExpression.ShouldUpdateSource`, `GraphicalUiElement.PushValueToViewModel`); a default TwoWay binding only pushes source values, and `OneWayToSource` on a setter-only target throws.
 
-**A view model member with no setter still feeds a TwoWay binding; only `OneWayToSource` refuses it.** TwoWay is the default mode, so a computed `FullName => ...` shown in a Label must keep working; `OneWayToSource` throws at attach (`BinderHelpers.GetReadOnlySourceMessage`). A private setter counts as a setter on both sides, as `PropertyInfo.SetValue` reaches it.
+**A view model member with no setter still feeds a TwoWay binding; only `OneWayToSource` refuses it.** TwoWay is the default mode, so a computed `FullName => ...` shown in a Label must keep working; `OneWayToSource` throws at attach (`BinderHelpers.GetReadOnlySourceMessage`). A private setter counts as a setter on both sides, as `PropertyInfo.SetValue` reaches it; on the source side one a base class declares is found through `BinderHelpers.AsDeclared`, since a `PropertyInfo` reflected from the derived type hides it.
 
 **A Forms `OneWayToSource` binding writes the control's current value to each source it attaches to** (`UntypedBindingExpression.AttachToSource`), as WPF does. This is how a view model bound to `ListBox.SelectedItems` receives the live selection collection, which never raises `PropertyChanged` itself. `ClearBinding` resets the target only when it has a setter of any visibility (`NpcBindingExpression.HasTargetSetter`). Tests: `OneWayToSourceAttachTests`.
 

@@ -54,19 +54,96 @@ public class SourceWithoutSetterBindingTests : BaseTestClass
         public string Nickname { get; private set; }
     }
 
+    public class BasePrivateSetterViewModel
+    {
+        public BasePrivateSetterViewModel(string name)
+        {
+            Name = name;
+        }
+
+        public string Name { get; private set; }
+    }
+
+    public class DerivedPrivateSetterViewModel : BasePrivateSetterViewModel
+    {
+        public DerivedPrivateSetterViewModel(string name) : base(name)
+        {
+        }
+    }
+
+    public interface IPerson
+    {
+        string FullName { get; }
+    }
+
+    public class SettablePerson : IPerson
+    {
+        public string FullName { get; set; } = string.Empty;
+    }
+
     public class HolderViewModel
     {
         public readonly string Id = "fixed";
 
         public ComputedViewModel? Person { get; set; }
 
+        public IPerson? Contact { get; set; }
+
+        public DerivedPrivateSetterViewModel? Derived { get; set; }
+
         public object? Untyped { get; set; }
 
         public IReadOnlyList<string> Names { get; set; } = new[] { "first" };
     }
 
+    [Fact]
+    public void OneWayToSource_BasePrivateSetter_WritesControlValue()
+    {
+        TextBox textBox = new() { Text = "typed" };
+        DerivedPrivateSetterViewModel viewModel = new("start");
+        textBox.SetBinding(nameof(TextBox.Text),
+            new Binding(nameof(DerivedPrivateSetterViewModel.Name)) { Mode = BindingMode.OneWayToSource });
+
+        textBox.BindingContext = viewModel;
+        textBox.Text = "edited";
+
+        viewModel.Name.ShouldBe("edited");
+    }
+
+    [Fact]
+    public void OneWayToSource_InterfaceTypedIntermediateWithGetOnlyLeaf_ThrowsNamingTheDeclaredType()
+    {
+        TextBox textBox = new() { Text = "typed" };
+        HolderViewModel viewModel = new() { Contact = new SettablePerson() };
+        textBox.BindingContext = viewModel;
+
+        InvalidOperationException exception = Should.Throw<InvalidOperationException>(() =>
+            textBox.SetBinding(nameof(TextBox.Text),
+                new Binding("Contact.FullName") { Mode = BindingMode.OneWayToSource }));
+
+        exception.Message.ShouldBe(
+            "IPerson.FullName has no setter (IPerson is the declared type of HolderViewModel.Contact), so it " +
+            "cannot be the source of a OneWayToSource binding, which writes TextBox.Text to it. Give " +
+            "IPerson.FullName a setter, or declare HolderViewModel.Contact as a type whose FullName has one.");
+    }
+
     [Theory]
-    [InlineData("Person.FullName", "ComputedViewModel.FullName")]
+    [InlineData("Derived.Name")]
+    [InlineData("Untyped.Name")]
+    public void TwoWay_BasePrivateSetter_EditReachesViewModel(string path)
+    {
+        TextBox textBox = new();
+        DerivedPrivateSetterViewModel inner = new("start");
+        HolderViewModel viewModel = new() { Derived = inner, Untyped = inner };
+        textBox.SetBinding(nameof(TextBox.Text), new Binding(path));
+
+        textBox.BindingContext = viewModel;
+        textBox.Text = "edited";
+
+        inner.Name.ShouldBe("edited");
+    }
+
+    [Theory]
     [InlineData("Names[0]", "HolderViewModel.Names[0]")]
     [InlineData("Id", "HolderViewModel.Id")]
     public void OneWayToSource_LeafWithNoSetter_ThrowsNamingTheLeafOwner(string path, string expectedLeaf)
