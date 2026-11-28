@@ -34,6 +34,36 @@ public class BindingSourceNotificationTests : BaseTestClass
         public string? Text { get; set; }
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void PropertyChanged_NullOrEmptyName_UpdatesTarget(string? raisedName)
+    {
+        Node vm = new() { Text = "before" };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), nameof(Node.Text));
+
+        vm.SetTextSilently("after");
+        vm.Raise(raisedName);
+
+        textBox.Text.ShouldBe("after");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void PropertyChanged_NullOrEmptyNameOnRoot_UpdatesNestedPathTarget(string? raisedName)
+    {
+        Node vm = new() { Child = new Node { Text = "before" } };
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), "Child.Text");
+
+        vm.SetChildSilently(new Node { Text = "after" });
+        vm.Raise(raisedName);
+
+        textBox.Text.ShouldBe("after");
+    }
+
     [Fact]
     public void NestedPath_IntermediateReplaced_OnlyTheNewIntermediateReachesTarget()
     {
