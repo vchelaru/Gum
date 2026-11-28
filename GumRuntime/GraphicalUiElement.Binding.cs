@@ -113,7 +113,9 @@ public partial class GraphicalUiElement : IBindingTarget
         // Entering the root tree from outside it resumes everything below, including descendants that left
         // the root on their own before being added to this subtree.
         bool clearsLeftRoot = isUnderRoot && !wasUnderRoot;
-        bool isLeftRoot = !isUnderRoot && (_isLeftRoot || wasUnderRoot);
+        // Outside the root, an element stays paused if it was paused for any reason (a paused ancestor
+        // included) or just left the root tree; one that was never under a root stays live.
+        bool isLeftRoot = !isUnderRoot && (AreBindingsPaused || wasUnderRoot);
 
         // Paused before the new parent's context arrives, so a removed subtree never attaches to it; resumed
         // after, so a re-added one attaches once to the context it ends up with.
@@ -180,7 +182,7 @@ public partial class GraphicalUiElement : IBindingTarget
             _propertyRegistry?.SetPaused(isPaused);
             if (this is InteractiveGue { FormsControlAsObject: Gum.Forms.Controls.FrameworkElement control })
             {
-                control.PropertyRegistry.SetPaused(isPaused);
+                control.SyncBindingsPausedToVisual();
             }
         }
 

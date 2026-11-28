@@ -320,6 +320,145 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
     }
 
     [Fact]
+    public void ChildWithOwnContextDetachedFromPausedScreen_StaysPausedUntilAddedToRoot()
+    {
+        GameViewModel screenViewModel = new() { Gold = 1 };
+        GameViewModel labelViewModel = new() { Gold = 2 };
+        (StackPanel screen, Label goldLabel, _) = CreateScreen();
+        screen.AddToRoot();
+        screen.BindingContext = screenViewModel;
+        goldLabel.BindingContext = labelViewModel;
+        screen.RemoveFromRoot();
+
+        goldLabel.Visual.Parent = null;
+        labelViewModel.Gold = 9;
+
+        goldLabel.Text.ShouldBe("2");
+        goldLabel.AddToRoot();
+        goldLabel.Text.ShouldBe("9");
+    }
+
+    [Fact]
+    public void VisualSwappedWhilePaused_ControlAddedToRoot_FollowsViewModel()
+    {
+        GameViewModel screenViewModel = new() { Gold = 1 };
+        GameViewModel labelViewModel = new() { Gold = 2 };
+        (StackPanel screen, Label goldLabel, _) = CreateScreen();
+        screen.AddToRoot();
+        screen.BindingContext = screenViewModel;
+        goldLabel.BindingContext = labelViewModel;
+        screen.RemoveFromRoot();
+
+        goldLabel.Visual = new Gum.Forms.DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: false);
+        goldLabel.AddToRoot();
+        labelViewModel.Gold = 7;
+
+        goldLabel.Text.ShouldBe("7");
+    }
+
+    [Fact]
+    public void VisualSwappedWhilePaused_ScreenAddedToRootThenControlAddedToIt_FollowsViewModel()
+    {
+        GameViewModel viewModel = new() { Gold = 1 };
+        (StackPanel screen, Label goldLabel, _) = CreateScreen();
+        screen.AddToRoot();
+        goldLabel.BindingContext = viewModel;
+        screen.RemoveFromRoot();
+
+        goldLabel.Visual = new Gum.Forms.DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: false);
+        screen.AddToRoot();
+        screen.AddChild(goldLabel);
+        viewModel.Gold = 7;
+
+        goldLabel.Text.ShouldBe("7");
+    }
+
+    [Fact]
+    public void LiveControlGivenVisualFromPausedScreen_IsPaused()
+    {
+        GameViewModel viewModel = new() { Gold = 1 };
+        StackPanel pausedScreen = new();
+        pausedScreen.AddToRoot();
+        pausedScreen.RemoveFromRoot();
+        Gum.Forms.DefaultVisuals.V3.LabelVisual pausedVisual = new(tryCreateFormsObject: false);
+        pausedScreen.Visual.Children.Add(pausedVisual);
+        (StackPanel screen, Label goldLabel, _) = CreateScreen();
+        screen.AddToRoot();
+        goldLabel.BindingContext = viewModel;
+
+        goldLabel.Visual = pausedVisual;
+        viewModel.Gold = 7;
+
+        // Paused, so the new Visual keeps its authored text instead of following the view model.
+        goldLabel.Text.ShouldNotBe("7");
+    }
+
+    // Where the parent sits: in the root, inside a removed (paused) screen, or in a tree never added to the root.
+    public enum ParentKind { Live, Paused, Detached, None }
+
+    private static (StackPanel? parent, StackPanel? holder) CreateParent(ParentKind kind)
+    {
+        if (kind == ParentKind.None)
+        {
+            return (null, null);
+        }
+        StackPanel holder = new();
+        StackPanel parent = new();
+        holder.AddChild(parent);
+        if (kind is ParentKind.Live or ParentKind.Paused)
+        {
+            holder.AddToRoot();
+        }
+        return (parent, holder);
+    }
+
+    [Theory]
+    [InlineData(ParentKind.Live, ParentKind.Live, false)]
+    [InlineData(ParentKind.Live, ParentKind.Paused, true)]
+    [InlineData(ParentKind.Live, ParentKind.Detached, true)]
+    [InlineData(ParentKind.Live, ParentKind.None, true)]
+    [InlineData(ParentKind.Paused, ParentKind.Live, false)]
+    [InlineData(ParentKind.Paused, ParentKind.Paused, true)]
+    [InlineData(ParentKind.Paused, ParentKind.Detached, true)]
+    [InlineData(ParentKind.Paused, ParentKind.None, true)]
+    [InlineData(ParentKind.Detached, ParentKind.Live, false)]
+    [InlineData(ParentKind.Detached, ParentKind.Paused, true)]
+    [InlineData(ParentKind.Detached, ParentKind.Detached, false)]
+    [InlineData(ParentKind.Detached, ParentKind.None, false)]
+    public void Reparent_IsPausedOnlyWhenOutOfTheRootAfterBeingInIt(ParentKind from, ParentKind to, bool isPaused)
+    {
+        GameViewModel viewModel = new() { Gold = 1 };
+        (StackPanel? oldParent, StackPanel? oldHolder) = CreateParent(from);
+        (StackPanel? newParent, StackPanel? newHolder) = CreateParent(to);
+        Label goldLabel = new();
+        goldLabel.SetBinding(nameof(Label.Text), nameof(GameViewModel.Gold));
+        goldLabel.BindingContext = viewModel;
+        oldParent!.AddChild(goldLabel);
+        // A paused parent is one removed from the root after its children were added.
+        if (from == ParentKind.Paused)
+        {
+            oldHolder!.RemoveFromRoot();
+        }
+        if (to == ParentKind.Paused)
+        {
+            newHolder!.RemoveFromRoot();
+        }
+
+        if (newParent is null)
+        {
+            goldLabel.Visual.Parent = null;
+        }
+        else
+        {
+            newParent.AddChild(goldLabel);
+        }
+        viewModel.Gold = 2;
+
+        goldLabel.BindingContext.ShouldBe(viewModel);
+        goldLabel.Text.ShouldBe(isPaused ? "1" : "2");
+    }
+
+    [Fact]
     public void MoveFromRootIntoDetachedPanel_ExplicitContext_IsKeptAndPaused()
     {
         GameViewModel viewModel = new() { Gold = 1 };
