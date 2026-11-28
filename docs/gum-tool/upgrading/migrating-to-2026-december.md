@@ -103,7 +103,7 @@ No change is needed unless code set `BindingContext` by hand to work around this
 
 ### A Bound BindingContext That Becomes Null Stays Null
 
-When an element's `BindingContext` is bound with `SetBinding(nameof(BindingContext), path)` and that ViewModel property becomes null, the element's `BindingContext` is now null, so its children's bound properties reset (see [Bound Properties Reset When the BindingContext Becomes Null](#bound-properties-reset-when-the-bindingcontext-becomes-null)). Previously the element fell back to its parent's `BindingContext`, so a child showed a same-named property of the parent's ViewModel, or null. Clearing the binding with `ClearBinding` makes the element inherit its parent's `BindingContext` again.
+When an element's `BindingContext` is bound with `SetBinding(nameof(BindingContext), path)` and that ViewModel property becomes null, the element's `BindingContext` is now null, so its children's bound properties reset (see [Bound Properties Reset When the BindingContext Becomes Null](#bound-properties-reset-when-the-bindingcontext-becomes-null)). Previously the element fell back to its parent's `BindingContext`, so a child showed a same-named property of the parent's ViewModel, or null. Clearing the binding with `ClearBinding` makes the element inherit its parent's `BindingContext` again. Previously, when the element already had a parent at `SetBinding` time, it kept that parent's `BindingContext` and did not follow later changes to it.
 
 You are affected if a panel bound to a property such as `SelectedItem` or `Player` relied on showing the parent's values while that property was null. Bind those children to the parent's ViewModel directly, or set `FallbackValue` on their bindings.
 
