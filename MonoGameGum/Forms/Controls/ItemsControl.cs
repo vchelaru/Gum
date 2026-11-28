@@ -78,7 +78,10 @@ public class ItemsControl : ScrollViewer
     /// the caller owns that collection, and code that bypasses the ItemsControl does not write back to it.
     ///
     /// Items is never null. Assigning null (directly or through a binding to a null view model
-    /// collection) clears the rows and assigns a new empty collection.
+    /// collection) clears the rows and assigns a new empty collection. A bound Items is assigned null
+    /// when the control's BindingContext becomes null (for example when it leaves the root), and is
+    /// bound again when a context is assigned. The collection is observed weakly, so it never keeps
+    /// this control alive.
     /// </remarks>
     [AllowNull]
     public IList Items
@@ -103,10 +106,8 @@ public class ItemsControl : ScrollViewer
                         _isReplacingItemsCollection = false;
                     }
 
-                    if (items is INotifyCollectionChanged notifyCollectionChanged)
-                    {
-                        notifyCollectionChanged.CollectionChanged -= HandleItemsCollectionChanged;
-                    }
+                    _itemsListener?.Dispose();
+                    _itemsListener = null;
                     items = value ?? new ObservableCollection<object>();
                     _isItemsAssigned = true;
                     _visualAuthoredItems.Clear();
@@ -127,11 +128,15 @@ public class ItemsControl : ScrollViewer
     private static void RunWithAllLayoutSuspended(Action change, GraphicalUiElement? flushRoot) =>
         GraphicalUiElement.RunWithAllLayoutSuspended(change, flushRoot);
 
+    // Weak, so a long-lived collection (such as a view model's) never keeps this control alive.
+    private WeakCollectionChangedListener<ItemsControl>? _itemsListener;
+
     private void ForceUpdateToItems()
     {
         if (items is INotifyCollectionChanged newNotifyCollectionChanged)
         {
-            newNotifyCollectionChanged.CollectionChanged += HandleItemsCollectionChanged;
+            _itemsListener = new(newNotifyCollectionChanged, this,
+                static (owner, sender, e) => owner.HandleItemsCollectionChanged(sender, e));
         }
 
         if (items.Count > 0)
@@ -1236,15 +1241,51 @@ public class ItemsControl : ScrollViewer
 
     #region Update To
 
-#if FRB
-    protected override void OnBindingContextChanged(object? sender, BindingContextChangedEventArgs args)
+    // A bound Items whose BindingContext became null (for example by leaving the root) is released, so
+    // the control stops following the view model's collection until a context is assigned again.
+    internal override void OnBindingContextRelayed()
     {
-        if (IsDataBound(nameof(Items)) && 
-            args is { OldBindingContext: not null, NewBindingContext: null })
+        base.OnBindingContextRelayed();
+        if (BindingContext is null && IsDataBound(nameof(Items)))
         {
-            this.Items = null;
+            Items = null;
         }
     }
-#endif
     #endregion
+}
+
+/// <summary>
+/// Forwards a collection's CollectionChanged to its owner while holding the owner weakly, so the
+/// collection never keeps the owner alive. Unsubscribes itself on the first change after the owner is
+/// collected.
+/// </summary>
+internal sealed class WeakCollectionChangedListener<TOwner> where TOwner : class
+{
+    private readonly INotifyCollectionChanged _source;
+    private readonly WeakReference<TOwner> _owner;
+    // Must not capture the owner, or the source would keep it alive through this delegate.
+    private readonly Action<TOwner, object?, NotifyCollectionChangedEventArgs> _handler;
+
+    public WeakCollectionChangedListener(INotifyCollectionChanged source, TOwner owner,
+        Action<TOwner, object?, NotifyCollectionChangedEventArgs> handler)
+    {
+        _source = source;
+        _owner = new WeakReference<TOwner>(owner);
+        _handler = handler;
+        _source.CollectionChanged += HandleCollectionChanged;
+    }
+
+    private void HandleCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (_owner.TryGetTarget(out TOwner? owner))
+        {
+            _handler(owner, sender, e);
+        }
+        else
+        {
+            Dispose();
+        }
+    }
+
+    public void Dispose() => _source.CollectionChanged -= HandleCollectionChanged;
 }

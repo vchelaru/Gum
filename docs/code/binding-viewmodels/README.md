@@ -40,7 +40,7 @@ The concept of binding is very flexible - it can be performed on any type of pro
 
 Binding is initially established when two properties are associated, and when a view is given reference to a view model, which is done through the `BindingContext` property. When binding is established, the view immediately updates its properties according to the values on the view model.
 
-Removing an element from the root (with `RemoveFromRoot`, `GumUI.Root.Children.Clear()`, or any other way it leaves the root) sets its own `BindingContext` to null, so children that inherit it lose it too. A child given its own `BindingContext` keeps it. Set `BindingContext` again when you add it back. Moving an element between other parents keeps its `BindingContext`.
+Removing an element from the root (with `RemoveFromRoot`, `GumUI.Root.Children.Clear()`, or any other way it leaves the root) sets its own `BindingContext` to null, so children that inherit it lose it too. A child given its own `BindingContext` keeps it. Set `BindingContext` again when you add it back. Moving an element between other parents keeps its `BindingContext`. A `ListBox` or `ComboBox` whose `Items` is bound shows no items while its `BindingContext` is null, and shows the view model's collection again once you set it.
 
 {% hint style="info" %}
 Clearing `BindingContext` on removal is available in December 2026, or now if building Gum from source. Before, removed UI kept its `BindingContext` and kept updating from its view model.
