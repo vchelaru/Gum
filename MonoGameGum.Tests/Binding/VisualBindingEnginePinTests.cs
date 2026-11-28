@@ -1287,10 +1287,11 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
         viewModel.Amount.ShouldBe(10);
     }
+    // A null or empty PropertyChanged name re-reads every binding on both engines (#8539).
 
     [Fact]
     [Trait("Pin", MustKeep)]
-    public void ViewModelRaisesEmptyPropertyName_TargetIsNotRefreshed()
+    public void ViewModelRaisesEmptyPropertyName_TargetIsRefreshed()
     {
         PlainNotifyingViewModel viewModel = new() { Value = "a" };
         PinRuntime sut = new() { BindingContext = viewModel };
@@ -1299,12 +1300,12 @@ public class VisualBindingEnginePinTests : BaseTestClass
         viewModel.SetSilently("b");
         viewModel.RaiseAll(string.Empty);
 
-        sut.StringValue.ShouldBe("a");
+        sut.StringValue.ShouldBe("b");
     }
 
     [Fact]
     [Trait("Pin", MustKeep)]
-    public void Forms_ViewModelRaisesEmptyPropertyName_TargetIsNotRefreshed()
+    public void Forms_ViewModelRaisesEmptyPropertyName_TargetIsRefreshed()
     {
         PlainNotifyingViewModel viewModel = new() { Value = "a" };
         PinControl sut = new() { BindingContext = viewModel };
@@ -1313,7 +1314,7 @@ public class VisualBindingEnginePinTests : BaseTestClass
         viewModel.SetSilently("b");
         viewModel.RaiseAll(string.Empty);
 
-        sut.StringValue.ShouldBe("a");
+        sut.StringValue.ShouldBe("b");
     }
 
     // Pair for GraphicalUiElementDottedBindingTests.PushValueToViewModel_DottedPath_IndexedLeaf_WritesOnlyThatSlot.
