@@ -118,6 +118,48 @@ public class Renderer : IRenderer
     private Layer? _currentRenderLayer;
     internal Layer CurrentRenderLayer => _currentRenderLayer ?? _layers[0];
 
+    /// <summary>
+    /// The world rows the active scissor can show, widened by
+    /// <see cref="CameraScissorExtensions.OffscreenCullMarginInPixels"/> on each side, for a renderable that
+    /// draws only the parts of itself inside the clip (Text lines, #8503). False when nothing should be
+    /// skipped: no clip, culling turned off with <see cref="CameraScissorExtensions.CullOffscreenWhenClipped"/>,
+    /// a <see cref="SpriteRenderer.ForcedMatrix"/> (the scissor ignores it), a turned render-target bake, or a
+    /// camera mapping that does not keep world rows as screen rows.
+    /// </summary>
+    internal bool TryGetActiveClipWorldSpanY(out float worldTop, out float worldBottom)
+    {
+        worldTop = 0;
+        worldBottom = 0;
+        System.Drawing.Rectangle? scissor = spriteRenderer.CurrentScissorRectangle;
+        if (!CameraScissorExtensions.CullOffscreenWhenClipped
+            || scissor == null
+            || spriteRenderer.ForcedMatrix != null
+            || (_bakedContainer != null && _bakedContainer.IsRenderTargetTurned()))
+        {
+            return false;
+        }
+
+        // The same mapping GetScissorRectangleFor builds the scissor with.
+        WorldToScreenTransform worldToScreen = Camera.GetWorldToScreenTransform(CurrentRenderLayer);
+        worldToScreen.Transform(0, 0, out _, out float screenYAtZero);
+        worldToScreen.Transform(1, 0, out _, out float screenYAlongX);
+        worldToScreen.Transform(0, 1, out _, out float screenYAtOne);
+        float screenPerWorld = screenYAtOne - screenYAtZero;
+        if (screenYAlongX != screenYAtZero || screenPerWorld <= 0)
+        {
+            return false;
+        }
+#if FRB
+        // GetScissorRectangleForWorldBounds adds the client offset under FRB.
+        screenYAtZero += Camera.ClientTop;
+#endif
+
+        int margin = CameraScissorExtensions.OffscreenCullMarginInPixels;
+        worldTop = (scissor.Value.Top - margin - screenYAtZero) / screenPerWorld;
+        worldBottom = (scissor.Value.Bottom + margin - screenYAtZero) / screenPerWorld;
+        return true;
+    }
+
     Texture2D mSinglePixelTexture = null!;
     Texture2D mDottedLineTexture = null!;
 

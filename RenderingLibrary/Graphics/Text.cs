@@ -1324,7 +1324,12 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 // boxes (tight kerning, italics, large outlines) can overwrite each other's alpha. Not addressed.
                 try
                 {
-                    RenderCharacterByCharacter(spriteRenderer);
+                    (float Top, float Bottom)? visibleSpan = null;
+                    if (systemManagers.Renderer.TryGetActiveClipWorldSpanY(out float visibleTop, out float visibleBottom))
+                    {
+                        visibleSpan = (visibleTop, visibleBottom);
+                    }
+                    RenderCharacterByCharacter(spriteRenderer, visibleSpan);
                 }
                 finally
                 {
@@ -1436,13 +1441,28 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// Test-only access to the character-by-character draw, so unit tests can record where every glyph lands
     /// (through <c>SpriteRenderer.DrawObserver</c>) without a render pass.
     /// </summary>
-    internal void DrawCharacterByCharacterForTests(SpriteRenderer spriteRenderer) => RenderCharacterByCharacter(spriteRenderer);
+    internal void DrawCharacterByCharacterForTests(SpriteRenderer spriteRenderer) => RenderCharacterByCharacter(spriteRenderer, null);
+
+    /// <summary>
+    /// Test-only draw with an active clip whose vertical extent, in world units, is
+    /// <paramref name="visibleTop"/> to <paramref name="visibleBottom"/> (#8503).
+    /// </summary>
+    internal void DrawCharacterByCharacterForTests(SpriteRenderer spriteRenderer, float visibleTop, float visibleBottom) =>
+        RenderCharacterByCharacter(spriteRenderer, (visibleTop, visibleBottom));
 
     // todo: reduce allocs by using a static here (static is prob okay since it can't be multithreaded)
     static List<int> widths = new List<int>();
-    private void RenderCharacterByCharacter(SpriteRenderer spriteRenderer)
+
+    // visibleSpan is the world rows the active clip can show, or null to draw every line (#8503).
+    private void RenderCharacterByCharacter(SpriteRenderer spriteRenderer, (float Top, float Bottom)? visibleSpan)
     {
         BitmapFont? fontToUse = DrawnFont;
+
+        // The span is in screen-aligned world rows, which says nothing simple about the lines of turned text.
+        if (visibleSpan != null && this.GetAbsoluteRotation() != 0)
+        {
+            visibleSpan = null;
+        }
 
 
         if (fontToUse != null)
@@ -1455,7 +1475,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
             if (InlineVariables.Count > 0)
             {
-                DrawWithInlineVariables(fontToUse, requiredWidth, spriteRenderer);
+                DrawWithInlineVariables(fontToUse, requiredWidth, spriteRenderer, visibleSpan);
             }
             else
             {
@@ -1482,19 +1502,24 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         // Issue #4001: draw the shadow silhouette first, offset and tinted, so the
                         // primary glyphs land on top of it. The offset scales with the font so it
                         // stays proportional when the text is scaled.
-                        fontToUse.ShadowFont.DrawTextLines(WrappedText,
+                        // The shadow's lines get their own visible range from where the shadow draws, so a
+                        // shadow line shows whenever it is inside the clip, whether or not its line is.
+                        float shadowTop = absoluteTop + DropshadowOffsetY * EffectiveFontScale;
+                        GetVisibleLineRange(fontToUse.ShadowFont, shadowTop, visibleSpan, out int firstShadowLine, out int endShadowLine);
+                        fontToUse.ShadowFont.DrawTextLineRange(firstShadowLine, endShadowLine, WrappedText,
                             HorizontalAlignment,
                             this,
                             requiredWidth, widths, spriteRenderer, DropshadowColor,
                             absoluteLeft + DropshadowOffsetX * EffectiveFontScale,
-                            absoluteTop + DropshadowOffsetY * EffectiveFontScale,
+                            shadowTop,
                             this.GetAbsoluteRotation(),
                             EffectiveFontScale, EffectiveFontScale, maxLettersToShow,
-                            OverrideTextRenderingPositionMode, lineHeightMultiplier: DrawLineHeightMultiplier,
-                            overlapDirection: OverlapDirection);
+                            OverrideTextRenderingPositionMode, DrawLineHeightMultiplier,
+                            shiftForOutline: true, OverlapDirection);
                     }
 
-                    fontToUse.DrawTextLines(WrappedText,
+                    GetVisibleLineRange(fontToUse, absoluteTop, visibleSpan, out int firstLine, out int endLine);
+                    fontToUse.DrawTextLineRange(firstLine, endLine, WrappedText,
                         HorizontalAlignment,
                         this,
                         requiredWidth, widths, spriteRenderer, Color,
@@ -1502,12 +1527,86 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         absoluteTop,
                         this.GetAbsoluteRotation(),
                         EffectiveFontScale, EffectiveFontScale, maxLettersToShow,
-                        OverrideTextRenderingPositionMode, lineHeightMultiplier: DrawLineHeightMultiplier,
-                        overlapDirection: OverlapDirection);
+                        OverrideTextRenderingPositionMode, DrawLineHeightMultiplier,
+                        shiftForOutline: true, OverlapDirection);
                 }
             }
 
         }
+    }
+
+    // The lines of WrappedText, drawn with font from a first line starting at originY, whose glyphs can reach
+    // visibleSpan: line i covers originY + i * step plus the font's glyph rows, so the first and last visible
+    // lines come from one division each (#8503). No span means every line.
+    private void GetVisibleLineRange(BitmapFont font, float originY, (float Top, float Bottom)? visibleSpan,
+        out int firstLine, out int endLineExclusive)
+    {
+        int count = WrappedText.Count;
+        firstLine = 0;
+        endLineExclusive = count;
+        float step = font.EffectiveLineHeight(EffectiveFontScale, DrawLineHeightMultiplier);
+        if (visibleSpan is not { } span || step <= 0)
+        {
+            return;
+        }
+
+        font.GetGlyphVerticalExtent(out int glyphTop, out int glyphBottom);
+        float first = (span.Top - originY - glyphBottom * EffectiveFontScale) / step;
+        float last = (span.Bottom - originY - glyphTop * EffectiveFontScale) / step;
+        firstLine = (int)System.Math.Max(0, System.Math.Min(count, System.Math.Ceiling(first)));
+        endLineExclusive = (int)System.Math.Max(firstLine, System.Math.Min(count, System.Math.Floor(last) + 1));
+    }
+
+    // The rows a font draws a line's glyphs in, from lineTop at scale, joined with its shadow when it has one.
+    private void JoinGlyphRows(BitmapFont font, float lineTop, float scale, ref float top, ref float bottom)
+    {
+        font.GetGlyphVerticalExtent(out int glyphTop, out int glyphBottom);
+        top = System.Math.Min(top, lineTop + glyphTop * scale);
+        bottom = System.Math.Max(bottom, lineTop + glyphBottom * scale);
+        if (font.ShadowFont != null)
+        {
+            float shadowTop = lineTop + DropshadowOffsetY * scale;
+            font.ShadowFont.GetGlyphVerticalExtent(out glyphTop, out glyphBottom);
+            top = System.Math.Min(top, shadowTop + glyphTop * scale);
+            bottom = System.Math.Max(bottom, shadowTop + glyphBottom * scale);
+        }
+    }
+
+    // Whether a line without inline variables, starting at lineTop, draws nothing inside span.
+    private bool IsPlainLineOutside(BitmapFont fontToUse, float lineTop, (float Top, float Bottom) span)
+    {
+        float top = float.MaxValue;
+        float bottom = float.MinValue;
+        JoinGlyphRows(fontToUse, lineTop, EffectiveFontScale, ref top, ref bottom);
+        return bottom < span.Top || top > span.Bottom;
+    }
+
+    // Whether a line of inline-variable text draws nothing inside visibleSpan. Only lines whose runs differ by
+    // color or font are judged: a [Y] or [Custom] run (or any other variable) can move its letters anywhere,
+    // so such a line always draws.
+    private bool IsStyledLineOutside(BitmapFont fontToUse, List<StyledSubstring> substrings, float lineTop, float maxBaseline,
+        (float Top, float Bottom) span)
+    {
+        float top = float.MaxValue;
+        float bottom = float.MinValue;
+        for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
+        {
+            var variables = substrings[substringIndex].Variables;
+            for (int variableIndex = 0; variableIndex < variables.Count; variableIndex++)
+            {
+                string name = variables[variableIndex].VariableName;
+                if (name != nameof(Color) && name != nameof(Red) && name != nameof(Green) && name != nameof(Blue)
+                    && name != nameof(Alpha) && name != nameof(FontScale) && name != nameof(BitmapFont))
+                {
+                    return false;
+                }
+            }
+            ResolveRunFont(variables, fontToUse, out BitmapFont? runFont, out float fontScale);
+            BitmapFont effectiveFont = runFont ?? fontToUse;
+            float runTop = lineTop + maxBaseline - (fontScale * effectiveFont.BaselineY);
+            JoinGlyphRows(effectiveFont, runTop, fontScale, ref top, ref bottom);
+        }
+        return bottom < span.Top || top > span.Bottom;
     }
 
     List<string> lineByLineList = new List<string>() { "" };
@@ -1516,7 +1615,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     // When drawing line-by-line, we only pass a single 
     List<int> individualLineWidth = new List<int>() { 0 };
-    private void DrawWithInlineVariables(BitmapFont fontToUse, int requiredWidth, SpriteRenderer spriteRenderer)
+    private void DrawWithInlineVariables(BitmapFont fontToUse, int requiredWidth, SpriteRenderer spriteRenderer,
+        (float Top, float Bottom)? visibleSpan)
     {
         // The caller runs UpdateIpsoForRendering first.
         var tempForRendering = mTempForRendering!;
@@ -1547,34 +1647,50 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             {
                 lineByLineList[0] = lineOfText;
 
-                if (HasDropshadow && fontToUse.ShadowFont != null)
+                // A line outside the clip draws nothing, but still takes its row and uses up its letters.
+                if (visibleSpan is not { } plainSpan || !IsPlainLineOutside(fontToUse, startOfLine.Y, plainSpan))
                 {
-                    fontToUse.ShadowFont.DrawTextLines(lineByLineList, HorizontalAlignment,
+                    if (HasDropshadow && fontToUse.ShadowFont != null)
+                    {
+                        fontToUse.ShadowFont.DrawTextLines(lineByLineList, HorizontalAlignment,
+                            this,
+                            requiredWidth, widths, spriteRenderer, DropshadowColor,
+                            startOfLine.X + DropshadowOffsetX * EffectiveFontScale,
+                            startOfLine.Y + DropshadowOffsetY * EffectiveFontScale,
+                            rotation, EffectiveFontScale,
+                            EffectiveFontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
+                            overlapDirection: OverlapDirection);
+                    }
+
+                    fontToUse.DrawTextLines(lineByLineList, HorizontalAlignment,
                         this,
-                        requiredWidth, widths, spriteRenderer, DropshadowColor,
-                        startOfLine.X + DropshadowOffsetX * EffectiveFontScale,
-                        startOfLine.Y + DropshadowOffsetY * EffectiveFontScale,
+                        requiredWidth, widths, spriteRenderer, color,
+                        startOfLine.X,
+                        startOfLine.Y,
                         rotation, EffectiveFontScale,
                         EffectiveFontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
                         overlapDirection: OverlapDirection);
                 }
 
-                fontToUse.DrawTextLines(lineByLineList, HorizontalAlignment,
-                    this,
-                    requiredWidth, widths, spriteRenderer, color,
-                    startOfLine.X,
-                    startOfLine.Y,
-                    rotation, EffectiveFontScale,
-                    EffectiveFontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
-                    overlapDirection: OverlapDirection);
-
                 startOfLine += fontToUse.EffectiveLineHeight(EffectiveFontScale, DrawLineHeightMultiplier) * yAxis;
-                maxLettersToShow -= lineOfText.Length;
+                lettersLeft -= lineOfText.Length;
             }
             else
             {
                 individualLineWidth[0] = widths[i];
                 float lineHeight = ComputeStyledLineHeight(fontToUse, substrings, out float maxBaseline);
+
+                if (visibleSpan is { } styledSpan && IsStyledLineOutside(fontToUse, substrings, startOfLine.Y, maxBaseline, styledSpan))
+                {
+                    // Outside the clip: the line still takes its row and uses up its letters, as drawing it would.
+                    for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
+                    {
+                        lettersLeft -= substrings[substringIndex].Substring.Length;
+                    }
+                    startOfLine += lineHeight * yAxis;
+                    startOfLineIndex += lineOfText.Length;
+                    continue;
+                }
                 StyledSubstring? previousSubstring = null;
                 BitmapFont? previousFont = null;
                 float previousScale = 0;

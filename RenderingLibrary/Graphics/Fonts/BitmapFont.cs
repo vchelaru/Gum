@@ -1036,7 +1036,28 @@ public class BitmapFont : IDisposable
         TextRenderingPositionMode? overrideTextRenderingPositionMode = null, 
         float lineHeightMultiplier = 1,
         bool shiftForOutline = true,
-        OverlapDirection overlapDirection = OverlapDirection.RightOnTop)
+        OverlapDirection overlapDirection = OverlapDirection.RightOnTop) =>
+        DrawTextLineRange(0, lines.Count, lines, horizontalAlignment, objectRequestingChange, requiredWidth, widths,
+            spriteRenderer, color, xOffset, yOffset, rotationDegrees, scaleX, scaleY, numberOfLettersToRender,
+            overrideTextRenderingPositionMode, lineHeightMultiplier, shiftForOutline, overlapDirection);
+
+    /// <summary>
+    /// <see cref="DrawTextLines"/> for only the lines from <paramref name="firstLine"/> up to
+    /// <paramref name="endLineExclusive"/> (#8503). Each drawn line lands exactly where the full draw puts it,
+    /// and the lines before <paramref name="firstLine"/> still count against
+    /// <paramref name="numberOfLettersToRender"/>.
+    /// </summary>
+    internal FloatRectangle DrawTextLineRange(int firstLine, int endLineExclusive, List<string> lines, HorizontalAlignment horizontalAlignment,
+        object objectRequestingChange, int requiredWidth, List<int> widths,
+        SpriteRenderer spriteRenderer,
+        Color color,
+        float xOffset, float yOffset,
+        float rotationDegrees, float scaleX, float scaleY,
+        int? numberOfLettersToRender,
+        TextRenderingPositionMode? overrideTextRenderingPositionMode,
+        float lineHeightMultiplier,
+        bool shiftForOutline,
+        OverlapDirection overlapDirection)
     {
         ///////////Early Out////////////////
         if (numberOfLettersToRender == 0)
@@ -1049,7 +1070,7 @@ public class BitmapFont : IDisposable
 
         var currentLetterOrigin = new Vector2();
 
-        int lineNumber = 0;
+        int lineNumber = firstLine;
 
         // The block origin in whole screen pixels, used when snapping to pixels.
         // No TextPositionRoundingMode (Floor/Ceiling) knob here -- away-from-zero rounding is hardcoded
@@ -1079,7 +1100,12 @@ public class BitmapFont : IDisposable
 
         GetRotatedAxes(rotationDegrees, out Vector2 xAxis, out Vector2 yAxis);
 
+        // Lines skipped before the range still use up letters, as if they had been drawn.
         int numberOfLettersRendered = 0;
+        for (int i = 0; i < firstLine; i++)
+        {
+            numberOfLettersRendered += lines[i].Length;
+        }
 
         var effectiveTextRenderingMode = overrideTextRenderingPositionMode ??
             Text.TextRenderingPositionMode;
@@ -1112,7 +1138,7 @@ public class BitmapFont : IDisposable
             
         var scale = new Vector2(scaleX, scaleY);
 
-        for (int i = 0; i < lines.Count; i++)
+        for (int i = firstLine; i < endLineExclusive; i++)
         {
             var line = lines[i];
 
@@ -1317,6 +1343,42 @@ public class BitmapFont : IDisposable
     /// Returns the effective line height in pixels, accounting for font scale and line height multiplier.
     /// </summary>
     public float EffectiveLineHeight(float fontScale = 1, float lineHeightMultiplier = 1) => mLineHeightInPixels * lineHeightMultiplier * fontScale;
+
+    bool _hasGlyphVerticalExtent;
+    int _glyphTop;
+    int _glyphBottom;
+
+    /// <summary>
+    /// The rows, in font pixels from the top of a line, that this font's glyphs can cover: the smallest
+    /// distance from the line top and the largest distance to a glyph's bottom over every character. Text
+    /// uses it to tell which lines of a clipped block can show (#8503). Computed once.
+    /// </summary>
+    internal void GetGlyphVerticalExtent(out int top, out int bottom)
+    {
+        if (!_hasGlyphVerticalExtent)
+        {
+            // The same rows GetCharacterRect places each glyph in; a glyph with no height draws nothing.
+            int minTop = int.MaxValue;
+            int maxBottom = int.MinValue;
+            for (int i = 0; i < mCharacterInfo.Length; i++)
+            {
+                BitmapCharacterInfo? info = mCharacterInfo[i];
+                if (info == null || info.PixelBottom <= info.PixelTop)
+                {
+                    continue;
+                }
+                int distanceFromTop = info.GetPixelDistanceFromTop(mLineHeightInPixels);
+                minTop = System.Math.Min(minTop, distanceFromTop);
+                maxBottom = System.Math.Max(maxBottom, distanceFromTop + info.PixelBottom - info.PixelTop);
+            }
+            bool hasGlyphs = minTop <= maxBottom;
+            _glyphTop = hasGlyphs ? minTop : 0;
+            _glyphBottom = hasGlyphs ? maxBottom : mLineHeightInPixels;
+            _hasGlyphVerticalExtent = true;
+        }
+        top = _glyphTop;
+        bottom = _glyphBottom;
+    }
 
     /// <summary>
     /// 
