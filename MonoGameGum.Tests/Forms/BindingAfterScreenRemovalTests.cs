@@ -51,8 +51,6 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         }
     }
 
-    private const string ResetBecause = "because a target whose BindingContext becomes null resets (#8543)";
-
     private static (StackPanel screen, Label goldLabel, Button buyButton) CreateScreen()
     {
         StackPanel screen = new();
@@ -636,7 +634,7 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
     }
 
     [Fact]
-    public void AddToManagers_RemoveFromRoot_ContainedInstancesKeepTheirOwnContextAndPause()
+    public void AddToManagers_RemoveFromRoot_KeepsContextsPausesAndResumesOnAddToRoot()
     {
         GameViewModel screenViewModel = new() { Gold = 1 };
         GameViewModel labelViewModel = new() { Gold = 2 };
@@ -644,6 +642,9 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         Label goldLabel = new();
         goldLabel.SetBinding(nameof(Label.Text), nameof(GameViewModel.Gold));
         screen.AddChild(goldLabel);
+        Button buyButton = new();
+        buyButton.SetBinding(nameof(Button.IsEnabled), nameof(GameViewModel.CanAfford));
+        screen.AddChild(buyButton);
         ListBox listBox = new();
         screen.AddChild(listBox);
         listBox.Items!.Add("first");
@@ -657,47 +658,24 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         screen.BindingContext = screenViewModel;
         goldLabel.BindingContext = labelViewModel;
 
+        // Forms RemoveFromRoot also calls RemoveFromManagers, which leaves every context in place.
         screen.RemoveFromRoot();
         labelViewModel.Gold = 40;
+        screenViewModel.Gold = 50;
 
-        // Forms RemoveFromRoot also calls RemoveFromManagers, which clears the screen's own context.
-        screen.BindingContext.ShouldBeNull();
+        screen.BindingContext.ShouldBe(screenViewModel);
         goldLabel.BindingContext.ShouldBe(labelViewModel);
         goldLabel.Text.ShouldBe("2");
+        buyButton.IsEnabled.ShouldBeFalse();
         listBox.ListBoxItems[1].BindingContext.ShouldBe("second");
-    }
 
-    private class RemovesOtherOnRemoval : Gum.GueDeriving.ContainerRuntime
-    {
-        public GraphicalUiElement? Other;
-
-        public override void RemoveFromManagers()
-        {
-            Other?.RemoveFromManagers();
-            base.RemoveFromManagers();
-        }
+        screen.AddToRoot();
+        goldLabel.Text.ShouldBe("40");
+        buyButton.IsEnabled.ShouldBeTrue();
     }
 
     [Fact]
-    public void RemoveFromManagers_UnrelatedElementRemovedDuringChildWalk_ClearsItsOwnContext()
-    {
-        GameViewModel otherViewModel = new() { Gold = 1 };
-        Gum.GueDeriving.ContainerRuntime other = new();
-        other.AddToManagers(SystemManagers.Default, null);
-        other.BindingContext = otherViewModel;
-        Gum.GueDeriving.ContainerRuntime screen = new();
-        RemovesOtherOnRemoval child = new() { Other = other };
-        screen.Children.Add(child);
-        child.ElementGueContainingThis = screen;
-        screen.AddToManagers(SystemManagers.Default, null);
-
-        screen.RemoveFromManagers();
-
-        other.BindingContext.ShouldBeNull();
-    }
-
-    [Fact]
-    public void AddToManagers_ExplicitContext_FollowsViewModelUntilRemovedFromManagers()
+    public void ManagersOnlyElement_RemoveFromManagers_KeepsContextAndFollowsViewModel()
     {
         GameViewModel viewModel = new() { Gold = 1 };
         (StackPanel screen, Label goldLabel, _) = CreateScreen();
@@ -707,11 +685,12 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         viewModel.Gold = 5;
         goldLabel.Text.ShouldBe("5");
 
+        // Never in the root, so nothing pauses it.
         screen.Visual.RemoveFromManagers();
         viewModel.Gold = 6;
 
-        screen.BindingContext.ShouldBeNull();
-        goldLabel.Text.ShouldBe(ContextResetExpectation.Of(new Label().Text), ResetBecause);
+        screen.BindingContext.ShouldBe(viewModel);
+        goldLabel.Text.ShouldBe("6");
     }
 
     [Fact]

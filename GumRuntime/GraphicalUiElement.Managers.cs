@@ -469,10 +469,6 @@ public partial class GraphicalUiElement
         }
     }
 
-    // True while this element's container removes it as part of its own RemoveFromManagers, so it
-    // can tell it is not the element the call was made on.
-    internal bool IsRemovingFromManagersWithContainer { get; private set; }
-
     public virtual void RemoveFromManagers()
     {
         foreach (var child in this.mWhatThisContains)
@@ -481,15 +477,7 @@ public partial class GraphicalUiElement
             {
                 continue;
             }
-            child.IsRemovingFromManagersWithContainer = true;
-            try
-            {
-                child.RemoveFromManagers();
-            }
-            finally
-            {
-                child.IsRemovingFromManagersWithContainer = false;
-            }
+            child.RemoveFromManagers();
         }
 
         // if mManagers is null, then it was never added to the managers

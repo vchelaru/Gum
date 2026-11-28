@@ -81,20 +81,6 @@ public partial class GraphicalUiElement : IBindingTarget
         }
     }
 
-    // Only the element RemoveFromManagers was called on loses its own context, matching leaving the
-    // root; contained children keep theirs.
-    [UnconditionalSuppressMessage("Trimming", "IL2026",
-        Justification = "Automatic teardown clearing BindingContext when this element is removed from " +
-            "managers. The trim risk this unwinds was already surfaced wherever BindingContext/SetBinding " +
-            "was actually called by the app to set up the binding in the first place.")]
-    partial void CustomRemoveFromManagers()
-    {
-        if (!IsRemovingFromManagersWithContainer)
-        {
-            BindingContext = null;
-        }
-    }
-
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "Automatic parent-to-child BindingContext propagation, always wired regardless " +
             "of whether binding is used. The trim risk is already surfaced wherever an ancestor's " +
