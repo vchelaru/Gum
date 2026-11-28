@@ -333,12 +333,21 @@ public partial class GraphicalUiElement
             "set this binding up.")]
     private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is null)
-        {
-            return;
-        }
         // Dotted-path bindings receive notifications via their PropertyPathObserver,
         // not via this root-level handler.
+        if (string.IsNullOrEmpty(e.PropertyName))
+        {
+            // A null or empty name means every property changed (the .NET convention).
+            foreach (VmToUiProperty binding in vmPropsToUiProps.Values.ToArray())
+            {
+                if (!binding.IsDottedPath)
+                {
+                    UpdateToVmProperty(binding.VmProperty);
+                }
+            }
+            PushBindingContextChangeToDescendents(vmPropertyName: null, BindingContext);
+            return;
+        }
         UpdateToVmProperty(e.PropertyName);
     }
 
@@ -747,7 +756,8 @@ public partial class GraphicalUiElement
         PushBindingContextChangeToDescendents(vmPropertyName, rootContext);
     }
 
-    private void PushBindingContextChangeToDescendents(string vmPropertyName, object? rootContext)
+    // A null vmPropertyName matches every descendant's BindingContext binding.
+    private void PushBindingContextChangeToDescendents(string? vmPropertyName, object? rootContext)
     {
         if (Children != null)
         {
@@ -773,11 +783,13 @@ public partial class GraphicalUiElement
         Justification = "Automatic descendant notification when a BindingContext-bound VM property " +
             "changes. The trim risk is already surfaced wherever SetBinding was actually called to set " +
             "up this binding.")]
-    private void MatchAndPushBindingContextChange(string vmPropertyName, object? rootContext)
+    private void MatchAndPushBindingContextChange(string? vmPropertyName, object? rootContext)
     {
-        if (BindingContextBinding == vmPropertyName && BindingContextBindingPropertyOwner == rootContext)
+        if (BindingContextBinding != null
+            && (vmPropertyName == null || BindingContextBinding == vmPropertyName)
+            && BindingContextBindingPropertyOwner == rootContext)
         {
-            UpdateToVmProperty(vmPropertyName);
+            UpdateToVmProperty(BindingContextBinding);
         }
         PushBindingContextChangeToDescendents(vmPropertyName, rootContext);
     }
