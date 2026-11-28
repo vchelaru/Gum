@@ -131,6 +131,7 @@ Only the default mode (above) and `UpdateSourceTrigger.LostFocus`, which never f
 **Compiled getters and setters are cached per (type, path).** `BinderHelpers.BuildGetter`/`BuildSetter` compile an expression tree once per pair; attaching a BindingContext only looks them up. A per-attach compile costs several KB and most of a millisecond per binding (`BindingAllocationTests`).
 
 **A view model field is read but never written.** `PropertyPathObserver` resolves a public field at the leaf (`IsLeafField`), and `UntypedBindingExpression.SetSourceValue` skips it.
+**What the visual engine used to throw on is reported once per binding.** A value the target cannot take (`NpcBindingExpression.ReportFailedConversionOnce`) and a `PushValueToViewModel` to a source with no setter (`PushTargetToSource`) write one `[Gum]` warning; a null into a value type and a push to a field stay silent.
 
 **Forms `StringFormat` is a composite format and must contain `{0}`.** `SetBinding` throws on one without it (`BinderHelpers.GetMissingPlaceholderMessage`), which is what a C# `$"..."` interpolated format leaves behind. The visual overloads' `toStringFormat` is a numeric specifier (`"N0"`) wrapped as `"{0:N0}"`.
 
