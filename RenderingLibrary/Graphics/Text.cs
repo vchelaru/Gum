@@ -2114,6 +2114,15 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         // instead of re-deriving it here with the wrong scale.
         mTempForRendering.Width = GetDrawnWidthForAlignment();
         mTempForRendering.Height = WrappedTextHeight;
+        if (TextRenderingMode == TextRenderingMode.RenderTarget)
+        {
+            // The render target stops at MaxRenderTargetSize while measurement does not (#8506), so draw it
+            // at the size it stops at and cut off the rest rather than stretch it over the measured size.
+            mTempForRendering.Width = System.Math.Min(mTempForRendering.Width,
+                BitmapFont.MaxRenderTargetSize * MeasurementFontScale);
+            mTempForRendering.Height = System.Math.Min(mTempForRendering.Height,
+                BitmapFont.MaxRenderTargetSize * LineHeightMultiplier * MeasurementFontScale);
+        }
         //mTempForRendering.Parent = this.Parent;
 
         float widthDifference = this.EffectiveWidth - mTempForRendering.Width;
@@ -2330,7 +2339,6 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             startOfLineIndex += line.Length;
         }
 
-        const int MaxWidthAndHeight = 4096;
         // Width must round UP (not to-nearest): this value becomes the Text's own self-imposed wrap
         // width (RelativeToChildren sets Text.Width to it), which is then compared against the same
         // line's raw, unrounded measurement in IWrappedTextExtensions.UpdateLines. Rounding to-nearest
@@ -2339,8 +2347,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         // the width no longer "fits" and gets force-wrapped (#3645). Only affects fractional widths, which
         // only occur via inline-run scaling (e.g. [FontScale]) - the non-inline-variable path measures
         // whole bitmap-font glyph advances, which are already integers.
-        requiredWidth = System.Math.Min((int)System.Math.Ceiling(maxWidth), MaxWidthAndHeight);
-        requiredHeight = System.Math.Min((int)(totalHeight + .5f), MaxWidthAndHeight);
+        // No upper limit, so siblings and parents lay out after every drawn line (#8506).
+        requiredWidth = (int)System.Math.Ceiling(maxWidth);
+        requiredHeight = (int)(totalHeight + .5f);
     }
 
     /// <summary>

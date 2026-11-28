@@ -2034,7 +2034,6 @@ public class Text : IVisible, IRenderableIpso,
             startOfLineIndex += line.Length;
         }
 
-        const int MaxWidthAndHeight = 4096;
         // Width must round UP (not to-nearest): this value becomes the Text's own self-imposed wrap
         // width (RelativeToChildren sets Text.Width to it), which is then compared against the same
         // line's raw, unrounded measurement in IWrappedTextExtensions.UpdateLines. Rounding to-nearest
@@ -2043,8 +2042,9 @@ public class Text : IVisible, IRenderableIpso,
         // the width no longer "fits" and gets force-wrapped (#3645). Only affects fractional widths, which
         // only occur via inline-run scaling (e.g. [FontScale]) - the non-inline-variable path measures
         // whole bitmap-font glyph advances, which are already integers.
-        requiredWidth = System.Math.Min((int)System.Math.Ceiling(maxWidth), MaxWidthAndHeight);
-        requiredHeight = System.Math.Min((int)(totalHeight + .5f), MaxWidthAndHeight);
+        // No upper limit, so siblings and parents lay out after every drawn line (#8506).
+        requiredWidth = (int)System.Math.Ceiling(maxWidth);
+        requiredHeight = (int)(totalHeight + .5f);
     }
 
     /// <summary>
@@ -2164,9 +2164,9 @@ public class Text : IVisible, IRenderableIpso,
             maxWidth = System.Math.Max(lineWidth, maxWidth);
         }
 
-        const int MaxWidthAndHeight = 4096; // change this later?
-        requiredWidth = System.Math.Min((int)(maxWidth +.5f), MaxWidthAndHeight);
-        requiredHeight = System.Math.Min((int)(maxHeight + .5f), MaxWidthAndHeight);
+        // No upper limit, so siblings and parents lay out after every drawn line (#8506).
+        requiredWidth = (int)(maxWidth + .5f);
+        requiredHeight = (int)(maxHeight + .5f);
         //if (requiredWidth != 0 && mOutlineThickness != 0)
         //{
         //    requiredWidth += mOutlineThickness * 2;
