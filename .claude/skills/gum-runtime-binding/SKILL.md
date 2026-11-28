@@ -95,7 +95,7 @@ textBox.SetBinding(nameof(TextBox.Text), new Binding("Child.Items[1].Text"));
 
 All binding features work with indexed paths: modes, converters, StringFormat, FallbackValue, LostFocus trigger.
 
-**Collection change notification:** `PropertyPathObserver` subscribes to `INotifyCollectionChanged` on collections in indexed path segments. When items are added, removed, replaced, or cleared, the binding re-evaluates. Out-of-bounds indexes resolve to null (triggering `FallbackValue` if set). Currently reacts to ALL collection changes regardless of whether the specific bound index is affected — this is intentionally broad for correctness; a future optimization could filter by index relevance.
+**Collection change notification:** `PropertyPathObserver` subscribes to `INotifyCollectionChanged` on collections in indexed path segments. Any change to that collection re-walks the path below the index (`OnCollectionChanged`), so the binding follows the item now at the index; a `PropertyChanged` re-walks from its own segment, including the collection it holds. Each listener records its path level and detaching goes by level, not list position, because a level that is not `INotifyPropertyChanged` adds no listener. Out-of-bounds indexes resolve to null (triggering `FallbackValue` if set). Currently reacts to ALL collection changes regardless of whether the specific bound index is affected — this is intentionally broad for correctness; a future optimization could filter by index relevance.
 
 **Limitations:** Dictionary/string key indexing is not supported.
 
