@@ -21,11 +21,12 @@ public class BindingOperationsTests
     }
     
     [Fact]
-    public void ClearBinding_UnsetsTargetValue_RemovesBinding()
+    public void ClearBinding_ResetsTargetToUnboundValue_RemovesBinding()
     {
         // Arrange
         TextBox textBox = new()
         {
+            Width = 50,
             BindingContext = new TestViewModel { FloatValue = 123}
         };
         
@@ -39,7 +40,8 @@ public class BindingOperationsTests
         Assert.False(textBox.IsDataBound(nameof(FrameworkElement.Width)));
         
         Assert.Equal(123, widthBeforeClear);
-        Assert.Equal(0, textBox.Width);
+        // #8543: ClearBinding shows the value the property held before it was bound.
+        Assert.Equal(ContextResetExpectation.Of(50f), textBox.Width);
     }
 
     [Fact]

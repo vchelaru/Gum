@@ -139,6 +139,10 @@ All binding features work with indexed paths: modes, converters, StringFormat, F
 
 **Forms bindings convert strings and integers to enum targets.** `BinderHelpers.ConvertToEnum` parses names ignoring case (as WPF's `EnumConverter` does) and maps numbers with `Enum.ToObject`; a value naming no member throws in `UpdateTarget`, while an unmatched edit written back to an enum source leaves the source unchanged.
 
+**A Forms target resets when an attached BindingContext becomes null.** `NpcBindingExpression.ResetTarget` shows `FallbackValue`, else the value the property held before it was first bound (`UnboundTargetValue`, kept per property by `PropertyRegistry` across rebinds; `ClearBinding` restores it too); OneWayToSource and BindingContext targets are skipped, and binding before any context resets nothing. Visual (GUE) bindings keep their last value. Tests: `BindingContextNullResetTests`, whose expected values go through `ContextResetExpectation`.
+
+**A focused TextBox/PasswordBox with the PropertyChanged trigger is not rewritten mid-typing.** A source value raised during its own edit is deferred (`_hasDeferredTargetUpdate`) and shown on `LostFocus` or `EditCommitted`. Tests: `TextBoxPropertyChangedEditTests`.
+
 **A setter-only target property binds OneWay on both systems.** Nothing may read the target without checking `CanRead` (`NpcBindingExpression.ShouldUpdateSource`, `GraphicalUiElement.PushValueToViewModel`); a default TwoWay binding only pushes source values, and `OneWayToSource` on a setter-only target throws.
 
 **A view model member with no setter still feeds a TwoWay binding; only `OneWayToSource` refuses it.** TwoWay is the default mode, so a computed `FullName => ...` shown in a Label must keep working; `OneWayToSource` throws at attach (`BinderHelpers.GetReadOnlySourceMessage`). A private setter counts as a setter on both sides, as `PropertyInfo.SetValue` reaches it; on the source side one a base class declares is found through `BinderHelpers.AsDeclared`, since a `PropertyInfo` reflected from the derived type hides it.
