@@ -61,18 +61,25 @@ namespace Gum.ProjectServices.CodeGeneration
 
             string namespaceName = _codeGenerator.GetElementNamespace(element, elementSettings, projectSettings);
 
-            if (!string.IsNullOrEmpty(namespaceName))
+            // Same form as the generated half of the class.
+            bool hasBlockNamespace = !string.IsNullOrEmpty(namespaceName) &&
+                !_codeGenerator.ResolveUseFileScopedNamespace(projectSettings);
+
+            if (hasBlockNamespace)
             {
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"namespace {namespaceName}");
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
             }
+            else if (!string.IsNullOrEmpty(namespaceName))
+            {
+                stringBuilder.AppendLine($"namespace {namespaceName};");
+                stringBuilder.AppendLine();
+            }
 
             #endregion
 
             #region Class Header/Opening {
-
-            // todo - this needs work! It's just placeholder so I can finish the rest of this method to get something with the right # of brackets
 
             string classHeader = GetClassHeader(element, projectSettings);
 
@@ -98,7 +105,7 @@ namespace Gum.ProjectServices.CodeGeneration
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             #endregion
 
-            if (!string.IsNullOrEmpty(namespaceName))
+            if (hasBlockNamespace)
             {
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");

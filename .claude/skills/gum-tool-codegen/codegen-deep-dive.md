@@ -237,17 +237,20 @@ using Gum.Converters;
 using Gum.DataTypes;
 // ...CommonUsingStatements, then any element-level UsingStatements
 
-namespace MyGame.Components
-{
-    partial class IconButton
-    {
-        partial void CustomInitialize()
-        {
+namespace MyGame.Components;
 
-        }
+partial class IconButton
+{
+    partial void CustomInitialize()
+    {
+
     }
 }
 ```
+
+The stub's namespace form follows the generated file's (`CodeGenerator.ResolveUseFileScopedNamespace`):
+file-scoped from C# 10 or when the version is unknown, a block below C# 10. Every rewrite of an existing
+custom file keeps the form the file already has, since older projects hold block-namespace files.
 
 Two details matter if you are editing Gum itself:
 
