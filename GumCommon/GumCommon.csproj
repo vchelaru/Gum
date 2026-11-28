@@ -354,6 +354,8 @@
 		<Compile Include="..\MonoGameGum\Forms\Data\BindingExpressionBase.cs" Link="Forms\Data\BindingExpressionBase.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Data\BindingOperations.cs" Link="Forms\Data\BindingOperations.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Data\GumProperty.cs" Link="Forms\Data\GumProperty.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Data\IBindingTarget.cs" Link="Forms\Data\IBindingTarget.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Data\MethodBindingExpression.cs" Link="Forms\Data\MethodBindingExpression.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Data\NpcBindingExpression.cs" Link="Forms\Data\NpcBindingExpression.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Data\PropertyRegistry.cs" Link="Forms\Data\PropertyRegistry.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Data\UntypedBindingExpressionBase.cs" Link="Forms\Data\UntypedBindingExpressionBase.cs" />

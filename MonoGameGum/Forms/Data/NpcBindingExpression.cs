@@ -34,7 +34,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
         Justification = "Only value types reach Activator.CreateInstance here, and every value type " +
             "has a parameterless constructor that the trimmer cannot remove.")]
     public NpcBindingExpression(
-        FrameworkElement target,
+        IBindingTarget target,
         string targetPropertyName,
         Binding binding) : base(target, targetPropertyName, binding)
     {
@@ -110,10 +110,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
         switch (trigger)
         {
             case UpdateSourceTrigger.PropertyChanged:
-                if (TargetElement is INotifyPropertyChanged npc)
-                {
-                    npc.PropertyChanged += OnTargetPropertyChanged;
-                }
+                TargetElement.PropertyChanged += OnTargetPropertyChanged;
                 break;
 
             case UpdateSourceTrigger.LostFocus when ShouldUpdateSource:
@@ -293,10 +290,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     public override void Dispose()
     {
-        if (TargetElement is INotifyPropertyChanged npc)
-        {
-            npc.PropertyChanged -= OnTargetPropertyChanged;
-        }
+        TargetElement.PropertyChanged -= OnTargetPropertyChanged;
         TargetElement.LostFocus -= OnLostFocus;
         TargetElement.InheritedBindingContextChanged -= OnInheritedBindingContextChanged;
         base.Dispose();

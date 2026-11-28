@@ -21,7 +21,7 @@ namespace Gum.Forms.Data;
 internal abstract class UntypedBindingExpression : BindingExpressionBase
 {
     protected Binding Binding { get; }
-    protected FrameworkElement TargetElement { get; }
+    protected IBindingTarget TargetElement { get; }
     protected Type? LeafType => PathObserver.LeafType;
     protected object? CurrentRoot => PathObserver.CurrentRoot;
     private Func<object, object?>? SourceGetter { get; set; }
@@ -30,7 +30,7 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     private readonly string _targetPropertyName;
     private bool _hasReportedMissingPath;
 
-    protected UntypedBindingExpression(FrameworkElement targetElement, string targetPropertyName, Binding binding)
+    protected UntypedBindingExpression(IBindingTarget targetElement, string targetPropertyName, Binding binding)
     {
         _targetPropertyName = targetPropertyName;
         _hasReportedMissingPath = false;

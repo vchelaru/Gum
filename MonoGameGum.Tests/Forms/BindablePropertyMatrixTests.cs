@@ -333,13 +333,14 @@ public class BindablePropertyMatrixTests : BaseTestClass
     }
 
     /// <summary>
-    /// A visual's SetBinding has no modes; a change made on the visual is written back only through
-    /// PushValueToViewModel, which no standard runtime calls, even for properties that raise PropertyChanged.
+    /// A visual's string SetBinding is TwoWay by default, as a Forms control's is, so every runtime property that
+    /// raises PropertyChanged writes a change back to the view model
+    /// (<see cref="FormsControls_EveryNotifyingProperty_TwoWayWritesBackToViewModel"/>).
     /// </summary>
     [Fact]
-    public void StandardRuntimes_EveryNotifyingProperty_StringBindingDoesNotWriteBackToViewModel()
+    public void StandardRuntimes_EveryNotifyingProperty_StringBindingWritesBackToViewModel()
     {
-        List<string> wroteBack = new();
+        List<string> notWrittenBack = new();
         int checkedCount = 0;
 
         foreach (Type runtimeType in ConstructibleTypes(typeof(GraphicalUiElement), typeof(TextRuntime).Assembly, "Gum.GueDeriving"))
@@ -376,15 +377,15 @@ public class BindablePropertyMatrixTests : BaseTestClass
 
                 property.SetValue(runtime, next);
 
-                if (!Equals(ReadViewModel(viewModel), original))
+                if (!Equals(ReadViewModel(viewModel), next))
                 {
-                    wroteBack.Add($"{runtimeType.Name}.{property.Name}");
+                    notWrittenBack.Add($"{runtimeType.Name}.{property.Name}");
                 }
             }
         }
 
         _output.WriteLine($"Runtime notifying properties checked: {checkedCount}");
         checkedCount.ShouldBeGreaterThan(0);
-        wroteBack.ShouldBeEmpty();
+        notWrittenBack.ShouldBeEmpty();
     }
 }

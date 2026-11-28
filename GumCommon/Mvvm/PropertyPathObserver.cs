@@ -99,7 +99,7 @@ public class PropertyPathObserver : IDisposable
 
             if (i == _segments.Length - 1)
             {
-                LeafType = pi?.PropertyType;
+                LeafType = pi?.PropertyType ?? GetLeafFieldType(cursor, _segments[i]);
                 if (_segments[i].Index.HasValue && LeafType != null)
                 {
                     LeafType = GetElementTypeForLeaf(LeafType);
@@ -200,7 +200,7 @@ public class PropertyPathObserver : IDisposable
 
             if (next == _segments.Length - 1)
             {
-                LeafType = pi?.PropertyType;
+                LeafType = pi?.PropertyType ?? GetLeafFieldType(cursor, _segments[next]);
                 if (_segments[next].Index.HasValue && LeafType != null)
                 {
                     LeafType = GetElementTypeForLeaf(LeafType);
@@ -243,6 +243,19 @@ public class PropertyPathObserver : IDisposable
             }
         }
         return cursor;
+    }
+
+    // A leaf may name a public instance field, which is read once and never raises change notification.
+    [RequiresUnreferencedCode(
+        "Looks up a field on owner's own type by name (GetField). That member may be removed under " +
+        "PublishTrimmed if nothing else in the app references it.")]
+    private static Type? GetLeafFieldType(object? owner, PathSegment segment)
+    {
+        if (owner == null || segment.Index.HasValue)
+        {
+            return null;
+        }
+        return owner.GetType().GetField(segment.Name, BindingFlags.Public | BindingFlags.Instance)?.FieldType;
     }
 
     [RequiresUnreferencedCode(

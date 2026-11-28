@@ -197,17 +197,17 @@ public class BindingStateCategoryAndVisualTypeTests : BaseTestClass
         container.Visible.ShouldBeTrue();
     }
 
+    // A visual binds on the Forms engine, which sets the target's default when the source value cannot convert
+    // (VisualBindingEnginePinTests.Forms_StringToBool_SetsDefault).
     [Fact]
-    public void VisualBinding_SourceTypeCannotConvert_ThrowsNamingBoundProperties()
+    public void VisualBinding_SourceTypeCannotConvert_SetsTargetDefault()
     {
         ShopViewModel viewModel = new() { Label = "yes" };
-        ContainerRuntime container = new() { BindingContext = viewModel };
+        ContainerRuntime container = new() { Visible = true, BindingContext = viewModel };
 
-        Exception exception = Should.Throw<Exception>(() =>
-            container.SetBinding(nameof(ContainerRuntime.Visible), nameof(ShopViewModel.Label)));
+        container.SetBinding(nameof(ContainerRuntime.Visible), nameof(ShopViewModel.Label));
 
-        exception.Message.ShouldContain(nameof(ContainerRuntime.Visible));
-        exception.Message.ShouldContain(nameof(ShopViewModel.Label));
+        container.Visible.ShouldBeFalse();
     }
 
     [Fact]

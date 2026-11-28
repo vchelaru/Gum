@@ -1,14 +1,9 @@
 using Gum.Forms.Data;
-using Gum.Mvvm;
-using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 // This file is NOT linked by FRB — FRB provides its own binding implementation via its own partial class files.
@@ -21,59 +16,29 @@ public class BindingContextChangedEventArgs : EventArgs
     public object? NewBindingContext { get; set; }
 }
 
-public partial class GraphicalUiElement
+/// <summary>
+/// BindingContext inheritance and SetBinding for visuals. Bindings run on the same engine as Forms controls
+/// (<see cref="PropertyRegistry"/>), with this element as the target.
+/// </summary>
+public partial class GraphicalUiElement : IBindingTarget
 {
-    class VmToUiProperty
+    // Created by the first SetBinding, so an element that is never bound allocates nothing for binding.
+    PropertyRegistry? _propertyRegistry;
+
+    // The IBindingTarget form of BindingContextChanged, which the binding engine subscribes to.
+    EventHandler<BindingContextChangedEventArgs>? _bindingTargetContextChanged;
+
+    event EventHandler<BindingContextChangedEventArgs>? IBindingTarget.BindingContextChanged
     {
-        public string VmProperty = string.Empty;
-        public string UiProperty = string.Empty;
+        add => _bindingTargetContextChanged += value;
+        remove => _bindingTargetContextChanged -= value;
+    }
 
-        public Delegate? Delegate;
-
-        public string? ToStringFormat;
-
-        /// <summary>
-        /// For property bindings whose <see cref="VmProperty"/> path contains a '.',
-        /// an observer that watches the dotted path on the active BindingContext and
-        /// raises ValueChanged whenever the leaf value changes.
-        /// </summary>
-        public PropertyPathObserver? PathObserver;
-
-        /// <summary>
-        /// Named handler subscribed to <see cref="PathObserver"/>'s ValueChanged event.
-        /// Stored so we can reliably unsubscribe when the binding is replaced or removed
-        /// (anonymous lambdas captured at subscription time can't be unsubscribed).
-        /// </summary>
-        public Action? PathObserverValueChangedHandler;
-
-        public bool HasReportedMissingPath;
-
-        // Treat any path containing '.' (multi-segment) or '[' (indexed segment) as a
-        // dotted path. Both require the PropertyPathObserver walk; only a bare property
-        // name takes the flat-binding fast path.
-        public bool IsDottedPath => VmProperty.Contains('.') || VmProperty.Contains('[');
-
-        /// <summary>
-        /// Detaches the dotted-path observer (if any) and unsubscribes the stored
-        /// ValueChanged handler. Safe to call when no observer is attached.
-        /// </summary>
-        public void Detach()
-        {
-            if (PathObserver != null)
-            {
-                if (PathObserverValueChangedHandler != null)
-                {
-                    PathObserver.ValueChanged -= PathObserverValueChangedHandler;
-                }
-                PathObserver.Detach();
-            }
-            PathObserverValueChangedHandler = null;
-        }
-
-        public override string ToString()
-        {
-            return $"VM:{VmProperty} UI{UiProperty}";
-        }
+    // A visual has no focus of its own, so a LostFocus trigger never fires on it.
+    event EventHandler? IBindingTarget.LostFocus
+    {
+        add { }
+        remove { }
     }
 
     partial void OnConstructor()
@@ -86,34 +51,26 @@ public partial class GraphicalUiElement
             "at the source's SetBinding call.")]
     partial void ResetBindingStateForClone()
     {
-        // MemberwiseClone shares the binding dictionaries and their path observers, whose handlers
-        // apply values to the source, so the clone gets empty ones and its own copies of the
-        // source's bindings are replayed below. The clone has no parent to inherit a context from
-        // and does not copy an explicit one; whoever places the clone supplies its context.
-        Dictionary<string, VmToUiProperty> sourceBindings = vmPropsToUiProps;
-        string? sourceContextBinding = BindingContextBinding;
+        // MemberwiseClone shares the registry, whose expressions apply values to the source, so the clone gets
+        // its own and the source's bindings are replayed on it. The clone has no parent to inherit a context
+        // from and does not copy an explicit one; whoever places the clone supplies its context.
+        PropertyRegistry? sourceRegistry = _propertyRegistry;
 
-        vmPropsToUiProps = new Dictionary<string, VmToUiProperty>();
-        vmEventsToUiMethods = new Dictionary<string, VmToUiProperty>();
-        _isSubscribedToViewModelPropertyChanged = false;
+        _propertyRegistry = null;
+        _bindingTargetContextChanged = null;
         mBindingContext = null;
         mInheritedBindingContext = null;
-        BindingContextBinding = null;
-        _hasReportedBindingContextBindingPath = false;
-        BindingContextBindingPropertyOwner = null;
         BindingContextChanged = null;
         InheritedBindingContextChanged = null;
 
-        // The clone has no BindingContext yet, so SetBinding only registers the binding and writes
-        // no value; nothing here can reach a renderable that a runtime's Clone override has yet
-        // to reset. The new entries are built from path and format, never the source's objects.
-        foreach (VmToUiProperty binding in sourceBindings.Values)
+        // The clone has no BindingContext yet, so SetBinding only registers the binding and writes no value;
+        // nothing here can reach a renderable that a runtime's Clone override has yet to reset.
+        if (sourceRegistry != null)
         {
-            SetBinding(binding.UiProperty, binding.VmProperty, binding.ToStringFormat);
-        }
-        if (sourceContextBinding != null)
-        {
-            SetBinding(nameof(BindingContext), sourceContextBinding);
+            foreach (KeyValuePair<string, Binding> binding in sourceRegistry.GetBindings())
+            {
+                SetBinding(binding.Key, binding.Value);
+            }
         }
     }
 
@@ -174,9 +131,6 @@ public partial class GraphicalUiElement
     /// theirs. The GumService sets this on its Root; popup and modal roots leave it off.
     /// </summary>
     internal bool ClearsBindingContextOfRemovedChildren { get; set; }
-
-    Dictionary<string, VmToUiProperty> vmPropsToUiProps = new Dictionary<string, VmToUiProperty>();
-    Dictionary<string, VmToUiProperty> vmEventsToUiMethods = new Dictionary<string, VmToUiProperty>();
 
     object? mInheritedBindingContext;
     internal object? InheritedBindingContext
@@ -239,204 +193,63 @@ public partial class GraphicalUiElement
         }
     }
 
-    bool _isSubscribedToViewModelPropertyChanged = false;
-    bool _hasReportedBindingContextBindingPath;
     [RequiresUnreferencedCode(
-        "Unsubscribes VM events and resolves each bound VM property/field/event by name on the new " +
-        "context's own type. Those members may be removed under PublishTrimmed if nothing else in the " +
-        "app references them.")]
+        "Each binding re-resolves its VM member by name on the new context's own type. Those members may " +
+        "be removed under PublishTrimmed if nothing else in the app references them.")]
     private void HandleBindingContextChangedInternal(object? oldContext, object? newContext)
     {
-        if (oldContext is INotifyPropertyChanged oldViewModel)
+        BindingContextChangedEventArgs args = new()
         {
-            UnsubscribeEventsOnOldViewModel(oldViewModel);
-        }
+            OldBindingContext = oldContext,
+            NewBindingContext = newContext
+        };
 
-        // Re-attach all dotted-path observers to the new context.
-        DetachAllPathObservers();
-
-        if (HasFlatPropertyBinding() && newContext is INotifyPropertyChanged viewModel)
-        {
-            TrySubscribeToViewModelChanges(viewModel);
-        }
-
-        if (newContext != null)
-        {
-            foreach (var vmProperty in vmPropsToUiProps.Keys)
-            {
-                UpdateToVmProperty(vmProperty);
-            }
-        }
+        // This element's own bindings follow the new context before its children inherit it.
+        _bindingTargetContextChanged?.Invoke(this, args);
 
         foreach (GraphicalUiElement child in GetAllBindableChildren())
         {
             child.InheritedBindingContext = newContext;
+        }
 
-            if (child.BindingContextBinding != null)
+        BindingContextChanged?.Invoke(this, args);
+    }
+
+    /// <summary>
+    /// The object a binding of <see cref="BindingContext"/> (see <see cref="BindingContextBinding"/>) reads its
+    /// path from: the context this element inherits from its parent. Null when BindingContext is not bound.
+    /// </summary>
+    public object? BindingContextBindingPropertyOwner => BindingContextBinding == null ? null : mInheritedBindingContext;
+
+    /// <summary>
+    /// The path <see cref="BindingContext"/> is bound to, resolved against the parent's BindingContext, or null
+    /// when BindingContext is not bound.
+    /// </summary>
+    public string? BindingContextBinding
+    {
+        get
+        {
+            if (_propertyRegistry != null)
             {
-                child.BindingContextBindingPropertyOwner = newContext;
-
-                child.UpdateToVmProperty(child.BindingContextBinding);
+                foreach (KeyValuePair<string, Binding> binding in _propertyRegistry.GetBindings())
+                {
+                    if (binding.Key == nameof(BindingContext))
+                    {
+                        return binding.Value.Path;
+                    }
+                }
             }
-        }
-
-        BindingContextChanged?.Invoke(this, new()
-        {
-            OldBindingContext = oldContext,
-            NewBindingContext = newContext
-        });
-    }
-
-    private void TrySubscribeToViewModelChanges(INotifyPropertyChanged viewModel)
-    {
-        if (_isSubscribedToViewModelPropertyChanged == false)
-        {
-            viewModel.PropertyChanged += HandleViewModelPropertyChanged;
-            _isSubscribedToViewModelPropertyChanged = true;
+            return null;
         }
     }
-
-    public static int PropertyUnsubscribeCallCount = 0;
-    public static int GetTypeCallCount = 0;
-
-    [RequiresUnreferencedCode(
-        "Looks up an event on the VM's own type by name (GetEvent). That member may be removed " +
-        "under PublishTrimmed if nothing else in the app references it.")]
-    private void UnsubscribeEventsOnOldViewModel(INotifyPropertyChanged oldViewModel)
-    {
-        if (_isSubscribedToViewModelPropertyChanged)
-        {
-            oldViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
-            _isSubscribedToViewModelPropertyChanged = false;
-        }
-
-        foreach (var eventItem in vmEventsToUiMethods.Values)
-        {
-            var delegateToRemove = eventItem.Delegate;
-
-            var foundEvent = oldViewModel.GetType().GetEvent(eventItem.VmProperty);
-            GetTypeCallCount++;
-            foundEvent?.RemoveEventHandler(oldViewModel, delegateToRemove);
-        }
-    }
-
-    public object? BindingContextBindingPropertyOwner { get; private set; }
-    public string? BindingContextBinding { get; private set; }
 
     public event Action<object, BindingContextChangedEventArgs>? BindingContextChanged;
 
-    object? EffectiveBindingContext => mBindingContext ?? InheritedBindingContext;
-
-    [UnconditionalSuppressMessage("Trimming", "IL2026",
-        Justification = "Automatic relay for an already-active flat binding's INotifyPropertyChanged " +
-            "subscription. The trim risk is already surfaced at the SetBinding/BindingContext call that " +
-            "set this binding up.")]
-    private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName is null)
-        {
-            return;
-        }
-        // Dotted-path bindings receive notifications via their PropertyPathObserver,
-        // not via this root-level handler.
-        UpdateToVmProperty(e.PropertyName);
-    }
-
-    private bool HasFlatPropertyBinding()
-    {
-        // Only flat property bindings need a root-level INPC subscription.
-        // Dotted-path bindings manage their own subscriptions via PropertyPathObserver,
-        // and event bindings use a separate AddEventHandler / RemoveEventHandler path
-        // (see vmEventsToUiMethods).
-        foreach (var binding in vmPropsToUiProps.Values)
-        {
-            if (!binding.IsDottedPath)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /// <summary>
-    /// Detects whether a dotted VM path resolves to an event on the leaf's parent
-    /// type. Detecting "is this an event" requires walking the path on a real
-    /// BindingContext (we have to know the type of the second-to-last segment
-    /// resolves to). When BindingContext is null we can't yet decide, so we defer
-    /// the check until <see cref="UpdateToVmProperty"/> runs after a context is
-    /// assigned. Returns true if the path was confirmed to target an event and
-    /// should throw.
-    /// </summary>
-    [RequiresUnreferencedCode(
-        "Walks the dotted path on the VM's own type and looks up the leaf event by name (GetEvent). " +
-        "Those members may be removed under PublishTrimmed if nothing else in the app references them.")]
-    private bool IsDottedPathTargetingEvent(string vmProperty)
-    {
-        var context = BindingContext;
-        if (context == null)
-        {
-            return false;
-        }
-
-        PathSegment[] segments = PathSegmentParser.ParseSegments(vmProperty);
-        object? parent = PropertyPathObserver.WalkSegments(context, segments, segments.Length - 1);
-        if (parent == null)
-        {
-            return false;
-        }
-
-        var leafName = segments[segments.Length - 1].Name;
-        return parent.GetType().GetEvent(leafName) != null;
-    }
-
-    // Accepts any instance method in the hierarchy, of any visibility, so no method that BindEvent's
-    // Delegate.CreateDelegate(type, this, name) can bind is refused.
-    [RequiresUnreferencedCode("Looks up methods on the element's type by name.")]
-    private static bool HasInstanceMethod(Type type, string name)
-    {
-        const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic |
-            BindingFlags.DeclaredOnly;
-        for (Type? current = type; current != null; current = current.BaseType)
-        {
-            foreach (MethodInfo method in current.GetMethods(flags))
-            {
-                if (method.Name == name)
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    [RequiresUnreferencedCode("Calls " + nameof(IsDottedPathTargetingEvent) + ".")]
-    private void ThrowIfDottedPathTargetsEvent(string vmProperty)
-    {
-        if (IsDottedPathTargetingEvent(vmProperty))
-        {
-            throw new NotSupportedException(
-                $"Dotted binding paths are not supported for event bindings. Got '{vmProperty}'.");
-        }
-    }
-
-    private void DetachAllPathObservers()
-    {
-        // Detach observers from their current roots without unsubscribing the
-        // ValueChanged handler — observers will be re-attached to the new
-        // BindingContext shortly. Full handler unsubscription happens only when
-        // a binding is overwritten or cleared (see VmToUiProperty.Detach).
-        foreach (var binding in vmPropsToUiProps.Values)
-        {
-            binding.PathObserver?.Detach();
-        }
-    }
-
-    /// <summary>
-    /// Returns whether <paramref name="uiProperty"/> on this element has a binding from
-    /// <see cref="SetBinding(string, string, string?)"/>.
+    /// Returns whether <paramref name="uiProperty"/> on this element has a binding.
     /// </summary>
     internal bool IsDataBound(string uiProperty) =>
-        vmPropsToUiProps.Values.Any(item => item.UiProperty == uiProperty);
+        _propertyRegistry?.GetBindingExpression(uiProperty) != null;
 
     /// <summary>
     /// Binds <paramref name="uiProperty"/> to the VM member named by <paramref name="vmProperty"/>,
@@ -445,94 +258,39 @@ public partial class GraphicalUiElement
     /// <see cref="SetBinding{TVm}(string, Expression{Func{TVm, object}}, string?)"/> overload, whose
     /// expression argument keeps the member from being trimmed.
     /// </summary>
+    /// <param name="uiProperty">The property on this element to set, or a method to call when the view
+    /// model event named by <paramref name="vmProperty"/> is raised.</param>
+    /// <param name="vmProperty">The path of the view model member.</param>
+    /// <param name="toStringFormat">A .NET format specifier such as "N0", applied when the target is a
+    /// string. Equivalent to a <see cref="Binding.StringFormat"/> of "{0:N0}".</param>
     [RequiresUnreferencedCode(
         "vmProperty is resolved by name against the BindingContext's own type. That member may be " +
         "removed under PublishTrimmed if nothing else in the app references it. Prefer the " +
         "SetBinding<TVm> overload that takes an expression instead of a string.")]
     public void SetBinding(string uiProperty, string vmProperty, string? toStringFormat = null)
     {
-        if (uiProperty == nameof(BindingContext))
+        SetBinding(uiProperty, new Binding(vmProperty)
         {
-            BindingContextBinding = vmProperty;
-            _hasReportedBindingContextBindingPath = false;
+            StringFormat = string.IsNullOrEmpty(toStringFormat) ? null : "{0:" + toStringFormat + "}"
+        });
+    }
 
-            BindingContextBindingPropertyOwner = (this.Parent as GraphicalUiElement)?.BindingContext;
-
-            UpdateToVmProperty(vmProperty);
-        }
-        else
-        {
-            // A binding writes the VM value to a public property with a setter of any visibility, or binds a VM
-            // event to a method of any visibility. Variables that only SetProperty knows (states, exposed
-            // variables) are not targets.
-            PropertyInfo? targetProperty = GetType().GetProperty(uiProperty);
-            if (targetProperty != null)
-            {
-                if (targetProperty.SetMethod == null)
-                {
-                    throw new InvalidOperationException(
-                        BinderHelpers.GetReadOnlyTargetMessage(GetType().Name, uiProperty, modeName: null));
-                }
-            }
-            else if (!HasInstanceMethod(GetType(), uiProperty))
-            {
-                throw new InvalidOperationException(
-                    $"{GetType().Name} has no public property and no method named '{uiProperty}', so it cannot be " +
-                    "the target of a binding. Bind a public property, or a method for a view model event.");
-            }
-
-            if (vmPropsToUiProps.TryGetValue(vmProperty, out var existingByVm))
-            {
-                existingByVm.Detach();
-                vmPropsToUiProps.Remove(vmProperty);
-            }
-            // This prevents single UI properties from being bound to multiple VM properties
-            if (vmPropsToUiProps.Any(item => item.Value.UiProperty == uiProperty))
-            {
-                var toRemove = vmPropsToUiProps.Where(item => item.Value.UiProperty == uiProperty).ToArray();
-
-                foreach (var kvp in toRemove)
-                {
-                    kvp.Value.Detach();
-                    vmPropsToUiProps.Remove(kvp.Key);
-                }
-            }
-
-            var newBinding = new VmToUiProperty();
-            newBinding.UiProperty = uiProperty;
-            newBinding.VmProperty = vmProperty;
-            newBinding.ToStringFormat = toStringFormat;
-
-            if (newBinding.IsDottedPath)
-            {
-                // Eagerly detect dotted-event-target if BindingContext is already set.
-                // If BindingContext is null, the check is deferred to UpdateToVmProperty
-                // (which runs once a context becomes available). Either way, dotted-path
-                // event bindings are never permitted.
-                ThrowIfDottedPathTargetsEvent(vmProperty);
-                PropertyPathObserver observer = new(vmProperty);
-                newBinding.PathObserver = observer;
-                Action handler = () => ApplyVmValueToUi(newBinding, observer.GetCurrentValue());
-                newBinding.PathObserverValueChangedHandler = handler;
-                observer.ValueChanged += handler;
-            }
-
-            vmPropsToUiProps.Add(vmProperty, newBinding);
-
-            if (BindingContext != null)
-            {
-                UpdateToVmProperty(vmProperty);
-
-                // Flat-path bindings need a root-level INPC subscription. Dotted-path
-                // bindings manage their own subscriptions via PropertyPathObserver.
-                if (!newBinding.IsDottedPath
-                    && _isSubscribedToViewModelPropertyChanged == false
-                    && BindingContext is INotifyPropertyChanged notifyPropertyChanged)
-                {
-                    TrySubscribeToViewModelChanges(notifyPropertyChanged);
-                }
-            }
-        }
+    /// <summary>
+    /// Binds <paramref name="uiProperty"/> using <paramref name="binding"/>, with every option a Forms control's
+    /// SetBinding takes (mode, converter, StringFormat, UpdateSourceTrigger, FallbackValue, TargetNullValue).
+    /// <paramref name="uiProperty"/> may also name a method, called when the view model event at
+    /// <see cref="Binding.Path"/> is raised. Binding <see cref="BindingContext"/> resolves the path against the
+    /// parent's BindingContext. The path is resolved by reflection at bind time; under <c>PublishTrimmed</c>, the
+    /// bound VM member survives only if something else in the app references it directly.
+    /// </summary>
+    [RequiresUnreferencedCode(
+        "binding.Path is resolved by name against the BindingContext's own type. That member may be " +
+        "removed under PublishTrimmed if nothing else in the app references it. Prefer the " +
+        "SetBinding<TVm> overload that takes an expression instead of a string.")]
+    public void SetBinding(string uiProperty, Binding binding)
+    {
+        _propertyRegistry ??= new PropertyRegistry(this);
+        _propertyRegistry.SetBinding(uiProperty, binding);
     }
 
     /// <summary>
@@ -548,324 +306,18 @@ public partial class GraphicalUiElement
     public void SetBinding<TVm>(string uiProperty, Expression<Func<TVm, object?>> vmPropertyExpression, string? toStringFormat = null) =>
         SetBinding(uiProperty, BinderHelpers.ExtractPath(vmPropertyExpression), toStringFormat);
 
-    [RequiresUnreferencedCode(
-        "Resolves the bound VM property/field/event by name on the BindingContext's own type " +
-        "(GetProperty/GetField/GetEvent). That member may be removed under PublishTrimmed if nothing " +
-        "else in the app references it.")]
-    private bool UpdateToVmProperty(string vmPropertyName)
-    {
-        var updated = false;
-
-        var isBoundToVmProperty = vmPropsToUiProps.ContainsKey(vmPropertyName) ||
-            BindingContextBinding == vmPropertyName;
-
-        if (isBoundToVmProperty)
-        {
-            var bindingContextObjectToUse = BindingContextBinding == vmPropertyName ?
-                BindingContextBindingPropertyOwner : BindingContext;
-
-            // Dotted-path property binding: walk the path through PropertyPathObserver.
-            if (BindingContextBinding != vmPropertyName
-                && vmPropsToUiProps.TryGetValue(vmPropertyName, out var maybeDotted)
-                && maybeDotted.IsDottedPath)
-            {
-                if (bindingContextObjectToUse != null && maybeDotted.PathObserver is { } observer)
-                {
-                    // Deferred event-target check: when SetBinding ran without a
-                    // BindingContext, we couldn't walk the path to confirm the leaf
-                    // was an event. Now that we have a context, validate before
-                    // attaching the observer.
-                    PathSegment[] segs = observer.Segments;
-                    object? leafParent = PropertyPathObserver.WalkSegments(
-                        bindingContextObjectToUse, segs, segs.Length - 1);
-                    if (leafParent != null
-                        && leafParent.GetType().GetEvent(segs[segs.Length - 1].Name) != null)
-                    {
-                        throw new NotSupportedException(
-                            $"Dotted binding paths are not supported for event bindings. Got '{vmPropertyName}'.");
-                    }
-
-                    ReportMissingPathOnce(maybeDotted, bindingContextObjectToUse);
-
-                    if (!ReferenceEquals(observer.CurrentRoot, bindingContextObjectToUse))
-                    {
-                        observer.Detach();
-                        observer.Attach(bindingContextObjectToUse);
-                    }
-                    ApplyVmValueToUi(maybeDotted, observer.GetCurrentValue());
-                    updated = true;
-                }
-                TryPushBindingContextChangeToChildren(vmPropertyName);
-                return updated;
-            }
-
-            var bindingContextObjectType = bindingContextObjectToUse?.GetType();
-
-            var vmProperty = bindingContextObjectType?.GetProperty(vmPropertyName);
-
-            FieldInfo? vmField = null;
-
-            if (vmProperty == null)
-            {
-                vmField = bindingContextObjectType?.GetField(vmPropertyName);
-            }
-
-            var foundEvent = bindingContextObjectType?.GetEvent(vmPropertyName);
-
-            if (vmProperty == null && vmField == null && foundEvent == null)
-            {
-                if (bindingContextObjectToUse != null)
-                {
-                    if (vmPropertyName == BindingContextBinding)
-                    {
-                        if (!_hasReportedBindingContextBindingPath)
-                        {
-                            _hasReportedBindingContextBindingPath = true;
-                            ReportMissingPath(bindingContextObjectToUse, vmPropertyName, nameof(BindingContext));
-                        }
-                    }
-                    else
-                    {
-                        ReportMissingPathOnce(vmPropsToUiProps[vmPropertyName], bindingContextObjectToUse);
-                    }
-                }
-            }
-            else if (foundEvent != null)
-            {
-                BindEvent(vmPropertyName, bindingContextObjectToUse, foundEvent);
-            }
-            else
-            {
-                var vmValue = vmField != null ? vmField?.GetValue(bindingContextObjectToUse) :
-                    vmProperty?.GetValue(bindingContextObjectToUse, null);
-
-
-                if (vmPropertyName == BindingContextBinding)
-                {
-                    BindingContext = vmValue;
-                }
-                else
-                {
-                    var binding = vmPropsToUiProps[vmPropertyName];
-                    ApplyVmValueToUi(binding, vmValue);
-                }
-                updated = true;
-            }
-        }
-
-        TryPushBindingContextChangeToChildren(vmPropertyName);
-
-        return updated;
-    }
-
-    [RequiresUnreferencedCode("Calls " + nameof(ReportMissingPath) + ".")]
-    private void ReportMissingPathOnce(VmToUiProperty binding, object bindingContext)
-    {
-        if (!binding.HasReportedMissingPath)
-        {
-            binding.HasReportedMissingPath = ReportMissingPath(bindingContext, binding.VmProperty, binding.UiProperty);
-        }
-    }
-
-    [RequiresUnreferencedCode("Calls " + nameof(BinderHelpers.GetMissingPathMessage) + ".")]
-    private bool ReportMissingPath(object bindingContext, string vmPath, string uiProperty)
-    {
-        string? message = BinderHelpers.GetMissingPathMessage(bindingContext, vmPath, allowEventLeaf: true,
-            GetType().Name, uiProperty);
-        if (message == null)
-        {
-            return false;
-        }
-        GumRuntime.ElementSaveExtensions.ReportDiagnostic(message);
-        return true;
-    }
-
-    private void ApplyVmValueToUi(VmToUiProperty binding, object? vmValue)
-    {
-        var thisType = this.GetType();
-
-        PropertyInfo? uiProperty = thisType.GetProperty(binding.UiProperty);
-
-        if (uiProperty == null)
-        {
-            var message = $"The type {thisType} does not have a property {binding.UiProperty}. If this property exists, make sure that it's not private.";
-            throw new Exception(message);
-        }
-
-        var convertedValue = ConvertValue(vmValue, uiProperty.PropertyType, binding.ToStringFormat);
-
-        try
-        {
-            uiProperty.SetValue(this, convertedValue, null);
-        }
-        catch
-        {
-#if FULL_DIAGNOSTICS
-            if (convertedValue != null && uiProperty.PropertyType != convertedValue.GetType())
-            {
-                throw new InvalidCastException(
-                    $"Error applying binding: The bound property {convertedValue.GetType()} {binding.VmProperty} with value {convertedValue} " +
-                    $"could not be converted to {uiProperty.PropertyType} which is the type of {binding.UiProperty}");
-            }
-#endif
-            throw;
-        }
-    }
-
-    [UnconditionalSuppressMessage("Trimming", "IL2026",
-        Justification = "Reached only from UpdateToVmProperty, whose RequiresUnreferencedCode " +
-            "annotation already surfaces name-based VM member resolution at the caller.")]
-    private void BindEvent(string vmPropertyName, object? bindingContextObjectToUse, EventInfo foundEvent)
-    {
-        var binding = vmPropsToUiProps[vmPropertyName];
-
-        if (binding.IsDottedPath)
-        {
-            throw new NotSupportedException(
-                $"Dotted binding paths are not supported for event bindings. Got '{vmPropertyName}' for UI member '{binding.UiProperty}'.");
-        }
-
-        var isAlreadyBound = vmEventsToUiMethods.ContainsKey(vmPropertyName);
-
-        if (!isAlreadyBound)
-        {
-            var delegateInstance = Delegate.CreateDelegate(foundEvent.EventHandlerType!, this, binding.UiProperty);
-
-            vmEventsToUiMethods.Add(vmPropertyName, new VmToUiProperty { UiProperty = binding.UiProperty, VmProperty = vmPropertyName, Delegate = delegateInstance });
-
-            foundEvent.AddEventHandler(bindingContextObjectToUse, delegateInstance);
-        }
-
-    }
-
-    private void TryPushBindingContextChangeToChildren(string vmPropertyName)
-    {
-        // Walks every descendant with index-based loops rather than a yield iterator so a VM
-        // notification allocates nothing when descending the tree. Each descendant is matched
-        // against this element's BindingContext (the root of the push), mirroring the original
-        // flat-visitation semantics.
-        object? rootContext = BindingContext;
-        PushBindingContextChangeToDescendents(vmPropertyName, rootContext);
-    }
-
-    private void PushBindingContextChangeToDescendents(string vmPropertyName, object? rootContext)
-    {
-        if (Children != null)
-        {
-            ObservableCollection<GraphicalUiElement> children = Children;
-            int count = children.Count;
-            for (int i = 0; i < count; i++)
-            {
-                children[i].MatchAndPushBindingContextChange(vmPropertyName, rootContext);
-            }
-        }
-        else
-        {
-            IList<GraphicalUiElement> contained = ContainedElements;
-            int count = contained.Count;
-            for (int i = 0; i < count; i++)
-            {
-                contained[i].MatchAndPushBindingContextChange(vmPropertyName, rootContext);
-            }
-        }
-    }
-
-    [UnconditionalSuppressMessage("Trimming", "IL2026",
-        Justification = "Automatic descendant notification when a BindingContext-bound VM property " +
-            "changes. The trim risk is already surfaced wherever SetBinding was actually called to set " +
-            "up this binding.")]
-    private void MatchAndPushBindingContextChange(string vmPropertyName, object? rootContext)
-    {
-        if (BindingContextBinding == vmPropertyName && BindingContextBindingPropertyOwner == rootContext)
-        {
-            UpdateToVmProperty(vmPropertyName);
-        }
-        PushBindingContextChangeToDescendents(vmPropertyName, rootContext);
-    }
-
     /// <summary>
-    /// Writes this UI property's current value back to its bound VM member, resolved by name on the
-    /// BindingContext's own type. That member may be removed under <c>PublishTrimmed</c> if nothing
-    /// else in the app references it -- see <see cref="SetBinding(string, string, string?)"/>.
+    /// Tells the bindings that this element's <paramref name="uiPropertyName"/> changed, so a TwoWay or
+    /// OneWayToSource binding writes it to its view model member. Call it from a property setter on a
+    /// derived visual whose setter does not already raise <see cref="PropertyChanged"/>.
     /// </summary>
-    [RequiresUnreferencedCode(
-        "Resolves the bound VM property by name on the BindingContext's own type (or an intermediate " +
-        "segment's type for dotted paths). That member may be removed under PublishTrimmed if nothing " +
-        "else in the app references it.")]
     protected void PushValueToViewModel([CallerMemberName] string? uiPropertyName = null)
     {
         if (uiPropertyName == null)
         {
             return;
         }
-
-        VmToUiProperty? matched = null;
-        foreach (var binding in vmPropsToUiProps.Values)
-        {
-            if (binding.UiProperty == uiPropertyName)
-            {
-                matched = binding;
-                break;
-            }
-        }
-
-        if (matched == null || BindingContext == null)
-        {
-            return;
-        }
-
-        PropertyInfo? uip = GetType().GetProperty(matched.UiProperty);
-        // A write-only UI property has no value to send back, so its binding is one-way.
-        if (uip is not { CanRead: true })
-        {
-            return;
-        }
-
-        if (matched.IsDottedPath)
-        {
-            PathSegment[] segments = matched.PathObserver?.Segments
-                ?? PathSegmentParser.ParseSegments(matched.VmProperty);
-
-            // TODO: indexed leaf write-back (e.g. "Items[0].Name" or "Items[0]") is a
-            // documented non-goal — short-circuit silently rather than attempt a
-            // PropertyInfo.SetValue against an indexed leaf.
-            if (segments[segments.Length - 1].Index.HasValue)
-            {
-                return;
-            }
-
-            object? parent = PropertyPathObserver.WalkSegments(BindingContext, segments, segments.Length - 1);
-            if (parent == null)
-            {
-                // Intermediate is null — silently no-op.
-                return;
-            }
-
-            // NOTE: If any intermediate along the path is a value type (struct), the
-            // walk above produces a boxed copy. Writing through `leafProperty.SetValue`
-            // mutates that copy rather than the original storage location. This is the
-            // same limitation as standard reflection-based property setters; correcting
-            // it would require generating per-path setter delegates that re-assign each
-            // boxed segment back into its parent. For now, two-way binding through
-            // struct intermediates is unsupported.
-            string leafName = segments[segments.Length - 1].Name;
-            PropertyInfo? leafProperty = parent.GetType().GetProperty(leafName);
-            if (leafProperty == null)
-            {
-                return;
-            }
-
-            object? uiValue = uip.GetValue(this, null);
-            leafProperty.SetValue(parent, uiValue, null);
-        }
-        else
-        {
-            if (BindingContext.GetType().GetProperty(matched.VmProperty) is { } vmp)
-            {
-                object? uiValue = uip.GetValue(this, null);
-                vmp.SetValue(BindingContext, uiValue, null);
-            }
-        }
+        RaisePropertyChangedEvent(uiPropertyName);
     }
 
     private IEnumerable<GraphicalUiElement> GetAllBindableChildren()

@@ -169,6 +169,8 @@
 		<Compile Remove="..\Forms\Data\BindingExpressionBase.cs" />
 		<Compile Remove="..\Forms\Data\BindingOperations.cs" />
 		<Compile Remove="..\Forms\Data\GumProperty.cs" />
+		<Compile Remove="..\Forms\Data\IBindingTarget.cs" />
+		<Compile Remove="..\Forms\Data\MethodBindingExpression.cs" />
 		<Compile Remove="..\Forms\Data\NpcBindingExpression.cs" />
 		<Compile Remove="..\Forms\Data\PropertyRegistry.cs" />
 		<Compile Remove="..\Forms\Data\UntypedBindingExpressionBase.cs" />

@@ -673,16 +673,18 @@ public class VisualBindingEnginePinTests : BaseTestClass
     // Paired Forms test: FrameworkElementBindingTests.SetBinding_BindingContext_SetThenAdd.
     [Fact]
     [Trait("Pin", WillMatchForms)]
-    public void BindingContextBinding_SetBeforeAdd_InheritsParentContextUnresolved()
+    public void BindingContextBinding_SetBeforeAdd_ResolvesAgainstParentContext()
     {
         PinViewModel viewModel = new() { Child = new PinViewModel { Value = "child" } };
         ContainerRuntime parent = new() { BindingContext = viewModel };
         PinRuntime sut = new();
+        sut.SetBinding(nameof(PinRuntime.StringValue), nameof(PinViewModel.Value));
 
         sut.SetBinding(nameof(GraphicalUiElement.BindingContext), nameof(PinViewModel.Child));
         parent.AddChild(sut);
 
-        sut.BindingContext.ShouldBe(viewModel);
+        sut.BindingContext.ShouldBe(viewModel.Child);
+        sut.StringValue.ShouldBe("child");
     }
 
     [Fact]
@@ -887,7 +889,7 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
     [Fact]
     [Trait("Pin", WillMatchForms)]
-    public void DefaultMode_TargetRaisesPropertyChanged_DoesNotWriteViewModel()
+    public void DefaultMode_TargetRaisesPropertyChanged_WritesViewModel()
     {
         PinViewModel viewModel = new() { Number = 1 };
         PinRuntime sut = new() { BindingContext = viewModel };
@@ -895,7 +897,7 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
         sut.NotifyingInt = 5;
 
-        viewModel.Number.ShouldBe(1);
+        viewModel.Number.ShouldBe(5);
     }
 
     [Fact]
@@ -913,7 +915,7 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
     [Fact]
     [Trait("Pin", WillMatchForms)]
-    public void TwoTargetPropertiesBoundToOneViewModelProperty_OnlyTheLastFollows()
+    public void TwoTargetPropertiesBoundToOneViewModelProperty_BothFollow()
     {
         PinViewModel viewModel = new() { Value = "a" };
         PinRuntime sut = new() { BindingContext = viewModel };
@@ -922,7 +924,7 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
         viewModel.Value = "b";
 
-        sut.StringValue.ShouldBe("a");
+        sut.StringValue.ShouldBe("b");
         sut.PushedString.ShouldBe("b");
     }
 
@@ -943,13 +945,13 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
     [Fact]
     [Trait("Pin", WillMatchForms)]
-    public void MissingViewModelProperty_LeavesTargetUnchanged()
+    public void MissingViewModelProperty_SetsTargetToDefault()
     {
         PinRuntime sut = new() { IntValue = 5, BindingContext = new PlainViewModel() };
 
         sut.SetBinding(nameof(PinRuntime.IntValue), "Missing");
 
-        sut.IntValue.ShouldBe(5);
+        sut.IntValue.ShouldBe(0);
     }
 
     [Fact]
@@ -965,7 +967,7 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
     [Fact]
     [Trait("Pin", WillMatchForms)]
-    public void ReadOnlyTarget_MessageNamesABinding()
+    public void ReadOnlyTarget_MessageNamesTheMode()
     {
         PinRuntime sut = new();
 
@@ -973,7 +975,7 @@ public class VisualBindingEnginePinTests : BaseTestClass
             sut.SetBinding(nameof(PinRuntime.ReadOnlyValue), nameof(PinViewModel.Number)));
 
         exception.Message.ShouldBe("PinRuntime.ReadOnlyValue has no setter, so it cannot be the target of a " +
-            "binding, which writes the view model's value to it. Bind a property that has a public setter.");
+            "TwoWay binding, which writes the view model's value to it. Bind a property that has a public setter.");
     }
 
     [Fact]
@@ -993,12 +995,16 @@ public class VisualBindingEnginePinTests : BaseTestClass
     [Trait("Pin", WillMatchForms)]
     [InlineData(false)]
     [InlineData(true)]
-    public void ToStringFormat_ValueThatIsNotANumber_Throws(bool useLambda)
+    public void ToStringFormat_ValueThatIsNotANumber_UsesItsText(bool useLambda)
     {
-        PinViewModel viewModel = new() { Flag = true };
+        PinViewModel viewModel = new() { Flag = true, Thing = new PinThing() };
         PinRuntime sut = new() { BindingContext = viewModel };
 
-        Should.Throw<Exception>(() => Bind(sut, nameof(PinRuntime.StringValue), "Flag", useLambda, "D6"));
+        Bind(sut, nameof(PinRuntime.StringValue), "Flag", useLambda, "D6");
+        sut.StringValue.ShouldBe("True");
+        Bind(sut, nameof(PinRuntime.StringValue), "Thing", useLambda, "D6");
+
+        sut.StringValue.ShouldBe("thing");
     }
 
     [Fact]
@@ -1017,12 +1023,14 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
     [Fact]
     [Trait("Pin", WillMatchForms)]
-    public void InvalidStringToInt_Throws()
+    public void InvalidStringToInt_SetsDefault()
     {
         PinViewModel viewModel = new() { Value = "abc" };
         PinRuntime sut = new() { IntValue = 7, BindingContext = viewModel };
 
-        Should.Throw<Exception>(() => sut.SetBinding(nameof(PinRuntime.IntValue), nameof(PinViewModel.Value)));
+        sut.SetBinding(nameof(PinRuntime.IntValue), nameof(PinViewModel.Value));
+
+        sut.IntValue.ShouldBe(0);
     }
 
     [Fact]
@@ -1039,14 +1047,14 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
     [Fact]
     [Trait("Pin", WillMatchForms)]
-    public void DecimalToInt_Truncates()
+    public void DecimalToInt_Rounds()
     {
         PinViewModel viewModel = new() { Price = 2.7m };
         PinRuntime sut = new() { BindingContext = viewModel };
 
         sut.SetBinding(nameof(PinRuntime.IntValue), nameof(PinViewModel.Price));
 
-        sut.IntValue.ShouldBe(2);
+        sut.IntValue.ShouldBe(3);
     }
 
     [Fact]
@@ -1063,14 +1071,14 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
     [Fact]
     [Trait("Pin", WillMatchForms)]
-    public void IntAboveByteRange_ClampsTo255()
+    public void IntAboveByteRange_SetsDefault()
     {
         PinViewModel viewModel = new() { Number = 300 };
-        PinRuntime sut = new() { BindingContext = viewModel };
+        PinRuntime sut = new() { ByteValue = 7, BindingContext = viewModel };
 
         sut.SetBinding(nameof(PinRuntime.ByteValue), nameof(PinViewModel.Number));
 
-        sut.ByteValue.ShouldBe((byte)255);
+        sut.ByteValue.ShouldBe((byte)0);
     }
 
     [Fact]
@@ -1087,12 +1095,14 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
     [Fact]
     [Trait("Pin", WillMatchForms)]
-    public void StringToBool_Throws()
+    public void StringToBool_SetsDefault()
     {
         PinViewModel viewModel = new() { Value = "yes" };
-        PinRuntime sut = new() { BindingContext = viewModel };
+        PinRuntime sut = new() { BoolValue = true, BindingContext = viewModel };
 
-        Should.Throw<Exception>(() => sut.SetBinding(nameof(PinRuntime.BoolValue), nameof(PinViewModel.Value)));
+        sut.SetBinding(nameof(PinRuntime.BoolValue), nameof(PinViewModel.Value));
+
+        sut.BoolValue.ShouldBeFalse();
     }
 
     [Fact]
@@ -1109,14 +1119,16 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
     [Fact]
     [Trait("Pin", WillMatchForms)]
-    public void PushValueToViewModel_GetOnlyViewModelProperty_ThrowsWhenTheBindingAppliesTheValue()
+    public void PushValueToViewModel_GetOnlyViewModelProperty_IgnoresTargetChange()
     {
         PinViewModel viewModel = new();
         PinRuntime sut = new() { BindingContext = viewModel };
+        sut.SetBinding(nameof(PinRuntime.PushedInt), nameof(PinViewModel.GetOnly));
+        sut.PushedInt.ShouldBe(42);
 
-        // Applying the view model value runs the setter, which pushes the value straight back.
-        Should.Throw<System.Reflection.TargetInvocationException>(() =>
-            sut.SetBinding(nameof(PinRuntime.PushedInt), nameof(PinViewModel.GetOnly)));
+        sut.PushedInt = 5;
+
+        viewModel.GetOnly.ShouldBe(42);
     }
 
     [Fact]
@@ -1132,9 +1144,11 @@ public class VisualBindingEnginePinTests : BaseTestClass
         viewModel.GetOnly.ShouldBe(42);
     }
 
+    // A field is written through the setter the Forms engine already built for one (BinderHelpers.BuildSetter);
+    // it went unwritten only because the path could not be resolved before fields were read.
     [Fact]
-    [Trait("Pin", MustKeep)]
-    public void PushValueToViewModel_ViewModelField_IsNotWritten()
+    [Trait("Pin", WillMatchForms)]
+    public void PushValueToViewModel_ViewModelField_IsWritten()
     {
         PinViewModel viewModel = new() { Field = 1 };
         PinRuntime sut = new() { BindingContext = viewModel };
@@ -1142,12 +1156,12 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
         sut.PushedInt = 5;
 
-        viewModel.Field.ShouldBe(1);
+        viewModel.Field.ShouldBe(5);
     }
 
     [Fact]
-    [Trait("Pin", MustKeep)]
-    public void Forms_TwoWayToViewModelField_DoesNotWriteIt()
+    [Trait("Pin", WillMatchForms)]
+    public void Forms_TwoWayToViewModelField_WritesIt()
     {
         PinViewModel viewModel = new() { Field = 1 };
         PinControl sut = new() { BindingContext = viewModel };
@@ -1155,36 +1169,35 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
         sut.NotifyingInt = 5;
 
-        viewModel.Field.ShouldBe(1);
+        viewModel.Field.ShouldBe(5);
     }
 
-    // Reading a view model field is a visual-only capability (ViewModelField_IsRead) the shared engine keeps.
+    // Reading a view model field was visual-only (ViewModelField_IsRead); the shared engine keeps it.
     [Fact]
     [Trait("Pin", "FormsGainsVisualCapability")]
-    public void Forms_ViewModelField_IsNotRead()
+    public void Forms_ViewModelField_IsRead()
     {
         PinViewModel viewModel = new() { Field = 9 };
         PinControl sut = new() { BindingContext = viewModel };
 
         sut.SetBinding(nameof(PinControl.IntValue), nameof(PinViewModel.Field));
 
-        sut.IntValue.ShouldBe(0);
+        sut.IntValue.ShouldBe(9);
     }
 
     [Fact]
     [Trait("Pin", WillMatchForms)]
-    public void BindingContextBinding_ParentWithoutFlatBinding_DoesNotFollowOwnerPropertyChange()
+    public void BindingContextBinding_ParentWithoutFlatBinding_FollowsOwnerPropertyChange()
     {
         PinViewModel viewModel = new() { Child = new PinViewModel { Value = "first" } };
         ContainerRuntime parent = new() { BindingContext = viewModel };
         PinRuntime sut = new();
         parent.AddChild(sut);
         sut.SetBinding(nameof(GraphicalUiElement.BindingContext), nameof(PinViewModel.Child));
-        PinViewModel first = viewModel.Child;
 
         viewModel.Child = new PinViewModel { Value = "replaced" };
 
-        sut.BindingContext.ShouldBe(first);
+        sut.BindingContext.ShouldBe(viewModel.Child);
     }
 
     [Fact]
@@ -1204,7 +1217,7 @@ public class VisualBindingEnginePinTests : BaseTestClass
 
     [Fact]
     [Trait("Pin", WillMatchForms)]
-    public void ViewModelEvent_AfterNotifyingContextSwap_IsNotBoundToNewContext()
+    public void ViewModelEvent_AfterNotifyingContextSwap_IsBoundToNewContext()
     {
         PinViewModel first = new();
         PinViewModel second = new();
@@ -1214,12 +1227,12 @@ public class VisualBindingEnginePinTests : BaseTestClass
         sut.BindingContext = second;
         second.Raise();
 
-        sut.Hits.ShouldBe(0);
+        sut.Hits.ShouldBe(1);
     }
 
     [Fact]
     [Trait("Pin", WillMatchForms)]
-    public void ViewModelEvent_OldPlainContext_StaysSubscribed()
+    public void ViewModelEvent_OldPlainContext_IsUnsubscribed()
     {
         PlainViewModel first = new();
         PinRuntime sut = new() { BindingContext = first };
@@ -1228,11 +1241,41 @@ public class VisualBindingEnginePinTests : BaseTestClass
         sut.BindingContext = new PlainViewModel();
         first.Raise();
 
-        sut.Hits.ShouldBe(1);
+        sut.Hits.ShouldBe(0);
+        first.HasRaisedSubscribers.ShouldBeFalse();
+    }
+
+    // A Forms control binds a view model event to a method through the same engine (setbinding.md).
+    [Fact]
+    [Trait("Pin", "FormsGainsVisualCapability")]
+    public void Forms_ViewModelEvent_BoundToPrivateMethod_CallsItAndFollowsContextSwap()
+    {
+        PinViewModel first = new();
+        PinViewModel second = new();
+        EventControl sut = new() { BindingContext = first };
+        sut.SetBinding("OnRaised", nameof(PinViewModel.Raised));
+
+        first.Raise();
+        sut.BindingContext = second;
+        first.Raise();
+        second.Raise();
+
+        sut.Hits.ShouldBe(2);
+        first.HasRaisedSubscribers.ShouldBeFalse();
+    }
+
+    public class EventControl : FrameworkElement
+    {
+        public EventControl() : base(new InteractiveGue())
+        {
+        }
+
+        public int Hits;
+        private void OnRaised(object? sender, EventArgs e) => Hits++;
     }
 
     [Fact]
-    [Trait("Pin", WillMatchForms)]
+    [Trait("Pin", MustKeep)]
     public void FormsVisual_ControlBindingChangesSharedProperty_VisualBindingDoesNotWriteItsSource()
     {
         PinViewModel viewModel = new() { Amount = 10, Ratio = 30 };
@@ -1246,7 +1289,7 @@ public class VisualBindingEnginePinTests : BaseTestClass
     }
 
     [Fact]
-    [Trait("Pin", WillMatchForms)]
+    [Trait("Pin", MustKeep)]
     public void ViewModelRaisesEmptyPropertyName_TargetIsNotRefreshed()
     {
         PlainNotifyingViewModel viewModel = new() { Value = "a" };
@@ -1260,7 +1303,7 @@ public class VisualBindingEnginePinTests : BaseTestClass
     }
 
     [Fact]
-    [Trait("Pin", WillMatchForms)]
+    [Trait("Pin", MustKeep)]
     public void Forms_ViewModelRaisesEmptyPropertyName_TargetIsNotRefreshed()
     {
         PlainNotifyingViewModel viewModel = new() { Value = "a" };
@@ -1271,6 +1314,23 @@ public class VisualBindingEnginePinTests : BaseTestClass
         viewModel.RaiseAll(string.Empty);
 
         sut.StringValue.ShouldBe("a");
+    }
+
+    // Pair for GraphicalUiElementDottedBindingTests.PushValueToViewModel_DottedPath_IndexedLeaf_WritesOnlyThatSlot.
+    [Fact]
+    [Trait("Pin", WillMatchForms)]
+    public void Forms_TwoWayIndexedLeaf_WritesOnlyThatSlot()
+    {
+        PinViewModel viewModel = new();
+        viewModel.Items.Add("first");
+        viewModel.Items.Add("second");
+        Label sut = new() { BindingContext = viewModel };
+        sut.SetBinding(nameof(Label.Text), "Items[0]");
+
+        sut.Text = "rewritten";
+
+        viewModel.Items[0].ShouldBe("rewritten");
+        viewModel.Items[1].ShouldBe("second");
     }
 
     public class PlainNotifyingViewModel : System.ComponentModel.INotifyPropertyChanged
