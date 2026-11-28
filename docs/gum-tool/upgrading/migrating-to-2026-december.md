@@ -26,13 +26,7 @@ You are affected if a variable of type `RangeBase` reads one of those members, o
 
 ## Binding
 
-Visuals (`GraphicalUiElement` and every `*Runtime`) now bind through the same engine as Forms controls, so `SetBinding` on a visual behaves the way it does on a Forms control. The entries below are the places where a visual binding used to behave differently.
-
-### Visual Bindings Are TwoWay
-
-A visual binding writes the visual's value back to the ViewModel whenever the bound property raises `PropertyChanged`, as a Forms binding does. Previously a visual binding wrote back only when a derived visual called `PushValueToViewModel`. Among the standard runtimes this affects properties such as `Text`, `Alpha` and `Rotation`.
-
-You are affected if code changes a bound visual property and the ViewModel must keep its own value. Bind with `new Binding(path) { Mode = BindingMode.OneWay }` instead of the string path.
+Visuals (`GraphicalUiElement` and every `*Runtime`) now bind through the same engine as Forms controls. A visual binding still copies the ViewModel value to the visual only, and writes back only through `PushValueToViewModel`, unless its `Binding` sets `Mode`. The entries below are the places where a visual binding used to behave differently.
 
 ### One ViewModel Property Can Feed Several Visual Properties
 
@@ -58,15 +52,21 @@ The `toStringFormat` argument of a visual's `SetBinding` now formats any value, 
 
 No change is needed unless code caught that exception.
 
-### Writing Back to the ViewModel
+### PushValueToViewModel
 
-A write from a visual to the ViewModel follows the Forms rules:
+`PushValueToViewModel` in a derived visual follows the Forms rules when it writes to the ViewModel:
 
 * A ViewModel property with no setter is left alone instead of throwing.
 * A path that ends in an index, such as `Names[0]`, writes that item. Previously nothing was written.
-* A ViewModel field is written. Previously fields were only read.
+* A binding whose `Mode` is `OneWay` is not written.
 
-You are affected if a ViewModel relied on one of these being skipped. Bind that property with `Mode = BindingMode.OneWay`.
+You are affected if a ViewModel relied on the exception or on the indexed item staying unchanged. Bind that property with `Mode = BindingMode.OneWay`.
+
+### Forms Controls Read ViewModel Fields
+
+A Forms control binding now reads a public ViewModel field, as a visual binding already did. Previously a path to a field was treated as missing, so the control showed its `FallbackValue`. A field is never written back, on a Forms control or a visual, and it raises no change notification.
+
+You are affected if a ViewModel has a field whose name matches a binding path that used to fall back. Rename the field, or bind to a property.
 
 ### BindingContext Bindings
 
@@ -80,11 +80,11 @@ A ViewModel event bound to a method now unsubscribes from the old `BindingContex
 
 You are affected if code subscribed to the new ViewModel's event by hand after changing `BindingContext`. Remove that code, or the method runs twice.
 
-### Error Messages and Removed Counters
+### Error Messages and Obsolete Members
 
-The error for a visual property with no setter now names the binding mode (`TwoWay`). Binding a Forms control to a name that is neither a property nor a method now throws the same message as a visual. `GraphicalUiElement.PropertyUnsubscribeCallCount` and `GraphicalUiElement.GetTypeCallCount` are removed.
+The error for a visual property with no setter now names the binding mode (`OneWay` unless the `Binding` sets one). Binding a Forms control to a name that is neither a property nor a method now throws the same message as a visual. `GraphicalUiElement.PropertyUnsubscribeCallCount` and `GraphicalUiElement.GetTypeCallCount` are obsolete and always `0`, and `GraphicalUiElement.ConvertValue` is obsolete because bindings no longer call it.
 
-You are affected if code compares the message text or reads one of the counters. Update the comparison, and delete the counter references.
+You are affected if code compares the message text or uses one of these members. Update the comparison, delete the counter references, and replace `ConvertValue` with a `Converter` on the `Binding`.
 
 ## Raylib
 

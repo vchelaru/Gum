@@ -49,7 +49,7 @@ buttonVisual.SetBinding(
     });
 ```
 
-Visuals and Forms controls share one binding engine, so a binding behaves the same on either. A binding is `TwoWay` unless its `Mode` says otherwise, so a visual property that raises `PropertyChanged` writes its new value back to the ViewModel.
+Visuals and Forms controls share one binding engine, with one difference: a binding on a visual that does not set `Mode` only copies the ViewModel value to the visual. States, `SetProperty` and localization change visual properties, and those changes stay out of the ViewModel. Set `Mode = BindingMode.TwoWay` to write the visual's changes back.
 
 {% hint style="info" %}
 Available in December 2026, or now if building Gum from source.
