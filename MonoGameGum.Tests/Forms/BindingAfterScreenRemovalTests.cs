@@ -23,6 +23,8 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         public bool CanAfford => Gold >= 10;
     }
 
+    private const string ResetBecause = "because a target whose BindingContext becomes null resets (#8543)";
+
     private static (StackPanel screen, Label goldLabel, Button buyButton) CreateScreen()
     {
         StackPanel screen = new();
@@ -86,8 +88,8 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
 
         screen.BindingContext.ShouldBeNull();
         goldLabel.BindingContext.ShouldBeNull();
-        goldLabel.Text.ShouldBe("1");
-        buyButton.IsEnabled.ShouldBeFalse();
+        goldLabel.Text.ShouldBe(ContextResetExpectation.Of(new Label().Text), ResetBecause);
+        buyButton.IsEnabled.ShouldBe(ContextResetExpectation.Of(new Button().IsEnabled), ResetBecause);
     }
 
     [Fact]
@@ -102,7 +104,7 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         viewModel.Gold = 7;
 
         screen.BindingContext.ShouldBeNull();
-        goldLabel.Text.ShouldBe("1");
+        goldLabel.Text.ShouldBe(ContextResetExpectation.Of(new Label().Text), ResetBecause);
     }
 
     [Fact]
@@ -122,7 +124,7 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         goldLabel.BindingContext.ShouldBe(childViewModel);
         goldLabel.Text.ShouldBe("40");
         buyButton.BindingContext.ShouldBeNull();
-        buyButton.IsEnabled.ShouldBeFalse();
+        buyButton.IsEnabled.ShouldBe(ContextResetExpectation.Of(new Button().IsEnabled), ResetBecause);
     }
 
     [Fact]
@@ -138,7 +140,7 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         viewModel.Gold = 30;
 
         screen.BindingContext.ShouldBeNull();
-        goldLabel.Text.ShouldBe("1");
+        goldLabel.Text.ShouldBe(ContextResetExpectation.Of(new Label().Text), ResetBecause);
 
         screen.BindingContext = viewModel;
         goldLabel.Text.ShouldBe("30");
@@ -162,7 +164,7 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
 
         goldLabel.Text.ShouldBe("20");
         buyButton.IsEnabled.ShouldBeTrue();
-        oldGoldLabel.Text.ShouldBe("1");
+        oldGoldLabel.Text.ShouldBe(ContextResetExpectation.Of(new Label().Text), ResetBecause);
     }
 
     [Fact]
@@ -338,7 +340,7 @@ public class BindingAfterScreenRemovalTests : BaseTestClass
         viewModel.Gold = 6;
 
         screen.BindingContext.ShouldBeNull();
-        goldLabel.Text.ShouldBe("5");
+        goldLabel.Text.ShouldBe(ContextResetExpectation.Of(new Label().Text), ResetBecause);
     }
 
     [Fact]

@@ -29,6 +29,9 @@ internal class PropertyRegistry
 
     private Dictionary<string, Binding> Bindings { get; } = [];
 
+    // What each property held before it was first bound: the value a cleared binding or BindingContext shows.
+    private Dictionary<string, object?> UnboundValues { get; } = [];
+
     public PropertyRegistry(IBindingTarget owner)
     {
         Owner = owner;
@@ -50,6 +53,16 @@ internal class PropertyRegistry
         if (ownerType.GetProperty(uiPropertyName) != null)
         {
             NpcBindingExpression npcExpression = new(Owner, uiPropertyName, binding);
+            // Captured once, the first time the property is bound, so a rebind does not take a view model's value
+            // as the value to reset to.
+            if (UnboundValues.TryGetValue(uiPropertyName, out object? unboundValue))
+            {
+                npcExpression.UnboundTargetValue = unboundValue;
+            }
+            else
+            {
+                UnboundValues[uiPropertyName] = npcExpression.UnboundTargetValue;
+            }
             Replace(uiPropertyName, npcExpression, binding);
             npcExpression.Start();
         }
@@ -140,7 +153,7 @@ internal class PropertyRegistry
         // Only a OneWayToSource binding can target a property with no setter, and it never wrote it.
         if (expression is NpcBindingExpression { HasTargetSetter: true } npcExpression)
         {
-            npcExpression.GetTargetProperty().SetValue(Owner, null);
+            npcExpression.GetTargetProperty().SetValue(Owner, npcExpression.UnboundTargetValue);
         }
         BindingExpressions.Remove(uiPropertyName);
         Bindings.Remove(uiPropertyName);
