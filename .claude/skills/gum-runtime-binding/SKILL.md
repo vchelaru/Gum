@@ -152,7 +152,7 @@ Only the default mode (above) and `UpdateSourceTrigger.LostFocus`, which never f
 
 **`[DependsOn("Game.Gold")]` follows a dotted path.** `ViewModel` handles the root segment in `NotifyPropertyChanged` and watches the rest with a `PropertyPathObserver` on the root's value (weak, so the referenced VM never keeps the dependent alive); it attaches when the root is notified or on the first `PropertyChanged` subscription, and reports an unknown segment once through the `[Gum]` channel. Undotted `[DependsOn]` is unchanged. Tests: `ViewModelDottedDependsOnTests`, `DottedDependsOnBindingTests`.
 
-**Lambda extracts path at call time, not at update time.** `vm => vm.Child.Text` becomes the static path `"Child.Text"`. If `Child` is replaced, `PropertyPathObserver` re-hooks the listener chain automatically.
+**Lambda extracts path at call time, not at update time.** `vm => vm.Child.Text` becomes the static path `"Child.Text"`. If `Child` is replaced, `PropertyPathObserver` re-hooks the listener chain automatically. An index in the lambda may be a constant or a captured variable, field or property (`v => v.Slots[i].Name` in a loop); `BinderHelpers.EvaluateIndex` reads its value once at the call. An index that reads the lambda parameter, calls a method or is not an `int` throws at `SetBinding`, naming the index. Tests: `LambdaCapturedIndexBindingTests`.
 
 **ListBox `Items` is bindable.** `listBox.SetBinding(nameof(ListBox.Items), nameof(vm.Items))` works and keeps the list in sync with an `ObservableCollection` on the VM.
 

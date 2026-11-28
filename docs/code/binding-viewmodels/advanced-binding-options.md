@@ -134,6 +134,22 @@ textBox.SetBinding<MyViewModel>(
     vm => vm.Items[0].Text);
 ```
 
+A lambda index can also be a variable, such as a loop counter. The binding uses the variable's value at the time `SetBinding` is called:
+
+```csharp
+// Initialize
+for (int i = 0; i < labels.Count; i++)
+{
+    labels[i].SetBinding<MyViewModel>(
+        nameof(Label.Text),
+        vm => vm.Items[i].Text);
+}
+```
+
+{% hint style="info" %}
+Variable indexes in lambdas are available in December 2026, or now if building Gum from source.
+{% endhint %}
+
 If the collection implements `INotifyCollectionChanged` (such as `ObservableCollection`), the binding automatically re-evaluates when items are added, removed, replaced, or cleared. If the bound index is out of range, the binding uses the `FallbackValue` if one is set.
 
 The following fiddle demonstrates index-based binding with a team of players. The TextBox is two-way bound to `Players[0].Name`, and three Labels display each player by index. Typing in the TextBox updates the first player's label, and the Replace button demonstrates collection change notification.

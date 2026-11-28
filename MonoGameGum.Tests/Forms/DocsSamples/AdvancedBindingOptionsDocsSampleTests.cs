@@ -273,6 +273,30 @@ public class AdvancedBindingOptionsDocsSampleTests : BaseTestClass
     }
 
     [Fact]
+    public void IndexPath_LambdaLoopVariable_BindsEachLabelToItsItem()
+    {
+        MyViewModel viewModel = new();
+        viewModel.Items.Add(new ItemViewModel { Text = "First" });
+        viewModel.Items.Add(new ItemViewModel { Text = "Second" });
+        System.Collections.Generic.List<Label> labels = new()
+        {
+            new Label { BindingContext = viewModel },
+            new Label { BindingContext = viewModel },
+        };
+
+        // Initialize
+        for (int i = 0; i < labels.Count; i++)
+        {
+            labels[i].SetBinding<MyViewModel>(
+                nameof(Label.Text),
+                vm => vm.Items[i].Text);
+        }
+
+        labels[0].Text.ShouldBe("First");
+        labels[1].Text.ShouldBe("Second");
+    }
+
+    [Fact]
     public void IndexPath_OutOfRange_UsesFallbackValue()
     {
         MyViewModel viewModel = new();
