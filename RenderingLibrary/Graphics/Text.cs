@@ -2114,6 +2114,15 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         // instead of re-deriving it here with the wrong scale.
         mTempForRendering.Width = GetDrawnWidthForAlignment();
         mTempForRendering.Height = WrappedTextHeight;
+        if (TextRenderingMode == TextRenderingMode.RenderTarget)
+        {
+            // The render target stops at MaxRenderTargetSize while measurement does not (#8506), so draw it
+            // at the size it stops at and cut off the rest rather than stretch it over the measured size.
+            mTempForRendering.Width = System.Math.Min(mTempForRendering.Width,
+                BitmapFont.MaxRenderTargetSize * MeasurementFontScale);
+            mTempForRendering.Height = System.Math.Min(mTempForRendering.Height,
+                BitmapFont.MaxRenderTargetSize * LineHeightMultiplier * MeasurementFontScale);
+        }
         //mTempForRendering.Parent = this.Parent;
 
         float widthDifference = this.EffectiveWidth - mTempForRendering.Width;

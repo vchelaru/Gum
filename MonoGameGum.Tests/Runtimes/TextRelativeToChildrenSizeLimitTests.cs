@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.GueDeriving;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using System.Linq;
 using Xunit;
@@ -51,5 +52,31 @@ public class TextRelativeToChildrenSizeLimitTests : BaseTestClass
 
         width.ShouldBeGreaterThan(4096);
         width.ShouldBe(measuredWidth);
+    }
+
+    // RenderTarget mode draws a texture that stops at 4096 pixels, so it is drawn at that size and the
+    // rest is cut off, rather than stretched over the full measured size.
+    [Theory]
+    [InlineData(300, 10)]
+    [InlineData(1, 600)]
+    public void RenderTargetMode_TextLargerThan4096_DrawsAt4096(int lineCount, int lettersPerLine)
+    {
+        TextRenderingMode originalMode = Text.TextRenderingMode;
+        Text.TextRenderingMode = TextRenderingMode.RenderTarget;
+        try
+        {
+            TextRuntime text = MakeRelative(RepeatLines(new string('m', lettersPerLine), lineCount));
+            Text renderable = (Text)text.RenderableComponent!;
+
+            IRenderableIpso drawn = renderable.UpdateIpsoForRenderingForTests();
+
+            System.Math.Max(text.AbsoluteWidth, text.AbsoluteHeight).ShouldBeGreaterThan(4096);
+            drawn.Width.ShouldBe(System.Math.Min(text.AbsoluteWidth, 4096));
+            drawn.Height.ShouldBe(System.Math.Min(text.AbsoluteHeight, 4096));
+        }
+        finally
+        {
+            Text.TextRenderingMode = originalMode;
+        }
     }
 }
