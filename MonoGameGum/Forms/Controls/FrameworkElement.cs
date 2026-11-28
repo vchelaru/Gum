@@ -390,8 +390,8 @@ public class FrameworkElement : INotifyPropertyChanged, IBindingTarget
     /// <summary>
     /// The object this control's bindings read from and write to, stored on its
     /// <see cref="Visual"/>. Children inherit it unless they are given their own. Leaving the root,
-    /// by any path, sets this control's own BindingContext to null, so children that inherit it lose it
-    /// too; a child given its own keeps it. Moving between other parents keeps it.
+    /// by any path, keeps it but pauses this control's bindings and its children's until the control
+    /// rejoins the root.
     /// </summary>
     public object? BindingContext
     {

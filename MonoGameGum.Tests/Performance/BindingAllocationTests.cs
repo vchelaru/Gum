@@ -102,4 +102,33 @@ public class BindingAllocationTests : BaseTestClass
         // Compiling a getter allocates several KB, so a per-attach compile of three of them lands far above this.
         result.BytesPerIteration.ShouldBeLessThanOrEqualTo(4096);
     }
+
+    [Fact]
+    public void RemoveFromRootAndAddToRoot_OnVisualWithThreeBindings_CostsNoMoreThanAContextSwap()
+    {
+        AttachViewModel viewModel = new() { Name = "a", Score = 1, Shown = true };
+        TextRuntime text = new();
+        text.SetBinding(nameof(TextRuntime.Text), nameof(AttachViewModel.Name));
+        text.SetBinding(nameof(TextRuntime.Width), nameof(AttachViewModel.Score));
+        text.SetBinding(nameof(TextRuntime.Visible), nameof(AttachViewModel.Shown));
+        text.AddToRoot();
+        text.BindingContext = viewModel;
+
+        // Removing pauses (detaches) all three bindings; adding resumes (re-attaches) them.
+        AllocationResult result = AllocationMeasurer.Measure(
+            () =>
+            {
+                text.RemoveFromRoot();
+                text.AddToRoot();
+            },
+            warmupIterations: 20,
+            measuredIterations: 200);
+
+        _output.WriteLine($"RemoveFromRoot + AddToRoot with three bindings: {result.BytesPerIteration:N0} bytes/cycle");
+        viewModel.Name = "b";
+        text.Text.ShouldBe("b");
+
+        // Same bound as a BindingContext swap: resuming re-attaches, and must not compile getters again.
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(4096);
+    }
 }

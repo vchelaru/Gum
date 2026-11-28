@@ -107,9 +107,9 @@ public partial class GraphicalUiElement : IBindingTarget
         if (args.OldValue is GraphicalUiElement old)
         {
             old.BindingContextChanged -= ParentBindingContextChanged;
-            isOwnPaused |= old.ClearsBindingContextOfRemovedChildren;
+            isOwnPaused |= old.PausesBindingsOfRemovedChildren;
         }
-        if (newParent?.ClearsBindingContextOfRemovedChildren == true)
+        if (newParent?.PausesBindingsOfRemovedChildren == true)
         {
             isOwnPaused = false;
         }
@@ -136,7 +136,7 @@ public partial class GraphicalUiElement : IBindingTarget
         }
     }
 
-    // Set on an element that left the root (a parent with ClearsBindingContextOfRemovedChildren) until it
+    // Set on an element that left the root (a parent with PausesBindingsOfRemovedChildren) until it
     // rejoins one; _isAncestorBindingPaused is set on its descendants. Either keeps the element's bindings off
     // their source while its BindingContext stays as it was.
     bool _isLeftRoot;
@@ -186,11 +186,11 @@ public partial class GraphicalUiElement : IBindingTarget
     public event EventHandler<BindingContextChangedEventArgs>? InheritedBindingContextChanged;
 
     /// <summary>
-    /// Whether a child that leaves this element, by any path, has its own explicitly set BindingContext
-    /// set to null. Descendants that inherited it lose it with it; descendants given their own keep
-    /// theirs. The GumService sets this on its Root; popup and modal roots leave it off.
+    /// Whether a child that leaves this element, by any path, has its bindings and its descendants'
+    /// paused until it is added to such an element again. Every element keeps its BindingContext. The
+    /// GumService sets this on its Root; popup and modal roots leave it off.
     /// </summary>
-    internal bool ClearsBindingContextOfRemovedChildren { get; set; }
+    internal bool PausesBindingsOfRemovedChildren { get; set; }
 
     object? mInheritedBindingContext;
     internal object? InheritedBindingContext
@@ -252,8 +252,8 @@ public partial class GraphicalUiElement : IBindingTarget
     /// The object this element's bindings read from and write to. Children inherit it unless they
     /// are given their own. Leaving the root, by any path (<see cref="RemoveFromRoot"/>, removing
     /// from or clearing the root's <see cref="Children"/>, or assigning another
-    /// <see cref="Parent"/>), sets this element's own BindingContext to null, so children that inherit
-    /// it lose it too; a child given its own keeps it. Moving between other parents keeps it. While
+    /// <see cref="Parent"/>), keeps it but pauses this element's bindings and its children's until the
+    /// element rejoins the root, which shows the view model's current values. While
     /// BindingContext is bound with SetBinding, it is the value the binding resolves, null included, and
     /// the parent's context shows through again once the binding is cleared.
     /// </summary>
