@@ -81,13 +81,35 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     }
 
     [RequiresUnreferencedCode("Calls " + nameof(AttachToSource) + ".")]
-    public void Start() => AttachToSource(TargetElement.BindingContext);
+    public void Start()
+    {
+        if (IsBindingContextTarget)
+        {
+            // Resolved first, so the target takes over its context only once the path has given it a value.
+            AttachToSource(TargetElement.InheritedBindingContext);
+            TargetElement.SetIsBindingContextBound(true);
+        }
+        else
+        {
+            AttachToSource(TargetElement.BindingContext);
+        }
+    }
+
+    /// <summary>
+    /// Whether this binding sets the target's BindingContext. Its path is read from the context the target
+    /// inherits, so it follows the parent's context rather than the context it sets.
+    /// </summary>
+    protected bool IsBindingContextTarget => _targetPropertyName == nameof(IBindingTarget.BindingContext);
 
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "Automatic relay when an already-bound target's BindingContext changes. The " +
             "trim risk is already surfaced wherever SetBinding was actually called to create this binding.")]
     private void OnTargetBindingContextChanged(object? sender, BindingContextChangedEventArgs e)
     {
+        if (IsBindingContextTarget)
+        {
+            return;
+        }
         AttachToSource(e.NewBindingContext);
     }
 
@@ -310,6 +332,10 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         TargetElement.BindingContextChanged -= OnTargetBindingContextChanged;
         PathObserver.ValueChanged -= UpdateTarget;
         PathObserver.Dispose();
+        if (IsBindingContextTarget)
+        {
+            TargetElement.SetIsBindingContextBound(false);
+        }
         base.Dispose();
     }
 }
