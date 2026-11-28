@@ -113,7 +113,7 @@ public class PropertyPathObserver : IDisposable
                 }
             }
 
-            cursor = pi?.GetValue(cursor);
+            cursor = GetSegmentValue(cursor, pi, _segments[i]);
 
             // For indexed segments, subscribe to collection changes before indexing into it.
             // PERF: Currently reacts to ALL collection changes, not just those affecting the
@@ -161,7 +161,7 @@ public class PropertyPathObserver : IDisposable
         for (int i = 0; i < count && cursor != null; i++)
         {
             PropertyInfo? pi = cursor.GetType().GetProperty(segments[i].Name);
-            cursor = pi?.GetValue(cursor);
+            cursor = GetSegmentValue(cursor, pi, segments[i]);
 
             if (segments[i].Index is int index && cursor != null)
             {
@@ -216,7 +216,7 @@ public class PropertyPathObserver : IDisposable
                 }
             }
 
-            cursor = pi?.GetValue(cursor);
+            cursor = GetSegmentValue(cursor, pi, _segments[next]);
 
             if (_segments[next].Index is int index && cursor != null)
             {
@@ -242,9 +242,7 @@ public class PropertyPathObserver : IDisposable
         object? cursor = _currentRoot;
         for (int i = 0; i <= level && cursor != null; i++)
         {
-            cursor = cursor.GetType()
-                           .GetProperty(_segments[i].Name)
-                           ?.GetValue(cursor);
+            cursor = GetSegmentValue(cursor, cursor.GetType().GetProperty(_segments[i].Name), _segments[i]);
 
             if (_segments[i].Index is int index && cursor != null)
             {
@@ -253,6 +251,16 @@ public class PropertyPathObserver : IDisposable
         }
         return cursor;
     }
+
+    // A segment that is not a property may name a public instance field, which is read (a view model field holding
+    // a struct, for "Position.X") and never written.
+    [RequiresUnreferencedCode(
+        "Looks up a field on cursor's own type by name (GetField). That member may be removed under " +
+        "PublishTrimmed if nothing else in the app references it.")]
+    private static object? GetSegmentValue(object? cursor, PropertyInfo? property, PathSegment segment) =>
+        property != null
+            ? property.GetValue(cursor)
+            : cursor?.GetType().GetField(segment.Name, BindingFlags.Public | BindingFlags.Instance)?.GetValue(cursor);
 
     // A leaf may name a public instance field, which is read once and never raises change notification.
     [RequiresUnreferencedCode(
