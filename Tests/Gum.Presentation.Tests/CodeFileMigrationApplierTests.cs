@@ -204,6 +204,33 @@ public class CodeFileMigrationApplierTests : BaseTestClass
         File.ReadAllText(oldGenerated.FullPath).ShouldBe("//Code for Controls/ButtonClose (Container)");
     }
 
+    // Old projects have block-namespace custom files, new ones file-scoped (#8512); a move keeps the form.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Apply_MovesCustomCode_RewritingTheHeaderInTheFilesOwnNamespaceForm(bool fileScoped)
+    {
+        FilePath oldCustom = WriteFile("Components/Controls/ButtonCloseRuntime.cs",
+            CustomCode("MyGame.Components.Controls", "ButtonCloseRuntime", fileScoped));
+        FilePath newCustom = new FilePath(Path.GetFullPath(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonClose.cs")));
+        CodeFileMigrationPlan plan = new CodeFileMigrationPlan(new[]
+        {
+            new CodeFileMigrationStep("Controls/ButtonClose", CodeFileMigrationAction.MoveCustomCode, oldCustom, newCustom),
+        });
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.AppendFolderToNamespace = true;
+
+        CodeFileMigrationResult result = CreateApplier().Apply(_projectFile, settings, plan);
+
+        result.Error.ShouldBeNull();
+        File.Exists(oldCustom.FullPath).ShouldBeFalse();
+        File.ReadAllText(newCustom.FullPath).ShouldBe(CustomCode("MyGame.Components.Controls", "ButtonClose", fileScoped));
+    }
+
+    private static string CustomCode(string namespaceName, string className, bool fileScoped) => fileScoped
+        ? $"namespace {namespaceName};\n\npartial class {className}\n{{\n    partial void CustomInitialize()\n    {{\n        Width = 10;\n    }}\n}}\n"
+        : $"namespace {namespaceName}\n{{\n    partial class {className}\n    {{\n        partial void CustomInitialize()\n        {{\n            Width = 10;\n        }}\n    }}\n}}\n";
+
     private CodeFileMigrationApplier CreateApplier()
     {
         ObjectFinder.Self.GumProjectSave = _project;

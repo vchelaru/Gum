@@ -125,6 +125,71 @@ public class CustomCodeHeaderUpdaterTests : BaseTestClass
         _backupService.List(_projectFile).ShouldBeEmpty();
     }
 
+    // A namespace setting change rewrites the custom file and regenerates the generated file, for
+    // both the root namespace and the folder suffix, keeping whichever namespace form the file uses (#8512).
+    [Theory]
+    [InlineData(false, "OldGame.Components.Controls", true, "MyGame.Components.Controls")]
+    [InlineData(true, "OldGame.Components.Controls", true, "MyGame.Components.Controls")]
+    [InlineData(false, "MyGame.Components.Controls", false, "MyGame.Components")]
+    [InlineData(true, "MyGame.Components.Controls", false, "MyGame.Components")]
+    public void Update_RewritesTheNamespaceInTheFilesOwnForm_AndRegenerates_WhenANamespaceSettingChanges(
+        bool fileScoped, string oldNamespace, bool appendFolderToNamespace, string expectedNamespace)
+    {
+        FilePath custom = WriteFile("Components/Controls/ButtonClose.cs",
+            CustomCode(oldNamespace, "partial class ButtonClose", fileScoped));
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.AppendFolderToNamespace = appendFolderToNamespace;
+        _dialogService.Setup(d => d.ShowMessage(It.IsAny<string>(), Title, It.IsAny<MessageDialogStyle>()))
+            .Returns(MessageDialogResult.Affirmative);
+
+        CreateUpdater().Update(_project, _projectFile, settings, "a namespace setting");
+
+        File.ReadAllText(custom.FullPath).ShouldBe(CustomCode(expectedNamespace, "partial class ButtonClose", fileScoped));
+        _regenerator.Verify(r => r.Regenerate("Controls/ButtonClose", settings), Times.Once);
+    }
+
+    [Fact]
+    public void Update_RewritesAMixedProject_KeepingEachFilesNamespaceForm()
+    {
+        FilePath block = WriteFile("Components/Controls/ButtonClose.cs",
+            CustomCode("OldGame.Components.Controls", "partial class ButtonClose", fileScoped: false));
+        FilePath fileScoped = WriteFile("Components/Controls/Icon.cs",
+            CustomCode("OldGame.Components.Controls", "partial class Icon", fileScoped: true));
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        _dialogService.Setup(d => d.ShowMessage(It.IsAny<string>(), Title, It.IsAny<MessageDialogStyle>()))
+            .Returns(MessageDialogResult.Affirmative);
+
+        CreateUpdater().Update(_project, _projectFile, settings, "Root Namespace from OldGame to MyGame");
+
+        File.ReadAllText(block.FullPath).ShouldBe(CustomCode("MyGame.Components.Controls", "partial class ButtonClose", fileScoped: false));
+        File.ReadAllText(fileScoped.FullPath).ShouldBe(CustomCode("MyGame.Components.Controls", "partial class Icon", fileScoped: true));
+    }
+
+    [Theory]
+    [InlineData(false, InheritanceLocation.InCustomCode, "partial class ButtonClose", "partial class ButtonClose : global::Gum.Forms.Controls.FrameworkElement")]
+    [InlineData(true, InheritanceLocation.InCustomCode, "partial class ButtonClose", "partial class ButtonClose : global::Gum.Forms.Controls.FrameworkElement")]
+    [InlineData(false, InheritanceLocation.InGeneratedCode, "partial class ButtonClose : global::Gum.Forms.Controls.FrameworkElement, System.IDisposable", "partial class ButtonClose : System.IDisposable")]
+    [InlineData(true, InheritanceLocation.InGeneratedCode, "partial class ButtonClose : global::Gum.Forms.Controls.FrameworkElement, System.IDisposable", "partial class ButtonClose : System.IDisposable")]
+    public void Update_MovesTheBaseClass_InTheFilesOwnNamespaceForm_WhenInheritanceLocationChanges(
+        bool fileScoped, InheritanceLocation newLocation, string oldHeader, string expectedHeader)
+    {
+        FilePath custom = WriteFile("Components/Controls/ButtonClose.cs",
+            CustomCode("MyGame.Components.Controls", oldHeader, fileScoped));
+        CodeOutputProjectSettings settings = CreateProjectSettings();
+        settings.InheritanceLocation = newLocation;
+        _dialogService.Setup(d => d.ShowMessage(It.IsAny<string>(), Title, It.IsAny<MessageDialogStyle>()))
+            .Returns(MessageDialogResult.Affirmative);
+
+        CreateUpdater().Update(_project, _projectFile, settings, "Inheritance Location");
+
+        File.ReadAllText(custom.FullPath).ShouldBe(CustomCode("MyGame.Components.Controls", expectedHeader, fileScoped));
+    }
+
+    /// <summary>A custom code file holding hand-written code, in either namespace form.</summary>
+    private static string CustomCode(string namespaceName, string classHeader, bool fileScoped) => fileScoped
+        ? $"namespace {namespaceName};\n\n{classHeader}\n{{\n    partial void CustomInitialize()\n    {{\n        Width = 10;\n    }}\n}}\n"
+        : $"namespace {namespaceName}\n{{\n    {classHeader}\n    {{\n        partial void CustomInitialize()\n        {{\n            Width = 10;\n        }}\n    }}\n}}\n";
+
     private CustomCodeHeaderUpdater CreateUpdater()
     {
         ObjectFinder.Self.GumProjectSave = _project;
