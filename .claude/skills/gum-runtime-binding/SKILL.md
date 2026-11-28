@@ -122,7 +122,7 @@ Only the default mode (above) and `UpdateSourceTrigger.LostFocus`, which never f
 
 ## Non-Obvious Behaviors
 
-**A string path that misses a member reports once, never throws.** Every binding builds the message with `BinderHelpers.GetMissingPathMessage` and send it through `ElementSaveExtensions.ReportDiagnostic` (the `[Gum]` `PropertyAssignmentError` channel), once per binding, when a non-null context is attached. The check walks declared member types; past the root, a member the declared type lacks is judged on the object held there, and when that object is null it reports only for a sealed declared type.
+**A string path that misses a member reports once, never throws.** Every binding builds the message with `BinderHelpers.GetMissingPathMessage` and send it through `ElementSaveExtensions.ReportDiagnostic` (the `[Gum]` `PropertyAssignmentError` channel), once per binding and context type, when a non-null context is attached. Every once-only binding report is keyed this way (`BindingExpressionBase.ShouldReport`), so a report spent on a context inherited from the parent does not hide the same problem on the target's own view model. The check walks declared member types; past the root, a member the declared type lacks is judged on the object held there, and when that object is null it reports only for a sealed declared type.
 
 **BindableGue is deprecated.** `GraphicalUiElement` now owns all binding logic. `BindableGue` exists only as a legacy alias.
 
@@ -134,7 +134,7 @@ Only the default mode (above) and `UpdateSourceTrigger.LostFocus`, which never f
 
 **A view model field is read but never written.** `PropertyPathObserver` resolves a public field at the leaf (`IsLeafField`), and `UntypedBindingExpression.SetSourceValue` skips it.
 
-**What the visual engine used to throw on is reported once per binding.** A value the target cannot take (`NpcBindingExpression.ReportFailedConversionOnce`) and a `PushValueToViewModel` to a source with no setter (`PushTargetToSource`) or to a field write one `[Gum]` warning; a null into a value type stays silent.
+**What the visual engine used to throw on is reported once per binding and context type.** A value the target cannot take (`NpcBindingExpression.ReportFailedConversionOnce`) and a `PushValueToViewModel` to a source with no setter (`PushTargetToSource`) or to a field write one `[Gum]` warning; a null into a value type stays silent.
 
 **Forms `StringFormat` is a composite format for one value and must contain `{0}`.** `SetBinding` throws (`BinderHelpers.GetStringFormatErrorMessage`) on a format `string.Format` rejects with one argument (`{1}`, an unclosed brace) and on one without `{0}`, which is what a C# `$"..."` interpolated format leaves behind; a specifier the value type rejects (`{0:Q}`) is left to `FallbackValue`. The visual overloads' `toStringFormat` is a numeric specifier (`"N0"`) wrapped as `"{0:N0}"`; a valid composite format (`"{0:N0}"`) passed there is used as is, and a string that is neither throws `ArgumentException`.
 
