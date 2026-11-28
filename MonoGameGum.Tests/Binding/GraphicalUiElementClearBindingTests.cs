@@ -254,4 +254,19 @@ public class GraphicalUiElementClearBindingTests
         original.IsDataBound(nameof(ClearRuntime.Label)).ShouldBeTrue();
         clone.IsDataBound(nameof(ClearRuntime.Label)).ShouldBeFalse();
     }
+
+    [Fact]
+    public void ClearBinding_PushingProperty_DoesNotWriteRestoredValueToViewModel()
+    {
+        ClearViewModel viewModel = new() { Name = "bound" };
+        PushingRuntime sut = new() { Label = "before", BindingContext = viewModel };
+        sut.SetBinding(nameof(PushingRuntime.Label), nameof(ClearViewModel.Name));
+        sut.Label = "pushed";
+        viewModel.Name.ShouldBe("pushed");
+
+        sut.ClearBinding(nameof(PushingRuntime.Label));
+
+        sut.Label.ShouldBe("before");
+        viewModel.Name.ShouldBe("pushed");
+    }
 }

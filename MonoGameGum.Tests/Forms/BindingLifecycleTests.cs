@@ -54,6 +54,66 @@ public class BindingLifecycleTests : BaseTestClass
         vm.Text.ShouldBe("first");
     }
 
+    private class CommittingElement : FrameworkElement
+    {
+        private string? _label;
+
+        public CommittingElement() : base(new Gum.Wireframe.InteractiveGue())
+        {
+        }
+
+        public string? Label
+        {
+            get => _label;
+            set
+            {
+                _label = value;
+                PushValueToViewModel();
+            }
+        }
+
+        // Commits its binding from the setter, the way TextBox commits Text on Enter.
+        public string? CommittedLabel
+        {
+            get => _label;
+            set
+            {
+                _label = value;
+                BindingOperations.GetBindingExpression(this, nameof(CommittedLabel))?.UpdateSource();
+            }
+        }
+    }
+
+    [Fact]
+    public void ClearBinding_PushingProperty_DoesNotWriteRestoredValueToViewModel()
+    {
+        TestViewModel vm = new() { Text = "bound" };
+        CommittingElement sut = new() { Label = "before", BindingContext = vm };
+        sut.SetBinding(nameof(CommittingElement.Label), nameof(TestViewModel.Text));
+        sut.Label = "pushed";
+        vm.Text.ShouldBe("pushed");
+
+        sut.ClearBinding(nameof(CommittingElement.Label));
+
+        sut.Label.ShouldBe("before");
+        vm.Text.ShouldBe("pushed");
+    }
+
+    [Fact]
+    public void ClearBinding_SetterCommitsOwnBinding_DoesNotWriteRestoredValueToViewModel()
+    {
+        TestViewModel vm = new() { Text = "bound" };
+        CommittingElement sut = new() { CommittedLabel = "before", BindingContext = vm };
+        sut.SetBinding(nameof(CommittingElement.CommittedLabel), nameof(TestViewModel.Text));
+        sut.CommittedLabel = "committed";
+        vm.Text.ShouldBe("committed");
+
+        sut.ClearBinding(nameof(CommittingElement.CommittedLabel));
+
+        sut.CommittedLabel.ShouldBe("before");
+        vm.Text.ShouldBe("committed");
+    }
+
     [Fact]
     public void SetBinding_SamePropertyRebound_OnlyTheNewPathFollowsAndReceivesEdits()
     {
