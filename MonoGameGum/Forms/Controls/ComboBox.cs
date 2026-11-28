@@ -498,11 +498,26 @@ public class ComboBox :
         SubscribeToListBox();
     }
 
-    public List<Keys> IgnoredKeys => throw new NotImplementedException();
+    /// <summary>
+    /// A list of keys that should be ignored by this control. Empty by default.
+    /// </summary>
+    public List<Keys> IgnoredKeys => _ignoredKeys ??= new List<Keys>();
+    List<Keys>? _ignoredKeys;
 
-    public bool TakingInput => throw new NotImplementedException();
+    /// <summary>
+    /// Whether this control is currently capable of receiving input. Always true.
+    /// </summary>
+    public bool TakingInput => true;
 
-    public IInputReceiver NextInTabSequence { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    /// <summary>
+    /// The next control to receive focus when the user presses the tab key.
+    /// </summary>
+#if FRB
+    // FRB's IInputReceiver declares this non-nullable.
+    public IInputReceiver NextInTabSequence { get; set; } = null!;
+#else
+    public IInputReceiver? NextInTabSequence { get; set; }
+#endif
 
     // These values are the list box values before the list box has been expanded.
     // The reason we need these is because the list box may have values (like Width)
