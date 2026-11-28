@@ -19,7 +19,7 @@ textBox.SetBinding<MyViewModel>(
     vm => vm.PlayerName);
 ```
 
-A parameterless lambda captures the ViewModel from a local variable:
+A parameterless lambda supplies only the property path. Gum reads the value from the control's `BindingContext`, not from the variable in the lambda, so `BindingContext` must be set:
 
 ```csharp
 // Initialize
