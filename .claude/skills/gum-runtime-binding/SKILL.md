@@ -122,7 +122,7 @@ Only the default mode (above) and `UpdateSourceTrigger.LostFocus`, which never f
 
 ## Non-Obvious Behaviors
 
-**A string path that misses a member reports once, never throws.** Every binding builds the message with `BinderHelpers.GetMissingPathMessage` and send it through `ElementSaveExtensions.ReportDiagnostic` (the `[Gum]` `PropertyAssignmentError` channel), once per binding, when a non-null context is attached. The check walks declared member types; past the root, a member the declared type lacks is judged on the object held there, and when that object is null it reports only for a sealed declared type.
+**A string path that misses a member reports once, never throws.** Every binding builds the message with `BinderHelpers.GetMissingPathMessage` and send it through `ElementSaveExtensions.ReportDiagnostic` (the `[Gum]` `PropertyAssignmentError` channel), once per binding and context type, when a non-null context is attached. Every once-only binding report is keyed this way (`BindingExpressionBase.ShouldReport`), so a report spent on a context inherited from the parent does not hide the same problem on the target's own view model. The check walks declared member types; past the root, a member the declared type lacks is judged on the object held there, and when that object is null it reports only for a sealed declared type.
 
 **BindableGue is deprecated.** `GraphicalUiElement` now owns all binding logic. `BindableGue` exists only as a legacy alias.
 
@@ -134,13 +134,15 @@ Only the default mode (above) and `UpdateSourceTrigger.LostFocus`, which never f
 
 **A view model field is read but never written.** `PropertyPathObserver` resolves a public field at the leaf (`IsLeafField`), and `UntypedBindingExpression.SetSourceValue` skips it.
 
-**What the visual engine used to throw on is reported once per binding.** A value the target cannot take (`NpcBindingExpression.ReportFailedConversionOnce`) and a `PushValueToViewModel` to a source with no setter (`PushTargetToSource`) or to a field write one `[Gum]` warning; a null into a value type stays silent.
+**What the visual engine used to throw on is reported once per binding and context type.** A value the target cannot take (`NpcBindingExpression.ReportFailedConversionOnce`) and a `PushValueToViewModel` to a source with no setter (`PushTargetToSource`) or to a field write one `[Gum]` warning; a null into a value type stays silent.
 
 **Forms `StringFormat` is a composite format for one value and must contain `{0}`.** `SetBinding` throws (`BinderHelpers.GetStringFormatErrorMessage`) on a format `string.Format` rejects with one argument (`{1}`, an unclosed brace) and on one without `{0}`, which is what a C# `$"..."` interpolated format leaves behind; a specifier the value type rejects (`{0:Q}`) is left to `FallbackValue`. The visual overloads' `toStringFormat` is a numeric specifier (`"N0"`) wrapped as `"{0:N0}"`; a valid composite format (`"{0:N0}"`) passed there is used as is, and a string that is neither throws `ArgumentException`.
 
 **A converter that throws is caught and reported once per direction per binding** (`UntypedBindingExpression.Convert`/`ConvertBack`). `Convert` shows `FallbackValue` or the default; `ConvertBack` leaves the source unchanged, as does `UnsetValue` from it. On the way back a target value equal to `TargetNullValue` writes null and skips the converter (`NpcBindingExpression.SetValueToSource`). Text written to an integral source parses with `NumberStyles.Number` in the current culture, so `"{0:N0}"` text round-trips; text that still fails (`"$1,235"`, `""`) leaves the source unchanged and is reported once (`ReportFailedSourceConversionOnce`); during a focused TextBox edit the report waits for the edit to end (`OnTextEditEnded`).
 
 **Forms bindings convert strings and integers to enum targets.** `BinderHelpers.ConvertToEnum` parses names ignoring case (as WPF's `EnumConverter` does) and maps numbers with `Enum.ToObject`; a value naming no member throws in `UpdateTarget`, while an unmatched edit written back to an enum source leaves the source unchanged.
+
+**A `Nullable<T>` source or target converts as its `T`** (`NpcBindingExpression.TryConvert`, the one conversion both binding systems use). Empty text is not null: it writes null only when it equals the binding's `TargetNullValue`, otherwise it is a failed conversion that leaves the source unchanged. Tests: `NullableNumberWriteBackTests`.
 
 **A bound target (Forms control or visual) resets when an attached BindingContext becomes null.** `NpcBindingExpression.ResetTarget` shows `FallbackValue`, else the value the property held before it was first bound (`UnboundTargetValue`, kept per property by `PropertyRegistry` across rebinds; `ClearBinding` restores it too); OneWayToSource and BindingContext targets are skipped, and binding before any context resets nothing. Visual (GUE) bindings keep their last value. Tests: `BindingContextNullResetTests`, whose expected values go through `ContextResetExpectation`.
 

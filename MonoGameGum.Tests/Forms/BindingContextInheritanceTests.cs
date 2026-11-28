@@ -145,4 +145,18 @@ public class BindingContextInheritanceTests : BaseTestClass
         inheritingChild.BindingContext.ShouldBe(parentVm);
         inheritingChild.Text.ShouldBe("parent");
     }
+
+    [Fact]
+    public void ChildRemovedFromParent_LosesInheritedContext()
+    {
+        TestViewModel vm = new() { Text = "parent" };
+        StackPanel parent = new() { BindingContext = vm };
+        TextBox child = new();
+        parent.AddChild(child);
+        child.BindingContext.ShouldBe(vm);
+
+        parent.RemoveChild(child);
+
+        child.BindingContext.ShouldBeNull();
+    }
 }

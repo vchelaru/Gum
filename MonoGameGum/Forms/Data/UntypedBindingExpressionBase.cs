@@ -53,13 +53,9 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     private Action<object, object?>? SourceSetter { get; set; }
     private PropertyPathObserver PathObserver { get; }
     private readonly string _targetPropertyName;
-    private bool _hasReportedMissingPath;
-    private bool _hasReportedConvertException;
-    private bool _hasReportedConvertBackException;
     // Set when a write must assign a struct back to a member that cannot take it; reported on the first dropped write,
     // since a binding that only displays the value never writes.
     private string? _unassignableStructMessage;
-    private bool _hasReportedUnassignableStruct;
     private bool _isLeafInStruct;
 
     protected UntypedBindingExpression(IBindingTarget targetElement, string targetPropertyName, Binding binding)
@@ -71,7 +67,6 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         }
 
         _targetPropertyName = targetPropertyName;
-        _hasReportedMissingPath = false;
         TargetElement = targetElement;
         TargetElement.BindingContextChanged += OnTargetBindingContextChanged;
 
@@ -229,16 +224,10 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     [RequiresUnreferencedCode("Calls " + nameof(BinderHelpers.GetMissingPathMessage) + ".")]
     private void ReportMissingPathOnce(object source)
     {
-        if (_hasReportedMissingPath)
-        {
-            return;
-        }
-
         string? message = BinderHelpers.GetMissingPathMessage(source, Binding.Path, allowEventLeaf: false,
             TargetElement.GetType().Name, _targetPropertyName);
-        if (message != null)
+        if (message != null && ShouldReport(nameof(ReportMissingPathOnce), source.GetType()))
         {
-            _hasReportedMissingPath = true;
             GumRuntime.ElementSaveExtensions.ReportDiagnostic(message);
         }
     }
@@ -297,16 +286,14 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
     private void ReportUnassignableStructOnce(string message)
     {
-        if (_hasReportedUnassignableStruct)
+        if (ShouldReport(nameof(ReportUnassignableStructOnce), CurrentRoot?.GetType()))
         {
-            return;
+            GumRuntime.ElementSaveExtensions.ReportDiagnostic(message);
         }
-        _hasReportedUnassignableStruct = true;
-        GumRuntime.ElementSaveExtensions.ReportDiagnostic(message);
     }
 
     // A converter that throws is caught so a bug in it cannot throw mid-frame, and reported once per direction
-    // per binding so it does not look like an empty value.
+    // per binding and source type so it does not look like an empty value.
     protected object? Convert(IValueConverter converter, object? value, Type targetType)
     {
         try
@@ -315,9 +302,8 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         }
         catch (Exception ex)
         {
-            if (!_hasReportedConvertException)
+            if (ShouldReport(nameof(IValueConverter.Convert), CurrentRoot?.GetType()))
             {
-                _hasReportedConvertException = true;
                 string shown = Binding.FallbackValue is null ? "default" : nameof(Binding.FallbackValue);
                 ReportConverterException(converter, nameof(IValueConverter.Convert), ex,
                     $"so the property shows its {shown}.");
@@ -338,9 +324,8 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         }
         catch (Exception ex)
         {
-            if (!_hasReportedConvertBackException)
+            if (ShouldReport(nameof(IValueConverter.ConvertBack), CurrentRoot?.GetType()))
             {
-                _hasReportedConvertBackException = true;
                 ReportConverterException(converter, nameof(IValueConverter.ConvertBack), ex,
                     $"so {Binding.Path} was not changed.");
             }

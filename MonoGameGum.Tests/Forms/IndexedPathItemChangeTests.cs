@@ -381,4 +381,123 @@ public class IndexedPathItemChangeTests : BaseTestClass
         label.BindingContext = fresh;
         return (new WeakReference(old), new WeakReference(old.Members), new WeakReference(old.Members[0].Slots));
     }
+
+    private class CountingSlot : INotifyPropertyChanged
+    {
+        private PropertyChangedEventHandler? _propertyChanged;
+        private string? _name;
+
+        public event PropertyChangedEventHandler? PropertyChanged
+        {
+            add => _propertyChanged += value;
+            remove => _propertyChanged -= value;
+        }
+
+        public int SubscriberCount => _propertyChanged?.GetInvocationList().Length ?? 0;
+
+        public string? Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                _propertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
+            }
+        }
+    }
+
+    private class CountingInventoryViewModel : ViewModel
+    {
+        public ObservableCollection<CountingSlot> Slots { get; } = new();
+
+        public ObservableCollection<string> Names { get; } = new();
+    }
+
+    [Fact]
+    public void ItemReplacedAtIndex_OldItemIsUnsubscribedAndNoLongerDrivesTarget()
+    {
+        CountingInventoryViewModel vm = new();
+        CountingSlot old = new() { Name = "old" };
+        vm.Slots.Add(old);
+        Label label = new() { BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), "Slots[0].Name");
+        old.SubscriberCount.ShouldBe(1);
+
+        vm.Slots[0] = new CountingSlot { Name = "new" };
+        old.Name = "stale";
+
+        label.Text.ShouldBe("new");
+        old.SubscriberCount.ShouldBe(0);
+        vm.Slots[0].SubscriberCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ClearedThenAdded_FollowsNewItem_OldItemUnsubscribed()
+    {
+        CountingInventoryViewModel vm = new();
+        CountingSlot old = new() { Name = "old" };
+        vm.Slots.Add(old);
+        Label label = new() { BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), "Slots[0].Name");
+
+        vm.Slots.Clear();
+        CountingSlot added = new() { Name = "added" };
+        vm.Slots.Add(added);
+        added.Name = "renamed";
+        old.Name = "stale";
+
+        label.Text.ShouldBe("renamed");
+        old.SubscriberCount.ShouldBe(0);
+        added.SubscriberCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ManyCollectionChanges_KeepOneSubscriptionOnItemAtIndex()
+    {
+        CountingInventoryViewModel vm = new();
+        CountingSlot first = new() { Name = "first" };
+        vm.Slots.Add(first);
+        Label label = new() { BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), "Slots[0].Name");
+
+        for (int i = 0; i < 5; i++)
+        {
+            vm.Slots.Add(new CountingSlot { Name = "extra" + i });
+        }
+
+        first.SubscriberCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void TwoWayEdit_AfterItemShiftedIntoIndex_WritesToItemNowAtIndex()
+    {
+        InventoryViewModel vm = CreateInventory();
+        TextBox textBox = new() { BindingContext = vm };
+        textBox.SetBinding(nameof(TextBox.Text), "Slots[1].Name");
+        SlotViewModel removed = vm.Slots[0];
+
+        vm.Slots.RemoveAt(0);
+        textBox.Text = "edited";
+
+        vm.Slots[1].Name.ShouldBe("edited");
+        vm.Slots[0].Name.ShouldBe("slot1");
+        removed.Name.ShouldBe("slot0");
+    }
+
+    [Fact]
+    public void IndexedLeaf_ReplacedAndMoved_ShowsValueAtIndex()
+    {
+        CountingInventoryViewModel vm = new();
+        vm.Names.Add("a");
+        vm.Names.Add("b");
+        vm.Names.Add("c");
+        Label label = new() { BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), "Names[1]");
+
+        vm.Names[1] = "B";
+        label.Text.ShouldBe("B");
+
+        vm.Names.Move(2, 1);
+        label.Text.ShouldBe("c");
+    }
 }

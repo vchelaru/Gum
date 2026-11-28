@@ -93,4 +93,32 @@ public class ConvertBackFailureTests : BaseTestClass
 
         _reports.Count.ShouldBe(1);
     }
+
+    private class OtherNameViewModel : ViewModel
+    {
+        public string? Name
+        {
+            get => Get<string?>();
+            set => Set(value);
+        }
+    }
+
+    [Fact]
+    public void ConvertBack_Throws_OnContextsOfTwoTypes_ReportsOncePerType()
+    {
+        TextBox textBox = new();
+        textBox.SetBinding(nameof(TextBox.Text), new Binding(nameof(NameViewModel.Name))
+        {
+            Converter = new ThrowingBackConverter()
+        });
+
+        textBox.BindingContext = new NameViewModel { Name = "a" };
+        textBox.Text = "typed a";
+        textBox.BindingContext = new OtherNameViewModel { Name = "b" };
+        textBox.Text = "typed b";
+        textBox.BindingContext = new NameViewModel { Name = "c" };
+        textBox.Text = "typed c";
+
+        _reports.Count.ShouldBe(2);
+    }
 }
