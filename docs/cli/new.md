@@ -89,7 +89,7 @@ The Gum project uses the `forms` template unless you pass `-t empty`. `ProjectCo
 gumcli new MyGame --platform silknet --source-linked
 ```
 
-`--source-linked` makes the game project reference the platform's runtime project in a Gum checkout (for example `Runtimes/SilkNetGum/SilkNetGum.csproj`) instead of the NuGet package. Use it to run a game against Gum changes that are not released yet.
+`--source-linked` makes the game project reference the platform's runtime project in a Gum checkout (for example `Runtimes/SilkNetGum/SilkNetGum.csproj`) instead of the NuGet package. Use it to run a game against Gum changes that are not released yet. `MyGame.slnx` lists the game project first, then the runtime project and every Gum project it references, so building the solution builds them all.
 
 `gumcli` looks for the checkout starting at the folder holding the `gumcli` executable, then at the current folder, and walks up from each. A `gumcli` built from the checkout always finds it. An installed `gumcli` finds it when you run the command from inside the checkout. The game project can be created anywhere, including outside the checkout.
 

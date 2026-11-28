@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Gum.DataTypes;
 using Gum.ProjectServices.CodeGeneration;
 
@@ -42,6 +43,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
         (string packageName, string runtimeProjectPath) = GetGumRuntime(platform);
         string gumReference = $"<PackageReference Include=\"{packageName}\" Version=\"{(preview ? "*-*" : "*")}\" />";
+        List<string> linkedProjects = new List<string>();
         if (gumSourceDirectory != null)
         {
             string runtimeCsproj = Path.GetFullPath(Path.Combine(gumSourceDirectory, runtimeProjectPath));
@@ -52,6 +54,7 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
 
             // MSBuild paths use backslashes by convention; the syntax version detection also expects them.
             gumReference = ProjectReferenceLine(fullDirectory, runtimeCsproj);
+            linkedProjects.Add(runtimeCsproj);
 
             foreach (string addOn in linkedAddOns ?? Array.Empty<string>())
             {
@@ -62,13 +65,14 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
                 }
 
                 gumReference += Environment.NewLine + "    " + ProjectReferenceLine(fullDirectory, addOnCsproj);
+                linkedProjects.Add(addOnCsproj);
             }
         }
 
         Directory.CreateDirectory(gumFolder);
 
         string rootNamespace = NameRules.ToCSharpIdentifier(projectName);
-        WriteHostFiles(fullDirectory, csprojPath, projectName, platform, gumReference, Path.GetFileName(gumProjectPath));
+        WriteHostFiles(fullDirectory, csprojPath, projectName, platform, gumReference, Path.GetFileName(gumProjectPath), linkedProjects);
 
         GumProjectTemplateWriter.Write(gumProjectPath, includeFormsTemplate, themeDirectory);
 
@@ -258,7 +262,8 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
     }
 
     private static void WriteHostFiles(
-        string directory, string csprojPath, string projectName, HostPlatform platform, string gumReference, string gumProjectFileName)
+        string directory, string csprojPath, string projectName, HostPlatform platform, string gumReference, string gumProjectFileName,
+        IReadOnlyList<string> linkedProjects)
     {
         string rootNamespace = NameRules.ToCSharpIdentifier(projectName);
         File.WriteAllText(
@@ -266,12 +271,56 @@ public class PlatformProjectScaffolder : IPlatformProjectScaffolder
             ReadTemplate(platform.ToString(), "Host.csproj.template", projectName, rootNamespace, gumProjectFileName)
                 .Replace("{{GumReference}}", gumReference));
 
-        // Only the game project: a source-linked Gum runtime stays a ProjectReference and needs no entry.
+        // The game comes first so it is the startup project. The linked Gum projects and everything they reference follow,
+        // as `dotnet sln add` lists them, so building the solution builds them.
+        IEnumerable<string> solutionProjects = GetProjectClosure(linkedProjects)
+            .Select(project => Path.GetRelativePath(directory, project).Replace('\\', '/'))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .Prepend(projectName + ".csproj");
+        StringBuilder solution = new StringBuilder("<Solution>" + Environment.NewLine);
+        foreach (string path in solutionProjects)
+        {
+            solution.Append($"  <Project Path=\"{SecurityElement.Escape(path)}\" />").Append(Environment.NewLine);
+        }
+
         File.WriteAllText(
             Path.Combine(directory, NewProjectLayout.GetSolutionFileName(projectName)),
-            "<Solution>" + Environment.NewLine +
-            $"  <Project Path=\"{SecurityElement.Escape(projectName + ".csproj")}\" />" + Environment.NewLine +
-            "</Solution>" + Environment.NewLine);
+            solution.Append("</Solution>").Append(Environment.NewLine).ToString());
+    }
+
+    // The projects and every project they reference, directly or through another, as full paths. Gum's runtime and add-on
+    // projects reference each other with plain, unconditional ProjectReference items, so reading the XML finds them all.
+    private static HashSet<string> GetProjectClosure(IEnumerable<string> projects)
+    {
+        HashSet<string> closure = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        Stack<string> pending = new Stack<string>(projects);
+        while (pending.Count > 0)
+        {
+            string project = pending.Pop();
+            if (!closure.Add(project))
+            {
+                continue;
+            }
+
+            // Loaded from a stream: XDocument.Load(path) treats the path as a URI and would decode a '%' in a folder name.
+            XDocument document;
+            using (FileStream stream = File.OpenRead(project))
+            {
+                document = XDocument.Load(stream);
+            }
+
+            string projectFolder = Path.GetDirectoryName(project)!;
+            IEnumerable<string> includes = document.Descendants()
+                .Where(element => element.Name.LocalName == "ProjectReference")
+                .Select(element => element.Attribute("Include")?.Value)
+                .OfType<string>();
+            foreach (string include in includes)
+            {
+                pending.Push(Path.GetFullPath(Path.Combine(projectFolder, include.Replace('\\', Path.DirectorySeparatorChar))));
+            }
+        }
+
+        return closure;
     }
 
     // Program.cs, and Game1.cs where the platform has one: the part of the host that initializes Gum and shows a screen.

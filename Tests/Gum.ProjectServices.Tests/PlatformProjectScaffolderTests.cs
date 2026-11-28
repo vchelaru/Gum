@@ -384,20 +384,39 @@ public class PlatformProjectScaffolderTests : IDisposable
         File.Exists(Path.Combine(projectDirectory, project.Attribute("Path")!.Value)).ShouldBeTrue();
     }
 
-    [Fact]
-    public void Create_WhenSourceLinked_ShouldKeepTheRuntimeProjectOutOfTheSlnx()
+    // Runs against this checkout, so every platform links its real runtime and add-ons.
+    [Theory]
+    [InlineData(HostPlatform.MonoGame)]
+    [InlineData(HostPlatform.Kni)]
+    [InlineData(HostPlatform.KniSkia)]
+    [InlineData(HostPlatform.Raylib)]
+    [InlineData(HostPlatform.Stride)]
+    [InlineData(HostPlatform.SilkNet)]
+    [InlineData(HostPlatform.Brutal)]
+    public void Create_WhenSourceLinked_ShouldListTheGameFirstThenEveryLinkedProjectAndItsReferences(HostPlatform platform)
     {
         string projectDirectory = Path.Combine(_tempDirectory, "MyGame");
-        string gumSource = CreateFakeGumSource("MonoGameGum/MonoGameGum.csproj");
 
         PlatformProjectResult result = _sut.Create(
-            projectDirectory, HostPlatform.MonoGame, includeFormsTemplate: false, gumSourceDirectory: gumSource);
+            projectDirectory, platform, includeFormsTemplate: false, gumSourceDirectory: FindRepoRoot(),
+            linkedAddOns: RecommendedPackages.ForSourceLinked(platform));
 
         result.Success.ShouldBeTrue(result.ErrorMessage);
-        File.ReadAllText(result.CsprojPath).ShouldContain("<ProjectReference Include=");
-        XDocument.Parse(File.ReadAllText(Path.Combine(projectDirectory, "MyGame.slnx")))
-            .Root!.Elements().Select(element => element.Attribute("Path")!.Value)
-            .ShouldBe(new[] { "MyGame.csproj" });
+        string[] paths = XDocument.Parse(File.ReadAllText(Path.Combine(projectDirectory, "MyGame.slnx")))
+            .Root!.Elements().Select(element => element.Attribute("Path")!.Value).ToArray();
+        paths[0].ShouldBe("MyGame.csproj");
+        paths.ShouldAllBe(path => !path.Contains('\\'));
+        paths.ShouldBeUnique();
+
+        string[] listed = paths.Select(path => Path.GetFullPath(Path.Combine(projectDirectory, path))).ToArray();
+        listed.ShouldAllBe(path => File.Exists(path));
+        foreach (string project in listed)
+        {
+            foreach (string reference in ReadProjectReferences(project))
+            {
+                listed.ShouldContain(reference, $"{project} references {reference}");
+            }
+        }
     }
 
     [Fact]
@@ -542,6 +561,23 @@ public class PlatformProjectScaffolderTests : IDisposable
         result.Success.ShouldBeFalse();
         result.ErrorMessage.ShouldContain("RaylibGum.csproj");
         Directory.Exists(projectDirectory).ShouldBeFalse();
+    }
+
+    private static IEnumerable<string> ReadProjectReferences(string csprojPath) =>
+        XDocument.Load(csprojPath).Descendants()
+            .Where(element => element.Name.LocalName == "ProjectReference")
+            .Select(element => Path.GetFullPath(Path.Combine(
+                Path.GetDirectoryName(csprojPath)!, element.Attribute("Include")!.Value.Replace('\\', Path.DirectorySeparatorChar))));
+
+    private static string FindRepoRoot()
+    {
+        string? directory = AppContext.BaseDirectory;
+        while (directory != null && !File.Exists(Path.Combine(directory, "Gum.slnx")))
+        {
+            directory = Path.GetDirectoryName(directory);
+        }
+
+        return directory ?? throw new InvalidOperationException("Gum.slnx not found above " + AppContext.BaseDirectory);
     }
 
     private string CreateFakeGumSource(string runtimeCsproj)

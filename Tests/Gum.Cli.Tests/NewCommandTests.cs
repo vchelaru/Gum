@@ -519,6 +519,26 @@ public class NewCommandTests : BaseTestClass
     }
 
     [Fact]
+    public void New_WithPlatformAndSourceLinked_ShouldListTheGameThenTheRuntimeAndItsReferencesInTheSlnx()
+    {
+        string projectDir = Path.Combine(TempDirectory, "MyGame");
+        string checkout = GumSourceLocator.Find(AppContext.BaseDirectory)!;
+        // gumcli links only the runtime (it has no option for the add-ons); MonoGameGum references GumCommon.
+        string[] linkedProjects = { "GumCommon/GumCommon.csproj", "MonoGameGum/MonoGameGum.csproj" };
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir, "--platform", "monogame", "--source-linked", "--no-restore");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        string[] expected = linkedProjects
+            .Select(path => Path.GetRelativePath(projectDir, Path.Combine(checkout, path)).Replace('\\', '/'))
+            .Prepend("MyGame.csproj")
+            .ToArray();
+        XDocument.Parse(File.ReadAllText(Path.Combine(projectDir, "MyGame.slnx"))).Root!.Elements()
+            .Select(element => element.Attribute("Path")!.Value)
+            .ShouldBe(expected);
+    }
+
+    [Fact]
     public void New_WithSourceLinkedButNoPlatform_ShouldReturnExitCode2()
     {
         string projectDir = Path.Combine(TempDirectory, "MyGame");
