@@ -431,25 +431,26 @@ internal class NpcBindingExpression : UntypedBindingExpression
     }
 
     private void SetValueToSource(object? value)
-    {        
+    {
         if (LeafType is not { } sourceType)
         {
             return;
         }
-        
-        if (Binding.Converter is { } converter)
+
+        // TargetNullValue is what the target shows for a null source, so the target holding it means null, as
+        // in WPF. Like the way in, it skips the converter.
+        if (Binding.TargetNullValue is not null && Equals(value, Binding.TargetNullValue))
+        {
+            value = null;
+        }
+        else if (Binding.Converter is { } converter)
         {
             value = ConvertBack(converter, value, sourceType);
         }
 
-        if (value == Binding.DoNothing) return;
-
-        if (value == GumProperty.UnsetValue)
-        {
-            value = Binding.FallbackValue;
-        }
-
-        value ??= Binding.TargetNullValue;
+        // UnsetValue (a ConvertBack that threw or produced no value) leaves the source unchanged, as WPF does;
+        // FallbackValue is a target-side value and never reaches the source.
+        if (value == Binding.DoNothing || value == GumProperty.UnsetValue) return;
 
         if (!IsValidForType(value, sourceType))
         {

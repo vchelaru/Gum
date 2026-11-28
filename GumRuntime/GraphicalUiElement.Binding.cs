@@ -273,9 +273,18 @@ public partial class GraphicalUiElement : IBindingTarget
         "SetBinding<TVm> overload that takes an expression instead of a string.")]
     public void SetBinding(string uiProperty, string vmProperty, string? toStringFormat = null)
     {
+        string? stringFormat = string.IsNullOrEmpty(toStringFormat) ? null : "{0:" + toStringFormat + "}";
+        if (BinderHelpers.GetStringFormatErrorMessage(stringFormat) != null)
+        {
+            throw new ArgumentException(
+                $"toStringFormat '{toStringFormat}' is not a format specifier. Pass the specifier alone, such as \"N0\", " +
+                "not a composite format such as \"{0:N0}\"; for a composite format, pass a Binding with StringFormat set.",
+                nameof(toStringFormat));
+        }
+
         SetBinding(uiProperty, new Binding(vmProperty)
         {
-            StringFormat = string.IsNullOrEmpty(toStringFormat) ? null : "{0:" + toStringFormat + "}"
+            StringFormat = stringFormat
         });
     }
 

@@ -134,7 +134,9 @@ Only the default mode (above) and `UpdateSourceTrigger.LostFocus`, which never f
 
 **What the visual engine used to throw on is reported once per binding.** A value the target cannot take (`NpcBindingExpression.ReportFailedConversionOnce`) and a `PushValueToViewModel` to a source with no setter (`PushTargetToSource`) or to a field write one `[Gum]` warning; a null into a value type stays silent.
 
-**Forms `StringFormat` is a composite format and must contain `{0}`.** `SetBinding` throws on one without it (`BinderHelpers.GetMissingPlaceholderMessage`), which is what a C# `$"..."` interpolated format leaves behind. The visual overloads' `toStringFormat` is a numeric specifier (`"N0"`) wrapped as `"{0:N0}"`.
+**Forms `StringFormat` is a composite format for one value and must contain `{0}`.** `SetBinding` throws (`BinderHelpers.GetStringFormatErrorMessage`) on a format `string.Format` rejects with one argument (`{1}`, an unclosed brace) and on one without `{0}`, which is what a C# `$"..."` interpolated format leaves behind; a specifier the value type rejects (`{0:Q}`) is left to `FallbackValue`. The visual overloads' `toStringFormat` is a numeric specifier (`"N0"`) wrapped as `"{0:N0}"`, and a composite format passed there throws `ArgumentException`.
+
+**A converter that throws is caught and reported once per direction per binding** (`UntypedBindingExpression.Convert`/`ConvertBack`). `Convert` shows `FallbackValue` or the default; `ConvertBack` leaves the source unchanged, as does `UnsetValue` from it. On the way back a target value equal to `TargetNullValue` writes null and skips the converter (`NpcBindingExpression.SetValueToSource`).
 
 **Forms bindings convert strings and integers to enum targets.** `BinderHelpers.ConvertToEnum` parses names ignoring case (as WPF's `EnumConverter` does) and maps numbers with `Enum.ToObject`; a value naming no member throws in `UpdateTarget`, while an unmatched edit written back to an enum source leaves the source unchanged.
 
