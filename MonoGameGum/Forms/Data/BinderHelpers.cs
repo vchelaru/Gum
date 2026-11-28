@@ -86,7 +86,7 @@ internal static class BinderHelpers
 
     // A property reflected from a derived type hides a private accessor its base class declares, so setters are
     // looked up on the declaring type.
-    private static PropertyInfo AsDeclared(PropertyInfo property)
+    public static PropertyInfo AsDeclared(PropertyInfo property)
     {
         if (property.DeclaringType is not { } declaringType || declaringType == property.ReflectedType)
         {

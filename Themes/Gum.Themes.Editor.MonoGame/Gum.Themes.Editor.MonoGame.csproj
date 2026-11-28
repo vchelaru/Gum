@@ -25,6 +25,7 @@
     <!-- Shared platform shim: isolates the per-backend font-creator wiring so EditorTheme stays
          platform-agnostic and source-shares cleanly into the .Kni and .Raylib variants. -->
     <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeTextStyles.cs" Link="ThemeTextStyles.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- KernSmith is a runtime dependency (the theme generates fonts at runtime), so it must flow

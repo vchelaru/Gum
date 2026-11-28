@@ -21,45 +21,43 @@ namespace Gum.Forms.Data;
 public enum BindingMode
 {
     /// <summary>
-    /// Data flows from the source to the target only.
-    /// Changes in the source (usually the ViewModel) update the target (usually the View),
-    /// but changes in the target do not update the source.
+    /// Data flows from the source (the ViewModel property) to the target (the UI property) only.
+    /// Changes in the source update the target, but changes in the target do not update the source.
     /// </summary>
     OneWay,
 
     /// <summary>
-    /// Data flows in both directions between the source and target.
-    /// Changes in either the source (usually the ViewModel) or target (usually the View) update the other.
+    /// Data flows in both directions between the source (the ViewModel property) and the target (the UI property).
+    /// Changes in either one update the other.
     /// </summary>
     TwoWay,
 
     /// <summary>
-    /// Data flows from the target to the source only.
-    /// Changes in the target (usually the View) update the source (usually the ViewModel),
-    /// but changes in the source do not update the target.
+    /// Data flows from the target (the UI property) to the source (the ViewModel property) only.
+    /// Changes in the target update the source, but changes in the source do not update the target.
     /// </summary>
     OneWayToSource
 }
 
 /// <summary>
-/// Defines when the source (usually the ViewModel) is updated in a binding.
+/// Defines when the source (the ViewModel property) is updated in a binding.
 /// </summary>
 public enum UpdateSourceTrigger
 {
     /// <summary>
-    /// Uses the default update behavior for the target property.
+    /// Uses the default update behavior for the target (the UI property).
     /// The default behavior depends on the type of control being bound.
     /// </summary>
     Default,
 
     /// <summary>
-    /// Updates the source immediately whenever the target property value changes.
+    /// Updates the source (the ViewModel property) immediately whenever the target (the UI property) changes.
     /// For example, in a TextBox, the source updates with every keystroke.
     /// </summary>
     PropertyChanged,
 
     /// <summary>
-    /// Updates the source when the target control loses focus.
+    /// Updates the source (the ViewModel property) when the control that owns the target (the UI property) loses focus.
     /// For example, in a TextBox, the source updates only when the user clicks outside the TextBox
     /// or tabs to another control, not during typing.
     /// </summary>
@@ -67,7 +65,7 @@ public enum UpdateSourceTrigger
 }
 
 /// <summary>
-/// Provides a way to transform values as they flow between the source and target in a binding.
+/// Provides a way to transform values as they flow between the source (the ViewModel property) and the target (the UI property) in a binding.
 /// Implement this interface to create custom converters for data transformations.
 /// </summary>
 /// <example>
@@ -93,41 +91,41 @@ public enum UpdateSourceTrigger
 public interface IValueConverter
 {
     /// <summary>
-    /// Converts a value from the source (usually ViewModel) to the target (usually View).
+    /// Converts a value from the source (the ViewModel property) to the target (the UI property).
     /// This is called when data flows from source to target.
     /// </summary>
-    /// <param name="value">The value from the source property.</param>
-    /// <param name="targetType">The type of the target property.</param>
+    /// <param name="value">The value of the source (the ViewModel property).</param>
+    /// <param name="targetType">The type of the target (the UI property).</param>
     /// <param name="parameter">An optional parameter from <see cref="Binding.ConverterParameter"/>.</param>
-    /// <returns>The converted value to set on the target property, or <see cref="Binding.DoNothing"/> to skip the update.</returns>
+    /// <returns>The converted value to set on the target (the UI property), or <see cref="Binding.DoNothing"/> to skip the update.</returns>
     object? Convert(object? value, Type targetType, object? parameter);
 
     /// <summary>
-    /// Converts a value from the target (usually View) back to the source (usually ViewModel).
+    /// Converts a value from the target (the UI property) back to the source (the ViewModel property).
     /// This is called when data flows from target to source in TwoWay or OneWayToSource bindings.
     /// </summary>
-    /// <param name="value">The value from the target property.</param>
-    /// <param name="sourceType">The type of the source property.</param>
+    /// <param name="value">The value of the target (the UI property).</param>
+    /// <param name="sourceType">The type of the source (the ViewModel property).</param>
     /// <param name="parameter">An optional parameter from <see cref="Binding.ConverterParameter"/>.</param>
-    /// <returns>The converted value to set on the source property, or <see cref="Binding.DoNothing"/> to skip the update.</returns>
+    /// <returns>The converted value to set on the source (the ViewModel property), or <see cref="Binding.DoNothing"/> to skip the update.</returns>
     object? ConvertBack(object? value, Type sourceType, object? parameter);
 }
 
 /// <summary>
-/// Represents a data binding between a source property (usually on a ViewModel) and a target property (usually on a View control).
+/// Represents a data binding between a source (the ViewModel property) and a target (the UI property).
 /// </summary>
-/// <param name="path">The property path on the source object to bind to.</param>
+/// <param name="path">The path of the source (the ViewModel property) to bind to.</param>
 public class Binding(string path)
 {
     /// <summary>
     /// A sentinel value that indicates no action should be taken during conversion.
-    /// Return this from a converter to prevent updating the target or source.
+    /// Return this from a converter to prevent updating the target (the UI property) or source (the ViewModel property).
     /// </summary>
     public static object DoNothing { get; } = new();
 
     /// <summary>
     /// Project-configurable defaults for <see cref="UpdateSourceTrigger.Default"/>, keyed by the
-    /// target control type and the bound property name. Lets a project opt every binding of a given
+    /// control type and the name of the target (the UI property). Lets a project opt every binding of a given
     /// control/property pair into a trigger (e.g. <c>LostFocus</c> for every <c>TextBox.Text</c>)
     /// without setting <see cref="UpdateSourceTrigger"/> on each individual <see cref="Binding"/>.
     /// </summary>
@@ -173,7 +171,7 @@ public class Binding(string path)
     public Binding(LambdaExpression propertyExpression) : this(BinderHelpers.ExtractPath(propertyExpression)) { }
 
     /// <summary>
-    /// Gets the property path on the source object to bind to.
+    /// Gets the path of the source (the ViewModel property) to bind to.
     /// For example, "UserName" or "Address.City".
     /// </summary>
     public string Path { get; } = path;
@@ -185,27 +183,27 @@ public class Binding(string path)
     public BindingMode Mode { get; init; } = BindingMode.TwoWay;
 
     /// <summary>
-    /// Gets or sets when the source is updated in a binding.
+    /// Gets or sets when the source (the ViewModel property) is updated in a binding.
     /// Default is <see cref="Data.UpdateSourceTrigger.Default"/>.
     /// </summary>
     public UpdateSourceTrigger UpdateSourceTrigger { get; init; } = UpdateSourceTrigger.Default;
 
     /// <summary>
-    /// Gets or sets the value to use when the binding cannot retrieve a value from the source.
+    /// Gets or sets the value to use when the binding cannot retrieve a value from the source (the ViewModel property).
     /// For example, if binding to a property that doesn't exist or if the source is null,
-    /// the FallbackValue will be displayed in the target control instead.
+    /// the FallbackValue will be displayed in the target (the UI property) instead.
     /// </summary>
     public object? FallbackValue { get; init; }
 
     /// <summary>
-    /// Gets or sets the value to use when the source property value is null.
+    /// Gets or sets the value to use when the source (the ViewModel property) value is null.
     /// For example, you might set TargetNullValue to "(none)" to display in a TextBox
     /// when the bound property is null, instead of showing an empty string.
     /// </summary>
     public object? TargetNullValue { get; init; }
 
     /// <summary>
-    /// Gets or sets a converter to transform values between the source and target.
+    /// Gets or sets a converter to transform values between the source (the ViewModel property) and the target (the UI property).
     /// For example, a converter might transform a boolean to a color (true = green, false = red)
     /// or convert a DateTime to a formatted string.
     /// </summary>
@@ -225,11 +223,11 @@ public class Binding(string path)
 }
 
 /// <summary>
-/// A strongly-typed binding that provides compile-time type safety for the source object.
+/// A strongly-typed binding that provides compile-time type safety for the ViewModel.
 /// This class exists to allow creating bindings with a typed lambda expression without casting,
 /// making the code more readable and type-safe.
 /// </summary>
-/// <typeparam name="T">The type of the source object (usually the ViewModel type).</typeparam>
+/// <typeparam name="T">The ViewModel type, which declares the source (the ViewModel property).</typeparam>
 /// <param name="propertyExpression">A lambda expression that references the property to bind to.
 /// For example: <c>new Binding&lt;MyViewModel&gt;(vm => vm.UserName)</c>.</param>
 public class Binding<T>(Expression<Func<T, object?>> propertyExpression)

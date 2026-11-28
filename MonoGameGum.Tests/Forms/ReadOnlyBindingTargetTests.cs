@@ -45,6 +45,50 @@ public class ReadOnlyBindingTargetTests : BaseTestClass
         button.Marker.ShouldBe("bound");
     }
 
+    public class InheritedPrivateSetterButton : PrivateSetterButton
+    {
+    }
+
+    public class InheritedPrivateSetterTextRuntime : PrivateSetterTextRuntime
+    {
+    }
+
+    [Theory]
+    [InlineData(BindingMode.OneWay)]
+    [InlineData(BindingMode.TwoWay)]
+    public void SetBinding_FormsTargetWithBaseClassPrivateSetter_StillBinds(BindingMode mode)
+    {
+        InheritedPrivateSetterButton button = new();
+
+        button.SetBinding(nameof(PrivateSetterButton.Marker), new Binding(nameof(ShopViewModel.Value)) { Mode = mode });
+        button.BindingContext = new ShopViewModel { Value = "bound" };
+
+        button.Marker.ShouldBe("bound");
+    }
+
+    [Fact]
+    public void ClearBinding_FormsTargetWithBaseClassPrivateSetter_ResetsTarget()
+    {
+        InheritedPrivateSetterButton button = new();
+        button.SetBinding(nameof(PrivateSetterButton.Marker), nameof(ShopViewModel.Value));
+        button.BindingContext = new ShopViewModel { Value = "bound" };
+
+        button.ClearBinding(nameof(PrivateSetterButton.Marker));
+
+        button.Marker.ShouldBeNull();
+    }
+
+    [Fact]
+    public void SetBinding_RuntimeTargetWithBaseClassPrivateSetter_StillBinds()
+    {
+        InheritedPrivateSetterTextRuntime text = new();
+
+        text.SetBinding(nameof(PrivateSetterTextRuntime.Marker), nameof(ShopViewModel.Value));
+        text.BindingContext = new ShopViewModel { Value = "bound" };
+
+        text.Marker.ShouldBe("bound");
+    }
+
     [Fact]
     public void SetBinding_RuntimeTargetWithPrivateSetter_StillBinds()
     {
@@ -85,9 +129,14 @@ public class ReadOnlyBindingTargetTests : BaseTestClass
                 && type.GetCustomAttribute<ObsoleteAttribute>() == null)
             .OrderBy(type => type.Name);
 
+    // A property reflected from a derived type hides its base class's private setter, so the setter is looked up
+    // on the declaring type; a private setter makes a property bindable.
     private static IEnumerable<PropertyInfo> ReadOnlyProperties(Type type) =>
         type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(property => property.CanRead && property.SetMethod == null
+            .Where(property => property.CanRead
+                && property.DeclaringType!.GetProperty(property.Name,
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly,
+                    binder: null, property.PropertyType, Type.EmptyTypes, modifiers: null)?.SetMethod == null
                 && property.GetIndexParameters().Length == 0
                 && property.GetCustomAttribute<ObsoleteAttribute>() == null)
             .GroupBy(property => property.Name)

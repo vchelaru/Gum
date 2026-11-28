@@ -1,6 +1,5 @@
 using System.IO;
 using System.Reflection;
-using Gum.DataTypes.Variables;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
@@ -125,25 +124,8 @@ public static class DarkProTheme
         Styling styling = Styling.ActiveStyle;
         DarkProText text = DarkProStyling.ActiveStyle.Text;
 
-        styling.Text.Normal.Clear();
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "IsBold", Type = "bool", Value = false });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
-
-        styling.Text.Strong.Clear();
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "IsBold", Type = "bool", Value = true });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
+        ThemeTextStyles.ApplyLadder(styling.Text, text.FontFamily, text.FontSize,
+            headingFont: text.FontFamily, titleFont: text.FontFamily);
 
         // Dark Pro tokens (see gum-styles.css :root for the source palette).
         // The Styling.Colors slots don't map 1:1 with the Dark Pro tokens, so
