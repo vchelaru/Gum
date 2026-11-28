@@ -193,6 +193,89 @@ public class CustomCodeStubDetectorTests : BaseTestClass
     }
 
     [Fact]
+    public void IsUntouchedStub_ReturnsFalse_WhenFileScopedCustomInitializeHasBody()
+    {
+        string contents = """
+            namespace MyGame.Components;
+
+            partial class MyComponent
+            {
+                partial void CustomInitialize()
+                {
+                    DoSomething();
+                }
+            }
+            """;
+
+        _detector.IsUntouchedStub(contents).ShouldBeFalse();
+    }
+
+    // A file-scoped file closes with one brace instead of two, so a type declared after the class
+    // must not be swallowed as the namespace's closing brace.
+    [Fact]
+    public void IsUntouchedStub_ReturnsFalse_WhenFileScopedFileDeclaresAnotherTypeAfterTheClass()
+    {
+        string contents = """
+            namespace MyGame.Components;
+
+            partial class MyComponent
+            {
+                partial void CustomInitialize()
+                {
+                }
+            }
+
+            class Helper
+            {
+            }
+            """;
+
+        _detector.IsUntouchedStub(contents).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsUntouchedStub_ReturnsTrue_ForCustomCodeGeneratorOutputBelowCSharp10()
+    {
+        // A project below C# 10 keeps getting block-namespace stubs, which must still read as untouched.
+        ComponentSave component = new ComponentSave { Name = "MyComponent", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+
+        Mock<INameVerifier> nameVerifier = new();
+        string? whyNotValid;
+        CommonValidationError error;
+        nameVerifier
+            .Setup(v => v.IsValidCSharpName(It.IsAny<string>(), out whyNotValid, out error))
+            .Returns(true);
+        Mock<ICSharpVersionDetectionService> languageDetection = new();
+        languageDetection
+            .Setup(d => d.Detect(It.IsAny<CodeOutputProjectSettings>(), It.IsAny<string?>()))
+            .Returns(9);
+
+        CodeGenerationNameVerifier codeGenNameVerifier = new(nameVerifier.Object);
+        FixedProjectDirectoryProvider directoryProvider = new(projectDirectory: null);
+        CodeGenerator codeGenerator = new(
+            codeGenNameVerifier,
+            new LocalizationService(),
+            new CodeOutputElementSettingsManager(directoryProvider),
+            directoryProvider,
+            cSharpVersionDetectionService: languageDetection.Object);
+        CustomCodeGenerator customCodeGenerator = new(codeGenerator, codeGenNameVerifier);
+
+        CodeOutputProjectSettings projectSettings = new CodeOutputProjectSettings
+        {
+            RootNamespace = "MyGame",
+            OutputLibrary = OutputLibrary.GumForms
+        };
+
+        string contents = customCodeGenerator.GetCustomCodeForElement(
+            component, new CodeOutputElementSettings(), projectSettings);
+
+        contents.ShouldContain("namespace MyGame.Components");
+        contents.ShouldNotContain("namespace MyGame.Components;");
+        _detector.IsUntouchedStub(contents).ShouldBeTrue();
+    }
+
+    [Fact]
     public void IsUntouchedStub_ReturnsTrue_ForStubWithNoNamespace()
     {
         // RootNamespace empty means codegen emits no namespace at all.

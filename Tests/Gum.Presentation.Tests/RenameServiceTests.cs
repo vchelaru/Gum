@@ -639,4 +639,69 @@ public class RenameServiceTests : BaseTestClass
         updated.ShouldContain("partial class MyComponent\r\n");
     }
 
+    // Existing projects have block-namespace custom files and new stubs are file-scoped (#8512), so
+    // every rewrite must work on both and keep the form the file already has.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void HandleRename_WhenRenamedAndMovedToFolder_RewritesTheHeaderInTheFilesOwnNamespaceForm(bool fileScoped)
+    {
+        GivenFile("Components/OldName.cs", CustomCodeWithMarker("MyGame.Components", "partial class OldName", fileScoped));
+        GivenFile("Components/OldName.Generated.cs", "//stale generated file");
+
+        ComponentSave element = GivenComponentInProject("Widgets/NewName");
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
+
+        _renameService.HandleRename(element, oldName: "OldName", projectSettings, VisualApi.Gum);
+
+        _dialogService.Verify(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MessageDialogStyle?>()), Times.Never);
+        File.ReadAllText(Path.Combine(_codeProjectRoot, "Components", "Widgets", "NewName.cs"))
+            .ShouldBe(CustomCodeWithMarker("MyGame.Components.Widgets", "partial class NewName", fileScoped));
+        string regeneratedCode = File.ReadAllText(Path.Combine(_codeProjectRoot, "Components", "Widgets", "NewName.Generated.cs"));
+        regeneratedCode.ShouldContain("namespace MyGame.Components.Widgets");
+        regeneratedCode.ShouldContain("partial class NewName");
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void HandleVariableSet_WhenBaseTypeChangedWithInheritanceInCustomCode_RewritesTheBaseTypeInTheFilesOwnNamespaceForm(bool fileScoped)
+    {
+        string original = CustomCodeWithMarker("MyGame.Components", "partial class MyComponent : SomeOldBase", fileScoped);
+        GivenFile("Components/MyComponent.cs", original);
+
+        ComponentSave element = GivenComponentInProject("MyComponent");
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
+        projectSettings.InheritanceLocation = InheritanceLocation.InCustomCode;
+
+        _renameService.HandleVariableSet(element, instance: null, "BaseType", oldValue: "Container", projectSettings);
+
+        File.ReadAllText(Path.Combine(_codeProjectRoot, "Components", "MyComponent.cs"))
+            .ShouldBe(CustomCodeWithMarker("MyGame.Components", "partial class MyComponent : global::Gum.Forms.Controls.FrameworkElement", fileScoped));
+    }
+
+    /// <summary>
+    /// A custom code file holding hand-written code, laid out the way <see cref="CustomCodeGenerator"/>
+    /// writes it in either namespace form.
+    /// </summary>
+    private static string CustomCodeWithMarker(string namespaceName, string classHeader, bool fileScoped) => fileScoped
+        ? $"namespace {namespaceName};\r\n" +
+          "\r\n" +
+          $"{classHeader}\r\n" +
+          "{\r\n" +
+          "    partial void CustomInitialize()\r\n" +
+          "    {\r\n" +
+          "        HandWrittenMarker();\r\n" +
+          "    }\r\n" +
+          "}\r\n"
+        : $"namespace {namespaceName}\r\n" +
+          "{\r\n" +
+          $"    {classHeader}\r\n" +
+          "    {\r\n" +
+          "        partial void CustomInitialize()\r\n" +
+          "        {\r\n" +
+          "            HandWrittenMarker();\r\n" +
+          "        }\r\n" +
+          "    }\r\n" +
+          "}\r\n";
 }
