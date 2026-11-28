@@ -233,10 +233,14 @@ label.SetBinding(nameof(Label.Text), binding);
 
 `StringFormat` must contain a `{0}` placeholder where the value goes, or `SetBinding` throws, whatever the target property's type. `SetBinding` also throws for a format `string.Format` rejects, such as `"{0} of {1}"` (a binding formats one value) or an unclosed brace. Write it as a plain string: an interpolated `$"HP: {0:N0}"` fills in `{0}` before the binding sees it.
 
+A specifier the value's type rejects, such as `"{0:Q}"` on an `int`, also throws from `SetBinding` when Gum knows the source property's type at that call: the `BindingContext` is already assigned and the path leads to a number, enum, date, time or `Guid` property, or a visual binds with a lambda. Otherwise, and for a binding with a `FallbackValue` or a `Converter`, Gum writes one `[Gum]` warning for that binding when a value fails to format, and the property shows the binding's `FallbackValue`, or the property type's default.
+
 A two-way binding with a `StringFormat` writes the UI value back without removing the format. A TextBox bound with `"Name: {0}"` that holds `"Name: Bob"` sets a `string` source to `"Name: Bob"`. A number keeps working because the text converts back to the source type: a TextBox bound to an `int` of `1234` with `"{0:N0}"` shows `"1,234"`, and editing it to `"1,235"` sets the source to `1235`.
 
 {% hint style="info" %}
 `SetBinding` refusing a format `string.Format` rejects is available in December 2026, or now if building Gum from source. Before that, the format threw later, when the `BindingContext` was assigned.
+
+Checking the specifier against the source property's type, and the warning in place of an exception, are available in December 2026, or now if building Gum from source. Before that, a specifier the value rejected threw when the `BindingContext` was assigned or the property changed, unless the binding had a `FallbackValue`.
 {% endhint %}
 
 ### FallbackValue Example
