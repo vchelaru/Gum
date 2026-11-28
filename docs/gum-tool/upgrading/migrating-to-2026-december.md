@@ -10,6 +10,12 @@ Available in December 2026, or now if building Gum from source.
 
 ## Forms
 
+### Bound Properties Reset When the BindingContext Becomes Null
+
+When a control's `BindingContext` becomes null, each bound property now shows the binding's `FallbackValue`, or the value the property held before it was bound when no `FallbackValue` is set. This happens when you set `BindingContext` to null and when the control leaves the root or the parent it inherited its context from. Previously the property kept the last value from the view model, so a `Label` bound to a player name kept showing that name. Assigning a `BindingContext` again shows the new view model's values. `OneWayToSource` bindings leave the control unchanged.
+
+You are affected if your game clears a `BindingContext` or removes a screen from the root while the screen is still visible, for example during a transition, and expects the old values to stay on screen. Clear the context after the screen is hidden, or set `FallbackValue` on the binding to choose what it shows.
+
 ### Multi-Line TextBox Selection Height Follows the Line Height
 
 In a multi-line `TextBox`, the selection highlight's `Height` is now set to the font's line height whenever the selection instance's `HeightUnits` is `Absolute`. Previously the highlight kept the height from the Visual, which is 20 in the default Visual, so it did not match the text when the font was larger or smaller than the default. Single-line `TextBox` controls and selection instances with any other `HeightUnits` are unchanged.

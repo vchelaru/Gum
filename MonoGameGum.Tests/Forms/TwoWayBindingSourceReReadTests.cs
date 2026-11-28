@@ -95,7 +95,7 @@ public class TwoWayBindingSourceReReadTests : BaseTestClass
     }
 
     [Fact]
-    public void LostFocusTrigger_ContextClearedWhileEditing_ViewModelCoerces_ControlKeepsItsValue()
+    public void LostFocusTrigger_ContextClearedWhileEditing_ViewModelCoerces_ControlResets()
     {
         CoercingViewModel vm = new() { Clamped = 10 };
         Slider slider = new() { Minimum = 0, Maximum = 100, BindingContext = vm };
@@ -107,7 +107,8 @@ public class TwoWayBindingSourceReReadTests : BaseTestClass
         slider.BindingContext = null;
 
         vm.Clamped.ShouldBe(10, "because clearing the context commits the pending edit to the outgoing view model");
-        slider.Value.ShouldBe(50, "because a control that has left its view model is not refreshed from it");
+        slider.Value.ShouldBe(ContextResetExpectation.Of(0d),
+            "because a target whose BindingContext becomes null resets (#8543), and is not refreshed from the outgoing view model");
     }
 
     [Fact]

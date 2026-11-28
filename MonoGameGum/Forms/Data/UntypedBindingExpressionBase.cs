@@ -78,6 +78,12 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     /// </summary>
     protected virtual void FlushPendingTargetValue() { }
 
+    /// <summary>
+    /// Shows the value for "no source" after the BindingContext became null, as WPF does when its
+    /// DataContext is cleared.
+    /// </summary>
+    protected virtual void ResetTarget() { }
+
     [RequiresUnreferencedCode(
         "Resolves the binding path by name against newSource's own type (PropertyPathObserver.Attach, " +
         "BinderHelpers.BuildGetter/BuildSetter). Those members may be removed under PublishTrimmed if " +
@@ -91,12 +97,19 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
         FlushPendingTargetValue();
 
+        bool wasAttached = CurrentRoot is not null;
         PathObserver.Detach();
         SourceGetter = null;
         SourceSetter = null;
 
         if (newSource is null)
         {
+            // Only a context that was attached and went away resets the target, so binding before any
+            // context exists keeps the value the control already shows.
+            if (wasAttached)
+            {
+                ResetTarget();
+            }
             return;
         }
 
