@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using Gum.Forms.Controls;
 using Gum.Forms.Data;
@@ -268,5 +269,122 @@ public class BindablePropertyMatrixTests : BaseTestClass
         _output.WriteLine($"Runtime properties checked: {checkedCount}");
         checkedCount.ShouldBeGreaterThan(20);
         failures.ShouldBeEmpty(string.Join(Environment.NewLine, failures));
+    }
+
+    private static void SetLambdaBinding(GraphicalUiElement runtime, string uiProperty, Type viewModelType)
+    {
+        ParameterExpression parameter = Expression.Parameter(viewModelType, "vm");
+        LambdaExpression lambda = Expression.Lambda(
+            typeof(Func<,>).MakeGenericType(viewModelType, typeof(object)),
+            Expression.Convert(Expression.Property(parameter, "Value"), typeof(object)),
+            parameter);
+        MethodInfo setBinding = typeof(GraphicalUiElement).GetMethods()
+            .Single(method => method.Name == nameof(GraphicalUiElement.SetBinding) && method.IsGenericMethodDefinition)
+            .MakeGenericMethod(viewModelType);
+        setBinding.Invoke(runtime, new object?[] { uiProperty, lambda, null });
+    }
+
+    [Fact]
+    public void StandardRuntimes_EveryBindableProperty_LambdaBindingFollowsViewModel()
+    {
+        List<string> failures = new();
+        int checkedCount = 0;
+
+        foreach (Type runtimeType in ConstructibleTypes(typeof(GraphicalUiElement), typeof(TextRuntime).Assembly, "Gum.GueDeriving"))
+        {
+            foreach (PropertyInfo property in BindableProperties(runtimeType))
+            {
+                object? next = RoundTrippingValue(runtimeType, property);
+                if (next == null)
+                {
+                    continue;
+                }
+                checkedCount++;
+                string caseName = $"{runtimeType.Name}.{property.Name}";
+                try
+                {
+                    GraphicalUiElement runtime = (GraphicalUiElement)Activator.CreateInstance(runtimeType)!;
+                    object? original = property.GetValue(runtime);
+                    object viewModel = CreateViewModel(property.PropertyType, next);
+                    runtime.BindingContext = viewModel;
+                    SetLambdaBinding(runtime, property.Name, viewModel.GetType());
+
+                    if (!Equals(property.GetValue(runtime), next))
+                    {
+                        failures.Add($"{caseName}: initial {property.GetValue(runtime)} expected {next}");
+                        continue;
+                    }
+                    WriteViewModel(viewModel, original);
+                    if (!Equals(property.GetValue(runtime), original))
+                    {
+                        failures.Add($"{caseName}: after change {property.GetValue(runtime)} expected {original}");
+                    }
+                }
+                catch (Exception exception)
+                {
+                    failures.Add($"{caseName}: threw {exception.GetType().Name} {exception.Message}");
+                }
+            }
+        }
+
+        _output.WriteLine($"Runtime properties checked: {checkedCount}");
+        checkedCount.ShouldBeGreaterThan(20);
+        failures.ShouldBeEmpty(string.Join(Environment.NewLine, failures));
+    }
+
+    /// <summary>
+    /// A visual's SetBinding has no modes; a change made on the visual is written back only through
+    /// PushValueToViewModel, which no standard runtime calls, even for properties that raise PropertyChanged.
+    /// </summary>
+    [Fact]
+    public void StandardRuntimes_EveryNotifyingProperty_StringBindingDoesNotWriteBackToViewModel()
+    {
+        List<string> wroteBack = new();
+        int checkedCount = 0;
+
+        foreach (Type runtimeType in ConstructibleTypes(typeof(GraphicalUiElement), typeof(TextRuntime).Assembly, "Gum.GueDeriving"))
+        {
+            foreach (PropertyInfo property in BindableProperties(runtimeType))
+            {
+                object? next = RoundTrippingValue(runtimeType, property);
+                if (next == null)
+                {
+                    continue;
+                }
+
+                GraphicalUiElement probe = (GraphicalUiElement)Activator.CreateInstance(runtimeType)!;
+                bool raises = false;
+                probe.PropertyChanged += (_, args) =>
+                {
+                    if (args.PropertyName == property.Name)
+                    {
+                        raises = true;
+                    }
+                };
+                property.SetValue(probe, next);
+                if (!raises)
+                {
+                    continue;
+                }
+
+                checkedCount++;
+                GraphicalUiElement runtime = (GraphicalUiElement)Activator.CreateInstance(runtimeType)!;
+                object? original = property.GetValue(runtime);
+                object viewModel = CreateViewModel(property.PropertyType, original);
+                runtime.BindingContext = viewModel;
+                runtime.SetBinding(property.Name, "Value");
+
+                property.SetValue(runtime, next);
+
+                if (!Equals(ReadViewModel(viewModel), original))
+                {
+                    wroteBack.Add($"{runtimeType.Name}.{property.Name}");
+                }
+            }
+        }
+
+        _output.WriteLine($"Runtime notifying properties checked: {checkedCount}");
+        checkedCount.ShouldBeGreaterThan(0);
+        wroteBack.ShouldBeEmpty();
     }
 }
