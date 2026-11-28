@@ -69,8 +69,24 @@ public class ReadOnlyBindingTargetTests : BaseTestClass
         InvalidOperationException exception = Should.Throw<InvalidOperationException>(
             () => listBox.SetBinding(nameof(ListBox.SelectedItems), nameof(ShopViewModel.SelectedItems)));
 
-        exception.Message.ShouldContain($"{nameof(ListBox)}.{nameof(ListBox.SelectedItems)}");
-        exception.Message.ShouldContain(nameof(BindingMode.OneWayToSource));
+        exception.Message.ShouldBe(
+            "ListBox.SelectedItems has no public setter, so it cannot be the target of a TwoWay binding, which " +
+            "writes the view model's value to it. Bind a property that has a public setter.");
+    }
+
+    [Fact]
+    public void SetBinding_ListBoxSelectedObject_FollowsViewModelSelection()
+    {
+        ListBox listBox = new();
+        listBox.Items.Add("a");
+        listBox.Items.Add("b");
+        ShopViewModel viewModel = new() { Value = "b" };
+
+        listBox.SetBinding(nameof(ListBox.SelectedObject), nameof(ShopViewModel.Value));
+        listBox.BindingContext = viewModel;
+        listBox.SelectedIndex = 0;
+
+        viewModel.Value.ShouldBe("a");
     }
 
     [Fact]
