@@ -1,4 +1,7 @@
+using Gum.DataTypes;
 using Gum.GueDeriving;
+using Gum.Managers;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
@@ -219,14 +222,58 @@ public class TextClipLineCullTests : BaseTestClass
     }
 
     [Fact]
-    public void Draw_TypewriterOverPlainAndStyledLines_DrawsOnlyThatManyLettersAndKeepsTheLimit()
+    public void Draw_TypewriterOverStyledLinesWithAClip_DrawsOnlyThatManyLettersAndKeepsTheLimit()
     {
         Text styled = (Text)CreateRuntime("[Color=Red]ab[/Color]\ncd\nef").RenderableComponent!;
         styled.MaxLettersToShow = 4;
 
-        Draw(styled).Count.ShouldBe(4);
-        Draw(styled).Count.ShouldBe(4);
+        Draw(styled, -100, 100).Count.ShouldBe(4);
+        Draw(styled, -100, 100).Count.ShouldBe(4);
         styled.MaxLettersToShow.ShouldBe(4);
+    }
+
+    [Theory]
+    [InlineData(40f)]
+    [InlineData(-40f)]
+    public void Draw_StyledLinesWithADropShadow_DrawsEachShadowLineWhoseShadowIsInsideTheClip(float shadowOffsetY)
+    {
+        string text = string.Join("\n", Enumerable.Range(0, 100).Select(i => i % 2 == 0 ? "[Color=Red]abc[/Color]" : "abc"));
+        Text styled = (Text)CreateRuntime(text).RenderableComponent!;
+        styled.BitmapFont!.ShadowFont = CreateFont();
+        styled.HasDropshadow = true;
+        styled.DropshadowOffsetY = shadowOffsetY;
+
+        List<Glyph> full = Draw(styled);
+        List<Glyph> clipped = Draw(styled, 205, 255);
+
+        // Six lines and six shadow lines 40 rows away reach the clip, out of 100 of each.
+        clipped.Count.ShouldBeLessThan(full.Count / 5);
+        ShouldDrawEveryGlyphTouching(full, clipped, 205, 255);
+    }
+
+    [Fact]
+    public void Draw_StyledLineWithAWaveEffect_IsAlwaysDrawn()
+    {
+        // Gum has no [Y] tag; vertical letter offsets come from [Custom] functions and the built-in effects.
+        System.Func<double> savedClock = BbCodeTextEffect.TimeSeconds;
+        try
+        {
+            ObjectFinder.Self.GumProjectSave = new GumProjectSave { Version = (int)GumProjectSave.GumxVersions.BbCodeTextEffects };
+            BbCodeTextEffect.TimeSeconds = () => 0.25;
+            Text styled = (Text)CreateRuntime("abc\n[Wave amp=300]abc[/Wave]\nabc").RenderableComponent!;
+            styled.RawText.ShouldBe("abc\nabc\nabc");
+
+            List<Glyph> full = Draw(styled);
+            // Line 0 is the first four draws (three letters and the line break), line 2 the last three.
+            List<Glyph> waveLine = full.Skip(4).Take(full.Count - 7).ToList();
+
+            // The clip is far below every line's own rows, but the wave can carry its letters anywhere.
+            Draw(styled, 400, 500).ShouldBe(waveLine);
+        }
+        finally
+        {
+            BbCodeTextEffect.TimeSeconds = savedClock;
+        }
     }
 
     [Fact]
