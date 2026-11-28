@@ -64,6 +64,7 @@ public partial class GraphicalUiElement : IBindingTarget
         _bindingTargetContextChanged = null;
         mBindingContext = null;
         mInheritedBindingContext = null;
+        _isBindingContextBound = false;
         BindingContextChanged = null;
         InheritedBindingContextChanged = null;
 
@@ -150,19 +151,43 @@ public partial class GraphicalUiElement : IBindingTarget
 
             if (oldInherited != value)
             {
-                var oldContext = BindingContext;
                 mInheritedBindingContext = value;
 
+                // A binding of BindingContext re-resolves here and sets this element's own context, which
+                // notifies the children itself, so the old context is computed after it with the own context
+                // it set; one captured before would announce that change a second time.
                 InheritedBindingContextChanged?.Invoke(this, new BindingContextChangedEventArgs
                 {
                     OldBindingContext = oldInherited,
                     NewBindingContext = mInheritedBindingContext
                 });
 
+                object? oldContext = mBindingContext ?? (_isBindingContextBound ? null : oldInherited);
                 if (oldContext != BindingContext)
                 {
                     HandleBindingContextChangedInternal(oldContext, BindingContext);
                 }
+            }
+        }
+    }
+
+    object? IBindingTarget.InheritedBindingContext => mInheritedBindingContext;
+
+    // While BindingContext is bound, the value the binding resolves is this element's context even when it is
+    // null, so the parent's context does not show through.
+    bool _isBindingContextBound;
+
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Called by a BindingContext binding, whose trim risk was surfaced at its SetBinding call.")]
+    void IBindingTarget.SetIsBindingContextBound(bool isBound)
+    {
+        if (_isBindingContextBound != isBound)
+        {
+            object? oldContext = BindingContext;
+            _isBindingContextBound = isBound;
+            if (oldContext != BindingContext)
+            {
+                HandleBindingContextChangedInternal(oldContext, BindingContext);
             }
         }
     }
@@ -173,11 +198,13 @@ public partial class GraphicalUiElement : IBindingTarget
     /// are given their own. Leaving the root, by any path (<see cref="RemoveFromRoot"/>, removing
     /// from or clearing the root's <see cref="Children"/>, or assigning another
     /// <see cref="Parent"/>), sets this element's own BindingContext to null, so children that inherit
-    /// it lose it too; a child given its own keeps it. Moving between other parents keeps it.
+    /// it lose it too; a child given its own keeps it. Moving between other parents keeps it. While
+    /// BindingContext is bound with SetBinding, it is the value the binding resolves, null included, and
+    /// the parent's context shows through again once the binding is cleared.
     /// </summary>
     public object? BindingContext
     {
-        get => mBindingContext ?? mInheritedBindingContext;
+        get => mBindingContext ?? (_isBindingContextBound ? null : mInheritedBindingContext);
         [RequiresUnreferencedCode(
             "Assigning a new BindingContext re-resolves every existing binding's VM member by name " +
             "on the new context's type. Those members may be removed under PublishTrimmed if nothing " +

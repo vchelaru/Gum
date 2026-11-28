@@ -24,6 +24,8 @@ child.BindingContext = other;     // explicit overrides inherited
 
 Subscribes to `INotifyPropertyChanged` and updates bound UI properties on change.
 
+**A BindingContext bound with `SetBinding` is the value its path resolves, null included.** Assigning `BindingContext = null` means "inherit", but a bound context that resolves to null stays null, so the parent's context does not show through to the children; `ClearBinding` makes the element inherit again (`IBindingTarget.SetIsBindingContextBound`). The path is read from the parent's context (`IBindingTarget.InheritedBindingContext`), never from the context the binding sets. Tests: `BoundBindingContextNullTests`, `BoundBindingContextScenarioTests`.
+
 **Leaving the root clears the element's own context.** Any path off the GumService `Root` (Forms or visual `RemoveFromRoot`, `Root.Children.Remove`/`Clear`, `RemoveChild`, `Parent = null`, assigning another parent) sets `BindingContext = null` on the element that left (`HandleBindingParentChanged`, when the old parent has `ClearsBindingContextOfRemovedChildren`, which GumService sets on its `Root`). Descendants that inherited it lose it with it; a descendant given its own keeps it, which is what keeps the item contexts ListBox/ComboBox/Menu/TabControl assign to their rows. A re-added screen needs its context assigned again. A bound `Items` (any ItemsControl, or ComboBox) is set to null when its context becomes null, so the control drops its rows and lets go of the view model's collection; scalar targets keep their last value. Moving between other parents keeps it, and so does leaving `PopupRoot`/`ModalRoot`: popups such as a ComboBox drop-down leave and rejoin those roots on every open and close. `RemoveFromManagers` follows the same rule for an element added with `AddToManagers`: only the element it was called on loses its own context, and the contained children it walks keep theirs.
 
 ## GraphicalUiElement Binding (Visuals)
@@ -110,7 +112,7 @@ Only the default mode (above) and `UpdateSourceTrigger.LostFocus`, which never f
 | `GumRuntime/GraphicalUiElement.Binding.cs` | Visual BindingContext inheritance, `SetBinding` wrappers, `PushValueToViewModel` |
 | `MonoGameGum/Forms/Data/IBindingTarget.cs` | What a binding needs from its target; `FrameworkElement` and `GraphicalUiElement` implement it |
 | `MonoGameGum/Forms/Data/PropertyRegistry.cs` | One target's bindings; picks a value binding (property) or an event binding (method) |
-| `MonoGameGum/Forms/Data/MethodBindingExpression.cs` | View model event bound to a target method of any visibility, re-subscribed on context changes |
+| `MonoGameGum/Forms/Data/MethodBindingExpression.cs` | View model event bound to a target method of any visibility, re-subscribed on context changes; a signature mismatch throws an `ArgumentException` naming the method, the event and both signatures |
 | `MonoGameGum/Forms/Data/Binding.cs` | Binding config class + BindingMode + UpdateSourceTrigger + IValueConverter |
 | `MonoGameGum/Forms/Data/NpcBindingExpression.cs` | Value binding — UpdateTarget, UpdateSource, PushTargetToSource |
 | `GumCommon/Mvvm/PropertyPathObserver.cs` | Watches dotted paths, re-hooks on intermediate changes, weak listeners |
@@ -152,7 +154,7 @@ Only the default mode (above) and `UpdateSourceTrigger.LostFocus`, which never f
 
 **`[DependsOn("Game.Gold")]` follows a dotted path.** `ViewModel` handles the root segment in `NotifyPropertyChanged` and watches the rest with a `PropertyPathObserver` on the root's value (weak, so the referenced VM never keeps the dependent alive); it attaches when the root is notified or on the first `PropertyChanged` subscription, and reports an unknown segment once through the `[Gum]` channel. Undotted `[DependsOn]` is unchanged. Tests: `ViewModelDottedDependsOnTests`, `DottedDependsOnBindingTests`.
 
-**Lambda extracts path at call time, not at update time.** `vm => vm.Child.Text` becomes the static path `"Child.Text"`. If `Child` is replaced, `PropertyPathObserver` re-hooks the listener chain automatically.
+**Lambda extracts path at call time, not at update time.** `vm => vm.Child.Text` becomes the static path `"Child.Text"`. If `Child` is replaced, `PropertyPathObserver` re-hooks the listener chain automatically. An index in the lambda may be a constant or a captured variable, field or property (`v => v.Slots[i].Name` in a loop); `BinderHelpers.EvaluateIndex` reads its value once at the call. An index that reads the lambda parameter, calls a method or is not an `int` throws at `SetBinding`, naming the index. Tests: `LambdaCapturedIndexBindingTests`.
 
 **ListBox `Items` is bindable.** `listBox.SetBinding(nameof(ListBox.Items), nameof(vm.Items))` works and keeps the list in sync with an `ObservableCollection` on the VM.
 

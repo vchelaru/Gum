@@ -423,6 +423,23 @@ public class FrameworkElement : INotifyPropertyChanged, IBindingTarget
 
     BindingMode IBindingTarget.DefaultBindingMode => BindingMode.TwoWay;
 
+#if FRB
+    object? IBindingTarget.InheritedBindingContext => BindingContext;
+
+    void IBindingTarget.SetIsBindingContextBound(bool isBound) { }
+#else
+    object? IBindingTarget.InheritedBindingContext => ((IBindingTarget?)Visual)?.InheritedBindingContext;
+
+    // Kept here as well as on the Visual so a replacement Visual is bound too.
+    bool _isBindingContextBound;
+
+    void IBindingTarget.SetIsBindingContextBound(bool isBound)
+    {
+        _isBindingContextBound = isBound;
+        ((IBindingTarget?)Visual)?.SetIsBindingContextBound(isBound);
+    }
+#endif
+
     /// <summary>
     /// The height in pixels. This is a calculated value considering HeightUnits and Height.
     /// </summary>
@@ -741,6 +758,7 @@ public class FrameworkElement : INotifyPropertyChanged, IBindingTarget
                     visual.ParentChanged -= HandleParentChanged;
 #if !FRB
                     StopWatchingVisibility();
+                    ((IBindingTarget)visual).SetIsBindingContextBound(false);
 #endif
                     ReactToVisualRemoved();
 
@@ -767,6 +785,9 @@ public class FrameworkElement : INotifyPropertyChanged, IBindingTarget
                     {
                         CarryExplicitBindingContext(oldVisual, visual);
                     }
+#if !FRB
+                    ((IBindingTarget)visual).SetIsBindingContextBound(_isBindingContextBound);
+#endif
 
                     visual.BindingContextChanged += OnVisualBindingContextChanged;
                     visual.InheritedBindingContextChanged += OnVisualInheritedBindingContextChanged;
