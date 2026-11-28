@@ -96,6 +96,15 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
         ReportMissingPathOnce(newSource);
 
+        // OneWayToSource only writes, so a source member with no setter would leave it doing nothing. TwoWay (the
+        // default mode) still shows the source value, so a get-only source keeps working in that direction.
+        if (Binding.Mode is BindingMode.OneWayToSource &&
+            BinderHelpers.GetReadOnlySourceMessage(newSource.GetType(), Binding.Path, Binding.Mode.ToString(),
+                TargetElement.GetType().Name, _targetPropertyName) is { } readOnlySourceMessage)
+        {
+            throw new InvalidOperationException(readOnlySourceMessage);
+        }
+
         PathObserver.Attach(newSource);
 
         bool shouldBuildSourceSetter =
