@@ -4,6 +4,8 @@
 
 Gum provides multiple options to control how binding behaves using the `Binding` type.
 
+A binding connects two properties. The source is the ViewModel property, found on the control's `BindingContext`. The target is the UI property, such as a TextBox's `Text`.
+
 ## Lambda Binding
 
 The recommended way to set up a binding is with a lambda expression, which provides compile-time checking, refactoring support, and (unlike a string path) safety under `PublishTrimmed` -- see the hint below. Lambda expressions are extension methods available on `FrameworkElement`.
@@ -17,7 +19,7 @@ textBox.SetBinding<MyViewModel>(
     vm => vm.PlayerName);
 ```
 
-A parameterless lambda captures the ViewModel from a local variable:
+A parameterless lambda supplies only the property path. Gum reads the value from the control's `BindingContext`, not from the variable in the lambda, so `BindingContext` must be set:
 
 ```csharp
 // Initialize
@@ -140,7 +142,7 @@ The following fiddle demonstrates index-based binding with a team of players. Th
 
 ## Available Binding Properties
 
-The following properties are available on the Binding class. Note that the term "source" typically refers to the ViewModel:
+The following properties are available on the Binding class:
 
 * `Path` - the property path on the source. This can be a simple name like `LabelText`, a dotted path like `Player.Name`, or an indexed path like `Items[0].Text`.
 * `Mode` - the direction of data flow in binding. This can be used to create one-way binding.
@@ -211,7 +213,7 @@ Binding binding = new(nameof(MyViewModel.Health))
 label.SetBinding(nameof(Label.Text), binding);
 ```
 
-`StringFormat` must contain a `{0}` placeholder where the value goes, or `SetBinding` throws. Write it as a plain string: an interpolated `$"HP: {0:N0}"` fills in `{0}` before the binding sees it.
+`StringFormat` must contain a `{0}` placeholder where the value goes, or `SetBinding` throws, whatever the target property's type. Write it as a plain string: an interpolated `$"HP: {0:N0}"` fills in `{0}` before the binding sees it.
 
 {% hint style="info" %}
 When `StringFormat` is set, the binding effectively becomes one-way for display purposes. Setting the target value does not attempt to parse the formatted string back to the source.
@@ -259,7 +261,7 @@ textBox.SetBinding(nameof(TextBox.Text), nameof(MyViewModel.Score));
 
 In the example above, setting `vm.Score = 12` updates `textBox.Text` to `"12"`, and typing `"42"` into the textbox updates `vm.Score` to `42`. The standard numeric types are supported: `byte`, `int`, `float`, `double`, and `decimal`.
 
-A `string` or integer source also converts to an enum target property, such as `ListBox.SelectionMode`. A string matches a member name in any case, and a number matches a member value. A value that matches no member makes the binding throw, naming the enum and the value.
+A `string` or integer source also converts to an enum target property, such as `ListBox.SelectionMode`. A string matches a member name in any case, and a number matches a member value. A value that matches no member makes the binding throw, naming the enum and the value. A `[Flags]` enum accepts any number, including bits no member defines.
 
 ### Conversion Failures
 

@@ -93,7 +93,7 @@ internal static class BinderHelpers
     /// <summary>
     /// Converts a string (a member name, any case, as WPF's EnumConverter does) or an integral number to
     /// <paramref name="enumType"/>. Returns <see cref="GumProperty.UnsetValue"/> when the value matches no member;
-    /// a number on a [Flags] enum only has to be a combination of bits.
+    /// a [Flags] enum accepts any number, including bits no member defines.
     /// </summary>
     public static object ConvertToEnum(object value, Type enumType)
     {
@@ -171,7 +171,7 @@ internal static class BinderHelpers
 
     // A property reflected from a derived type hides a private accessor its base class declares, so setters are
     // looked up on the declaring type.
-    private static PropertyInfo AsDeclared(PropertyInfo property)
+    public static PropertyInfo AsDeclared(PropertyInfo property)
     {
         if (property.DeclaringType is not { } declaringType || declaringType == property.ReflectedType)
         {

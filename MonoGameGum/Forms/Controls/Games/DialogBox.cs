@@ -99,7 +99,11 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     public event Action<IInputReceiver>? FocusUpdate;
 
-    public List<Keys> IgnoredKeys => throw new NotImplementedException();
+    /// <summary>
+    /// A list of keys that should be ignored by this control. Empty by default.
+    /// </summary>
+    public List<Keys> IgnoredKeys => _ignoredKeys ??= new List<Keys>();
+    List<Keys>? _ignoredKeys;
 
     public bool TakingInput { get; set; } = true;
 

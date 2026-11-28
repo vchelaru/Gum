@@ -77,11 +77,26 @@ public class Slider : ThumbRangeBase, IInputReceiver
 
     public bool IsThumbGrabbed => MainCursor.WindowPushed == this.thumb?.Visual;
 
-    public List<Keys> IgnoredKeys => throw new NotImplementedException();
+    /// <summary>
+    /// A list of keys that should be ignored by this control. Empty by default.
+    /// </summary>
+    public List<Keys> IgnoredKeys => _ignoredKeys ??= new List<Keys>();
+    List<Keys>? _ignoredKeys;
 
-    public bool TakingInput => throw new NotImplementedException();
+    /// <summary>
+    /// Whether this control is currently capable of receiving input. Always true.
+    /// </summary>
+    public bool TakingInput => true;
 
-    public IInputReceiver NextInTabSequence { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    /// <summary>
+    /// The next control to receive focus when the user presses the tab key.
+    /// </summary>
+#if FRB
+    // FRB's IInputReceiver declares this non-nullable.
+    public IInputReceiver NextInTabSequence { get; set; } = null!;
+#else
+    public IInputReceiver? NextInTabSequence { get; set; }
+#endif
 
     double ValueOnThumbOrTrackPush;
 

@@ -1,6 +1,5 @@
 using System.IO;
 using System.Reflection;
-using Gum.DataTypes.Variables;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
@@ -145,29 +144,13 @@ public static class NeonTheme
         Styling styling = Styling.ActiveStyle;
         NeonText text = NeonStyling.ActiveStyle.Text;
 
-        styling.Text.Normal.Clear();
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "IsBold", Type = "bool", Value = false });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
-
         // Share Tech Mono has no Bold face; Strong still tracks the same
         // family — Gum's IsBold flag resolves through KernSmith's "Bold" slot
         // which simply isn't registered for Share Tech Mono, so it falls back
         // to Regular. This matches the CSS spec (body text is one weight).
-        styling.Text.Strong.Clear();
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "IsBold", Type = "bool", Value = true });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
+        // Headings use the Orbitron display face.
+        ThemeTextStyles.ApplyLadder(styling.Text, text.FontFamily, text.FontSize,
+            headingFont: text.TitleFontFamily, titleFont: text.TitleFontFamily);
 
         // The four Styling.Colors slots that overlap with V3's vocabulary; they
         // also color the controls left at their stock V3 visual (e.g. Label, which

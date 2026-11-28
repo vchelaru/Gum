@@ -391,7 +391,7 @@ public class NeonTemplateTests
             "Muted", "Placeholder", "ScrollThumbHover", "SliderThumbShadow", "Surface1",
             "Surface2", "Text", "White", "WindowShadow"
         };
-        string[] expectedTextStyles = { "Normal", "Strong" };
+        string[] expectedTextStyles = { "Tiny", "Small", "Normal", "Emphasis", "Strong", "H3", "H2", "H1", "Title" };
 
         GumProjectSave project = LoadNeon();
         ComponentSave styles = project.Components.Single(c => c.Name == "Neon/Styles");

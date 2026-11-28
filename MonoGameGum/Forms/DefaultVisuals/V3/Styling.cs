@@ -478,6 +478,17 @@ public class Text
     public StateSave Normal = CreateFontState("Liberation Sans", 18, false, false);
     public StateSave Strong = CreateFontState("Liberation Sans", 18, true, false);
     public StateSave Emphasis = CreateFontState("Liberation Sans", 18, false, true);
+
+    // The rest of the Forms template's text ladder (#8509), its sizes scaled by 18/14 so the ladder stays
+    // ordered around Normal. Sizes other than 18 need a font creator (KernSmith), like any font the
+    // embedded atlas does not cover.
+    public StateSave Tiny = CreateFontState("Liberation Sans", 13, false, false);
+    public StateSave Small = CreateFontState("Liberation Sans", 15, false, false);
+    public StateSave H3 = CreateFontState("Liberation Sans", 21, true, false);
+    public StateSave H2 = CreateFontState("Liberation Sans", 23, true, false);
+    public StateSave H1 = CreateFontState("Liberation Sans", 28, true, false);
+    public StateSave Title = CreateFontState("Liberation Sans", 36, true, false);
+
     private static StateSave CreateFontState(string fontName, int fontSize, bool isBold, bool isItalic)
     {
         return new()
@@ -495,6 +506,12 @@ public class Text
     public StateSave Normal = new();
     public StateSave Strong = new();
     public StateSave Emphasis = new();
+    public StateSave Tiny = new();
+    public StateSave Small = new();
+    public StateSave H3 = new();
+    public StateSave H2 = new();
+    public StateSave H1 = new();
+    public StateSave Title = new();
 #endif
 
 }
