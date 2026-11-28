@@ -39,16 +39,26 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     /// A field is excluded: it is read, never written, by design.
     /// </summary>
     protected bool IsSourceResolvedWithoutSetter =>
-        PathObserver.HasResolution && !PathObserver.IsLeafField && SourceSetter is null;
+        PathObserver.HasResolution && !IsLeafViewModelField && SourceSetter is null &&
+        _unassignableStructMessage is null;
 
     /// <summary>Whether the path resolved to a source field, which a binding reads but never writes.</summary>
-    protected bool IsSourceField => PathObserver.HasResolution && PathObserver.IsLeafField;
+    protected bool IsSourceField => PathObserver.HasResolution && IsLeafViewModelField;
+
+    // A field of a struct (Vector2.X) is written on a copy that goes back through the holder's property setter, so
+    // only a field of a view model object falls under "read, never written".
+    private bool IsLeafViewModelField => PathObserver.IsLeafField && !_isLeafInStruct;
 
     private Func<object, object?>? SourceGetter { get; set; }
     private Action<object, object?>? SourceSetter { get; set; }
     private PropertyPathObserver PathObserver { get; }
     private readonly string _targetPropertyName;
     private bool _hasReportedMissingPath;
+    // Set when a write must assign a struct back to a member that cannot take it; reported on the first dropped write,
+    // since a binding that only displays the value never writes.
+    private string? _unassignableStructMessage;
+    private bool _hasReportedUnassignableStruct;
+    private bool _isLeafInStruct;
 
     protected UntypedBindingExpression(IBindingTarget targetElement, string targetPropertyName, Binding binding)
     {
@@ -122,6 +132,8 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         PathObserver.Detach();
         SourceGetter = null;
         SourceSetter = null;
+        _unassignableStructMessage = null;
+        _isLeafInStruct = false;
 
         if (newSource is null)
         {
@@ -146,6 +158,7 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         }
 
         PathObserver.Attach(newSource);
+        _isLeafInStruct = BinderHelpers.IsLeafInStruct(newSource, Binding.Path);
 
         bool shouldBuildSourceSetter =
             CanWriteSource;
@@ -161,6 +174,11 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
                 // Keep this safe for edge-case expression failures, but do not rely on exceptions
                 // for normal readonly binding behavior.
             }
+        }
+        else if (shouldBuildSourceSetter)
+        {
+            _unassignableStructMessage = BinderHelpers.GetUnassignableStructMessage(newSource.GetType(),
+                Binding.Path, Mode.ToString(), TargetElement.GetType().Name, _targetPropertyName);
         }
 
         try
@@ -229,13 +247,38 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     protected bool SetSourceValue(object? value)
     {
         // A view model field is read, never written.
-        if (SourceSetter is null || !PathObserver.HasResolution || PathObserver.IsLeafField || CurrentRoot is null)
+        if (SourceSetter is null || !PathObserver.HasResolution || IsLeafViewModelField || CurrentRoot is null)
         {
+            if (_unassignableStructMessage is { } message && PathObserver.HasResolution && !IsLeafViewModelField)
+            {
+                ReportUnassignableStructOnce(message);
+            }
             // binding error: broken path
             return false;
         }
-        SourceSetter(CurrentRoot, value);
+
+        try
+        {
+            SourceSetter(CurrentRoot, value);
+        }
+        catch (BinderHelpers.StructWriteBackException exception)
+        {
+            // A struct past a segment resolved on the runtime type, whose holder turned out not to be assignable.
+            ReportUnassignableStructOnce($"{exception.Message} The {Mode} binding of " +
+                $"{TargetElement.GetType().Name}.{_targetPropertyName} cannot write to the view model.");
+            return false;
+        }
         return true;
+    }
+
+    private void ReportUnassignableStructOnce(string message)
+    {
+        if (_hasReportedUnassignableStruct)
+        {
+            return;
+        }
+        _hasReportedUnassignableStruct = true;
+        GumRuntime.ElementSaveExtensions.ReportDiagnostic(message);
     }
 
     protected object? Convert(IValueConverter converter, object? value, Type targetType)

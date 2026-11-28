@@ -141,7 +141,12 @@ internal static class BinderHelpers
     public static string? GetReadOnlySourceMessage(Type sourceType, string path, string modeName,
         string targetTypeName, string targetPropertyName)
     {
-        if (GetPathWritability(sourceType, path, out Type leafOwner) != PathWritability.NoSetter)
+        PathWritability writability = GetPathWritability(sourceType, path, out Type leafOwner);
+        if (writability == PathWritability.StructHolderNotAssignable)
+        {
+            return GetUnassignableStructMessage(sourceType, path, modeName, targetTypeName, targetPropertyName);
+        }
+        if (writability != PathWritability.NoSetter)
         {
             return null;
         }
@@ -191,7 +196,9 @@ internal static class BinderHelpers
         // The leaf resolves on declared types and has no setter.
         NoSetter,
         // The path does not resolve, or the leaf cannot be written for another reason.
-        NotWritable
+        NotWritable,
+        // The leaf is in a struct that cannot be assigned back to the member holding it.
+        StructHolderNotAssignable
     }
 
     // A setter of any visibility counts: the compiled setter and PropertyInfo.SetValue both reach a non-public
@@ -232,7 +239,7 @@ internal static class BinderHelpers
             return AsDeclared(indexer).SetMethod is not null ? PathWritability.Writable : PathWritability.NoSetter;
         }
 
-        return leafMember switch
+        PathWritability leafWritability = leafMember switch
         {
             PropertyInfo propertyInfo => AsDeclared(propertyInfo).SetMethod is not null
                 ? PathWritability.Writable
@@ -241,6 +248,115 @@ internal static class BinderHelpers
                 ? PathWritability.Writable
                 : PathWritability.NoSetter,
             _ => PathWritability.NotWritable
+        };
+
+        return leafWritability == PathWritability.Writable && FindUnassignableStructHolder(targetType, segments) >= 0
+            ? PathWritability.StructHolderNotAssignable
+            : leafWritability;
+    }
+
+    /// <summary>
+    /// The message for a binding whose write must assign a changed struct back to the member holding it (the
+    /// Position of "Position.X") when that member cannot be assigned, or null when the write can reach the source.
+    /// </summary>
+    [RequiresUnreferencedCode("Calls " + nameof(GetPathWritability) + ".")]
+    public static string? GetUnassignableStructMessage(Type sourceType, string path, string modeName,
+        string targetTypeName, string targetPropertyName)
+    {
+        if (GetPathWritability(sourceType, path, out _) != PathWritability.StructHolderNotAssignable)
+        {
+            return null;
+        }
+
+        PathSegment[] segments = ParseSegments(path);
+        int holderIndex = FindUnassignableStructHolder(sourceType, segments);
+        TryWalkToLeafOwner(sourceType, segments[..(holderIndex + 1)], out Type holderOwner, out _);
+        string holderName = $"{holderOwner.Name}.{FormatSegment(segments[holderIndex])}";
+        bool isViewModelField = !holderOwner.IsValueType && !segments[holderIndex].Index.HasValue &&
+            TryGetMember(holderOwner, segments[holderIndex].Name, out MemberInfo? holder, out _) && holder is FieldInfo;
+        string reason = isViewModelField
+            ? "is a view model field, which bindings never write"
+            : "cannot be assigned (no setter, or readonly)";
+        string fix = isViewModelField ? "Make it a property with a setter." : "Give it a setter.";
+        return $"{holderName} holds a struct, so a write to '{path}' changes a copy that must be assigned back " +
+            $"to {holderName}, but {holderName} {reason}. The {modeName} binding of " +
+            $"{targetTypeName}.{targetPropertyName} cannot write to the view model. {fix}";
+    }
+
+    /// <summary>
+    /// Whether the leaf of <paramref name="path"/> is a member of a struct (Position.X), judged on declared types and,
+    /// past a segment the declared type lacks, on the object <paramref name="source"/> holds there now. Such a leaf
+    /// may be a field: the write changes a copy that goes back to the view model through a property.
+    /// </summary>
+    [RequiresUnreferencedCode("Calls " + nameof(TryWalkToLeafOwner) + " and " + nameof(TryWalkRuntime) + ".")]
+    public static bool IsLeafInStruct(object source, string path)
+    {
+        PathSegment[] segments = ParseSegments(path);
+        if (segments.Length < 2)
+        {
+            return false;
+        }
+        if (TryWalkToLeafOwner(source.GetType(), segments, out Type owner, out _))
+        {
+            return owner.IsValueType;
+        }
+        return TryWalkRuntime(source, segments, segments.Length - 1, out object? holder) &&
+            holder!.GetType().IsValueType;
+    }
+
+    // A leaf held in a struct is written to a copy, so each struct on the way back must be assigned to the member
+    // holding it, up to the first owner that is a reference type. Returns the index of the first segment on that
+    // way that cannot be assigned, or -1 when every one can or the path does not resolve on declared types.
+    [RequiresUnreferencedCode("Calls " + nameof(TryGetMember) + ".")]
+    private static int FindUnassignableStructHolder(Type rootType, PathSegment[] segments)
+    {
+        // values[i + 1] is the declared type of the value segments[i] reads; members[i] is the member it reads.
+        Type[] values = new Type[segments.Length];
+        MemberInfo?[] members = new MemberInfo?[segments.Length];
+        values[0] = rootType;
+        for (int i = 0; i < segments.Length - 1; i++)
+        {
+            if (!TryGetMember(values[i], segments[i].Name, out members[i], out Type memberType))
+            {
+                return -1;
+            }
+            values[i + 1] = segments[i].Index.HasValue ? GetElementType(memberType) : memberType;
+        }
+
+        for (int i = segments.Length - 2; i >= 0 && values[i + 1].IsValueType; i--)
+        {
+            // A struct goes back into a view model through a property setter only: writing a view model's field
+            // would skip its setter and PropertyChanged. Fields inside a struct are part of the copy.
+            bool isViewModelField = members[i] is FieldInfo && !values[i].IsValueType;
+            if (isViewModelField || !CanAssignStruct(members[i]!, segments[i]))
+            {
+                return i;
+            }
+            if (segments[i].Index.HasValue)
+            {
+                // The struct goes back into a collection object, which holds it.
+                break;
+            }
+        }
+        return -1;
+    }
+
+    [RequiresUnreferencedCode("Calls " + nameof(FindIntIndexer) + ".")]
+    private static bool CanAssignStruct(MemberInfo member, PathSegment segment)
+    {
+        if (segment.Index.HasValue)
+        {
+            Type collectionType = member is PropertyInfo p ? p.PropertyType : ((FieldInfo)member).FieldType;
+            return collectionType.IsArray ||
+                (!collectionType.IsValueType && FindIntIndexer(collectionType) is { } indexer &&
+                    AsDeclared(indexer).SetMethod is not null);
+        }
+
+        return member switch
+        {
+            PropertyInfo property => AsDeclared(property).SetMethod is not null,
+            FieldInfo field => !field.IsInitOnly && !field.IsLiteral,
+            _ => false
         };
     }
 
@@ -440,6 +556,14 @@ internal static class BinderHelpers
     private static Action<object, object?> BuildRuntimeTypeSetter(Expression holder, PathSegment[] segments,
         int startIndex, ParameterExpression instanceParam, ParameterExpression valueParam)
     {
+        if (holder.Type.IsValueType)
+        {
+            // A struct (or Nullable<T>) held here would be a copy, so the path is walked from the root, letting
+            // SetOnRuntimeType assign it back to its holder.
+            holder = instanceParam;
+            startIndex = 0;
+        }
+
         Expression call = Expression.Call(SetOnRuntimeTypeMethod,
             Expression.Convert(holder, typeof(object)), Expression.Constant(segments), Expression.Constant(startIndex),
             valueParam);
@@ -469,13 +593,18 @@ internal static class BinderHelpers
     }
 
     // Writes value to the leaf of segments[startIndex..], resolving each segment on the runtime type of the
-    // object that holds it. Does nothing when the path is broken or the leaf is read-only.
+    // object that holds it. Does nothing when the path is broken or the leaf is read-only. A struct read along the
+    // way is a boxed copy, so after the leaf is set each one is assigned back to the member holding it; one that
+    // cannot be throws StructWriteBackException.
     [RequiresUnreferencedCode("Looks up members by name on runtime types.")]
     private static void SetOnRuntimeType(object? holder, PathSegment[] segments, int startIndex, object? value)
     {
+        // owners[i] holds segments[i].
+        object?[] owners = new object?[segments.Length];
         object? owner = holder;
         for (int i = startIndex; i < segments.Length - 1; i++)
         {
+            owners[i] = owner;
             if (owner == null || !TryGetRuntimeValue(owner, segments[i], out owner))
             {
                 return;
@@ -487,20 +616,78 @@ internal static class BinderHelpers
             return;
         }
 
-        PathSegment leaf = segments[^1];
+        if (SetLeafOnRuntimeType(owner, segments[^1], value))
+        {
+            for (int i = segments.Length - 2; i >= startIndex && owner!.GetType().IsValueType; i--)
+            {
+                AssignStructBack(owners[i]!, segments[i], owner, segments);
+                if (segments[i].Index.HasValue)
+                {
+                    break;
+                }
+                owner = owners[i];
+            }
+        }
+    }
+
+    // A struct that a binding cannot assign back to its holder, so the write would change only a copy.
+    internal sealed class StructWriteBackException : InvalidOperationException
+    {
+        public StructWriteBackException(string message) : base(message) { }
+    }
+
+    [RequiresUnreferencedCode("Looks up members by name on runtime types.")]
+    private static void AssignStructBack(object parent, PathSegment segment, object box, PathSegment[] segments)
+    {
+        if (TryGetMember(parent.GetType(), segment.Name, out MemberInfo? member, out _))
+        {
+            if (segment.Index is int index)
+            {
+                if (GetMemberValue(member!, parent) is IList { IsReadOnly: false } list)
+                {
+                    list[index] = box;
+                    return;
+                }
+            }
+            else if (member is PropertyInfo property && AsDeclared(property) is { SetMethod: not null } declared)
+            {
+                declared.SetValue(parent, box);
+                return;
+            }
+            // Only a field inside a struct: a view model's own fields are never written.
+            else if (member is FieldInfo { IsInitOnly: false, IsLiteral: false } field && parent.GetType().IsValueType)
+            {
+                field.SetValue(parent, box);
+                return;
+            }
+        }
+
+        string holderName = $"{parent.GetType().Name}.{FormatSegment(segment)}";
+        string path = string.Join(".", Array.ConvertAll(segments, FormatSegment));
+        throw new StructWriteBackException(
+            $"{holderName} holds a struct, so a write to '{path}' changes a copy that must be assigned back to " +
+            $"{holderName}, but {holderName} cannot be assigned (no setter, readonly, or a view model field).");
+    }
+
+    // Returns whether the leaf was written.
+    [RequiresUnreferencedCode("Looks up members by name on runtime types.")]
+    private static bool SetLeafOnRuntimeType(object owner, PathSegment leaf, object? value)
+    {
+
         if (leaf.Index is int index)
         {
+            // A collection is a reference that holds the element, so nothing is assigned back after it.
             if (TryGetMember(owner.GetType(), leaf.Name, out MemberInfo? collectionMember, out _) &&
                 GetMemberValue(collectionMember!, owner) is IList list && index >= 0 && index < list.Count)
             {
                 list[index] = value;
             }
-            return;
+            return false;
         }
 
         if (!TryGetMember(owner.GetType(), leaf.Name, out MemberInfo? member, out Type memberType))
         {
-            return;
+            return false;
         }
 
         if (value == null && memberType.IsValueType && Nullable.GetUnderlyingType(memberType) == null)
@@ -512,11 +699,12 @@ internal static class BinderHelpers
         {
             case PropertyInfo property when AsDeclared(property) is { SetMethod: not null } declared:
                 declared.SetValue(owner, value);
-                break;
+                return true;
             case FieldInfo { IsInitOnly: false, IsLiteral: false } field:
                 field.SetValue(owner, value);
-                break;
+                return true;
         }
+        return false;
     }
 
     [RequiresUnreferencedCode("Looks up members by name on runtime types.")]
@@ -584,6 +772,13 @@ internal static class BinderHelpers
 
         // walk all but last segment, propagating nulls
         PathSegment[] segments = ParseSegments(path);
+        if (segments.Length > 1 && !segments[^1].Index.HasValue &&
+            TryWalkToLeafOwner(targetType, segments, out Type leafOwner, out _) && leafOwner.IsValueType &&
+            TryGetMember(leafOwner, segments[^1].Name, out _, out _))
+        {
+            return CompileStructWriteBackSetter(targetType, segments, instanceParam, valueParam);
+        }
+
         for (int i = 0; i < segments.Length - 1; i++)
         {
             if (i > 0 && !TryGetMember(current.Type, segments[i].Name, out _, out _))
@@ -654,12 +849,7 @@ internal static class BinderHelpers
         }
 
         // now 'current' owns the final member
-        string lastName = lastSegment.Name;
-        MemberExpression memberExpr = Expression.PropertyOrField(current, lastName);
-        if (memberExpr.Member is PropertyInfo leafProperty)
-        {
-            memberExpr = Expression.Property(current, AsDeclared(leafProperty));
-        }
+        MemberExpression memberExpr = DeclaredMember(current, lastSegment.Name);
 
         // figure out the member's declared type
         Type memberType = memberExpr.Member switch
@@ -685,6 +875,73 @@ internal static class BinderHelpers
         return Expression
             .Lambda<Action<object, object?>>(ifSetAssign, instanceParam, valueParam)
             .Compile();
+    }
+
+    // The member access a setter writes through, with a property's setter looked up on its declaring type.
+    [RequiresUnreferencedCode("Looks up the member on owner's type by name (Expression.PropertyOrField).")]
+    private static MemberExpression DeclaredMember(Expression owner, string name)
+    {
+        MemberExpression member = Expression.PropertyOrField(owner, name);
+        return member.Member is PropertyInfo property ? Expression.Property(owner, AsDeclared(property)) : member;
+    }
+
+    // A setter for a leaf held in a struct ("Position.X"): the path is read into locals, the leaf is set on the
+    // innermost struct, and each changed struct is assigned back to the member holding it until a reference-type
+    // owner (or a collection) takes it. Does nothing when a reference along the path is null.
+    [RequiresUnreferencedCode("Calls " + nameof(BuildIndexAccess) + " and " + nameof(BuildIndexSetExpression) + ".")]
+    private static Action<object, object?> CompileStructWriteBackSetter(Type targetType, PathSegment[] segments,
+        ParameterExpression instanceParam, ParameterExpression valueParam)
+    {
+        LabelTarget end = Expression.Label("end");
+        List<ParameterExpression> variables = new();
+        List<Expression> statements = new();
+
+        // holders[i] owns segments[i]; collections[i] is the collection an indexed segments[i] reads from.
+        ParameterExpression[] holders = new ParameterExpression[segments.Length];
+        ParameterExpression?[] collections = new ParameterExpression?[segments.Length];
+        holders[0] = AddLocal(targetType, Expression.Convert(instanceParam, targetType));
+        for (int i = 0; i < segments.Length - 1; i++)
+        {
+            Expression value = DeclaredMember(holders[i], segments[i].Name);
+            if (segments[i].Index is int index)
+            {
+                collections[i] = AddLocal(value.Type, value);
+                value = BuildIndexAccess(collections[i]!, index);
+            }
+            holders[i + 1] = AddLocal(value.Type, value);
+        }
+
+        MemberExpression leaf = DeclaredMember(holders[^1], segments[^1].Name);
+        statements.Add(Expression.Assign(leaf, BuildValueConversion(valueParam, leaf.Type)));
+
+        for (int i = segments.Length - 2; i >= 0 && holders[i + 1].Type.IsValueType; i--)
+        {
+            if (segments[i].Index is int index)
+            {
+                statements.Add(BuildIndexSetExpression(collections[i]!, index, holders[i + 1]));
+                break;
+            }
+            statements.Add(Expression.Assign(DeclaredMember(holders[i], segments[i].Name), holders[i + 1]));
+        }
+
+        statements.Add(Expression.Label(end));
+        return Expression
+            .Lambda<Action<object, object?>>(Expression.Block(variables, statements), instanceParam, valueParam)
+            .Compile();
+
+        // Stores value in a new local, returning early when it is a null reference.
+        ParameterExpression AddLocal(Type type, Expression value)
+        {
+            ParameterExpression local = Expression.Variable(type);
+            variables.Add(local);
+            statements.Add(Expression.Assign(local, value));
+            if (!type.IsValueType || Nullable.GetUnderlyingType(type) != null)
+            {
+                statements.Add(Expression.IfThen(
+                    Expression.Equal(local, Expression.Constant(null, type)), Expression.Return(end)));
+            }
+            return local;
+        }
     }
 
     public static string ExtractPath(LambdaExpression expression)
