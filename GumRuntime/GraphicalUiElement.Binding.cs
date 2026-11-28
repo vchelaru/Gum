@@ -442,6 +442,14 @@ public partial class GraphicalUiElement
         }
         else
         {
+            // A binding always writes the VM value to the UI property. A name with no property may still be a
+            // method bound to a VM event, so only a property without a public setter is refused.
+            if (GetType().GetProperty(uiProperty) != null && !BinderHelpers.CanWritePath(GetType(), uiProperty))
+            {
+                throw new InvalidOperationException(
+                    BinderHelpers.GetReadOnlyTargetMessage(GetType().Name, uiProperty, modeName: null));
+            }
+
             if (vmPropsToUiProps.TryGetValue(vmProperty, out var existingByVm))
             {
                 existingByVm.Detach();

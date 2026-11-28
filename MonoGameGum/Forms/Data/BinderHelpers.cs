@@ -35,6 +35,21 @@ internal static class BinderHelpers
     /// </summary>
     public static PathSegment[] ParseSegments(string path) => PathSegmentParser.ParseSegments(path);
 
+    /// <summary>
+    /// The message for a binding that would write to a target property with no public setter. A null
+    /// <paramref name="modeName"/> is a binding with no modes (a visual's SetBinding).
+    /// </summary>
+    public static string GetReadOnlyTargetMessage(string ownerTypeName, string propertyName, string? modeName)
+    {
+        string bindingName = modeName == null ? "a binding" : $"a {modeName} binding";
+        string message = $"{ownerTypeName}.{propertyName} has no public setter, so it cannot be the target of " +
+            $"{bindingName}, which writes the view model's value to it. Bind a property that has a public setter";
+        return modeName == null
+            ? message + "."
+            : message + $", or set Mode = {nameof(BindingMode)}.{nameof(BindingMode.OneWayToSource)} to copy the " +
+                "control's value to the view model instead.";
+    }
+
     [RequiresUnreferencedCode(
         "Walks the path on targetType by name (GetProperty/GetField). Those members may be removed " +
         "under PublishTrimmed if nothing else in the app references them.")]
