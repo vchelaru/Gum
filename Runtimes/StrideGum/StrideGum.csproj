@@ -97,13 +97,13 @@
 	<!-- GPU rendering through SkiaGameRendering, one package per Stride graphics API; Skia draws
 	     straight into a Stride Texture, no CPU rasterize-and-upload. D3D11 and D3D12 only ship
 	     net10.0-windows7.0, so they are scoped to that TFM; Vulkan ships net10.0 and goes to both.
-	     0.20.0-beta is the latest published and pins SkiaSharp [4.153.1], matching SkiaPackages.props. -->
+	     0.27.0 pins SkiaSharp [4.153.1], matching SkiaPackages.props. -->
 	<ItemGroup>
-		<PackageReference Include="SkiaGameRendering.Stride.VK" Version="0.20.0-beta" />
+		<PackageReference Include="SkiaGameRendering.Stride.VK" Version="0.27.0" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)'=='net10.0-windows7.0'">
-		<PackageReference Include="SkiaGameRendering.Stride.D3D11" Version="0.20.0-beta" />
-		<PackageReference Include="SkiaGameRendering.Stride.D3D12" Version="0.20.0-beta" />
+		<PackageReference Include="SkiaGameRendering.Stride.D3D11" Version="0.27.0" />
+		<PackageReference Include="SkiaGameRendering.Stride.D3D12" Version="0.27.0" />
 	</ItemGroup>
 
 	<!-- All three packages declare the same SkiaGameRendering.SkiaRenderTarget2D (and SkiaRenderer,
