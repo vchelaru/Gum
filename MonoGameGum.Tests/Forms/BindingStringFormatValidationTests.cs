@@ -98,4 +98,46 @@ public class BindingStringFormatValidationTests : BaseTestClass
 
         Should.NotThrow(() => text.BindingContext = new GoldViewModel { Gold = 1234 });
     }
+
+    [Fact]
+    public void SetBinding_EscapedPlaceholderOnly_ThrowsAtSetBinding()
+    {
+        Label label = new();
+
+        Should.Throw<InvalidOperationException>(() =>
+            label.SetBinding(nameof(Label.Text), new Binding(nameof(GoldViewModel.Gold)) { StringFormat = "{{0}}" }));
+    }
+
+    [Fact]
+    public void SetBinding_AlignedPlaceholder_ShowsValue()
+    {
+        Label label = new() { BindingContext = new GoldViewModel { Gold = 12 } };
+
+        label.SetBinding(nameof(Label.Text), new Binding(nameof(GoldViewModel.Gold)) { StringFormat = "[{0,4}]" });
+
+        label.Text.ShouldBe("[  12]");
+    }
+
+    [Fact]
+    public void VisualSetBinding_BindingObjectWithBadStringFormat_ThrowsAtSetBinding()
+    {
+        TextRuntime text = new();
+
+        Should.Throw<InvalidOperationException>(() =>
+            text.SetBinding(nameof(TextRuntime.Text), new Binding(nameof(GoldViewModel.Gold)) { StringFormat = "{0} of {1}" }));
+    }
+
+    [Fact]
+    public void SetBinding_RefusedFormat_LeavesPreviousBindingWorking()
+    {
+        GoldViewModel vm = new() { Gold = 1 };
+        Label label = new() { BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), nameof(GoldViewModel.Gold));
+
+        Should.Throw<InvalidOperationException>(() =>
+            label.SetBinding(nameof(Label.Text), new Binding(nameof(GoldViewModel.Gold)) { StringFormat = "{1}" }));
+        vm.Gold = 2;
+
+        label.Text.ShouldBe("2");
+    }
 }
