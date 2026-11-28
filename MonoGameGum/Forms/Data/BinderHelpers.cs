@@ -47,6 +47,91 @@ internal static class BinderHelpers
     }
 
     /// <summary>
+    /// The message for a <see cref="Binding.StringFormat"/> with no <c>{0}</c> placeholder, whose output never
+    /// shows the value, or null when the format has one (any <c>{0:...}</c> or <c>{0,n}</c> form counts; an
+    /// escaped <c>{{0}}</c> does not). A format string.Format rejects outright is left to fail when it is used.
+    /// </summary>
+    public static string? GetMissingPlaceholderMessage(string? stringFormat)
+    {
+        if (stringFormat is null)
+        {
+            return null;
+        }
+
+        string formatted;
+        try
+        {
+            formatted = string.Format(System.Globalization.CultureInfo.InvariantCulture, stringFormat, PlaceholderProbe.Instance);
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+
+        if (formatted.Contains(PlaceholderProbe.Token))
+        {
+            return null;
+        }
+
+        return $"Binding.StringFormat '{stringFormat}' has no {{0}} placeholder, so the bound value never appears. " +
+            "Put {0} where the value goes, in a plain string: an interpolated $\"...\" string fills {0} in before the binding sees it.";
+    }
+
+    /// <summary>
+    /// Formats as a token no real format string contains, whatever format item it fills.
+    /// </summary>
+    private sealed class PlaceholderProbe : IFormattable
+    {
+        public const string Token = "\u0001GumBindingValue\u0001";
+        public static readonly PlaceholderProbe Instance = new();
+
+        public string ToString(string? format, IFormatProvider? formatProvider) => Token;
+
+        public override string ToString() => Token;
+    }
+
+    /// <summary>
+    /// Converts a string (a member name, any case, as WPF's EnumConverter does) or an integral number to
+    /// <paramref name="enumType"/>. Returns <see cref="GumProperty.UnsetValue"/> when the value matches no member;
+    /// a number on a [Flags] enum only has to be a combination of bits.
+    /// </summary>
+    public static object ConvertToEnum(object value, Type enumType)
+    {
+        object? result = null;
+        if (value is string text)
+        {
+            try
+            {
+                result = Enum.Parse(enumType, text, ignoreCase: true);
+            }
+            catch (Exception exception) when (exception is ArgumentException or OverflowException)
+            {
+                return GumProperty.UnsetValue;
+            }
+        }
+        else if (Type.GetTypeCode(value.GetType()) is TypeCode.SByte or TypeCode.Byte or TypeCode.Int16 or
+            TypeCode.UInt16 or TypeCode.Int32 or TypeCode.UInt32 or TypeCode.Int64 or TypeCode.UInt64)
+        {
+            result = Enum.ToObject(enumType, value);
+        }
+
+        if (result is null)
+        {
+            return GumProperty.UnsetValue;
+        }
+
+        bool isFlags = enumType.IsDefined(typeof(FlagsAttribute), inherit: false);
+        return isFlags || Enum.IsDefined(enumType, result) ? result : GumProperty.UnsetValue;
+    }
+
+    /// <summary>
+    /// The message for a source value that matches no member of the enum target it is bound to.
+    /// </summary>
+    public static string GetUnmatchedEnumMessage(object value, Type enumType, string ownerTypeName, string propertyName) =>
+        $"Cannot set {ownerTypeName}.{propertyName}: the bound value '{value}' ({value.GetType().Name}) matches no member " +
+        $"of enum {enumType.Name}. Bind a member name or a number defined on {enumType.Name}.";
+
+    /// <summary>
     /// The message for a binding that would write to a view model member with no setter, or null when the
     /// path's leaf can be written or does not resolve on declared types (a missing member is reported
     /// elsewhere, and a member only the runtime type has is checked at write time).

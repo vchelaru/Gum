@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Gum.Forms.Controls;
 using Gum.Forms.Data;
@@ -9,8 +10,7 @@ namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
 /// How a bound value of one type reaches a target or source of another: assignable and convertible values
-/// arrive, an unconvertible edit leaves the source alone. Tests marked as pinning current behavior cover
-/// cases whose right outcome is a design question.
+/// arrive, an unconvertible edit leaves the source alone.
 /// </summary>
 public class BindingValueConversionTests : BaseTestClass
 {
@@ -18,6 +18,44 @@ public class BindingValueConversionTests : BaseTestClass
     {
         Small,
         Large
+    }
+
+    [Flags]
+    public enum Sides
+    {
+        None = 0,
+        Left = 1,
+        Right = 2
+    }
+
+    private class SizeElement : FrameworkElement
+    {
+        private Size _size;
+        private Sides _flags;
+
+        public SizeElement() : base(new Gum.Wireframe.InteractiveGue())
+        {
+        }
+
+        public Size Size
+        {
+            get => _size;
+            set
+            {
+                _size = value;
+                PushValueToViewModel();
+            }
+        }
+
+        public Sides Flags
+        {
+            get => _flags;
+            set
+            {
+                _flags = value;
+                PushValueToViewModel();
+            }
+        }
     }
 
     public class ConversionViewModel : ViewModel
@@ -114,38 +152,145 @@ public class BindingValueConversionTests : BaseTestClass
     }
 
     [Fact]
-    public void StringSource_ToEnumTarget_PinsCurrentBehavior_TargetGetsDefault()
+    public void StringSource_ToEnumTarget_SetsMatchingMember()
     {
-        // Convert.ChangeType does not parse enums, so the target falls back to default. Design question.
-        ListBox listBox = new() { SelectionMode = SelectionMode.Multiple };
+        ListBox listBox = new();
 
         listBox.SetBinding(nameof(ListBox.SelectionMode), nameof(ConversionViewModel.Text));
         listBox.BindingContext = new ConversionViewModel { Text = nameof(SelectionMode.Multiple) };
 
-        listBox.SelectionMode.ShouldBe(SelectionMode.Single);
+        listBox.SelectionMode.ShouldBe(SelectionMode.Multiple);
     }
 
     [Fact]
-    public void IntSource_ToEnumTarget_PinsCurrentBehavior_TargetGetsDefault()
+    public void StringSource_ToEnumTarget_IgnoresCase()
     {
-        ListBox listBox = new() { SelectionMode = SelectionMode.Multiple };
+        // WPF parses enum names through EnumConverter, which ignores case.
+        ListBox listBox = new();
+
+        listBox.SetBinding(nameof(ListBox.SelectionMode), nameof(ConversionViewModel.Text));
+        listBox.BindingContext = new ConversionViewModel { Text = "multiple" };
+
+        listBox.SelectionMode.ShouldBe(SelectionMode.Multiple);
+    }
+
+    [Fact]
+    public void IntSource_ToEnumTarget_SetsMatchingMember()
+    {
+        ListBox listBox = new();
 
         listBox.SetBinding(nameof(ListBox.SelectionMode), nameof(ConversionViewModel.Number));
         listBox.BindingContext = new ConversionViewModel { Number = (int)SelectionMode.Multiple };
 
-        listBox.SelectionMode.ShouldBe(SelectionMode.Single);
+        listBox.SelectionMode.ShouldBe(SelectionMode.Multiple);
     }
 
     [Fact]
-    public void StringFormatWithoutPlaceholder_PinsCurrentBehavior_ShowsFormatLiterally()
+    public void StringSource_ToEnumTarget_UnknownName_ThrowsNamingEnumAndValue()
     {
-        // "$0" is what C# leaves of $"${0:N0}". The value never appears. Whether to warn or throw is a design question.
+        ListBox listBox = new() { SelectionMode = SelectionMode.Multiple };
+        listBox.SetBinding(nameof(ListBox.SelectionMode), nameof(ConversionViewModel.Text));
+
+        InvalidOperationException exception = Should.Throw<InvalidOperationException>(() =>
+            listBox.BindingContext = new ConversionViewModel { Text = "Huge" });
+
+        exception.Message.ShouldContain("'Huge'");
+        exception.Message.ShouldContain(nameof(SelectionMode));
+        listBox.SelectionMode.ShouldBe(SelectionMode.Multiple);
+    }
+
+    [Fact]
+    public void IntSource_ToEnumTarget_UndefinedNumber_ThrowsNamingEnumAndValue()
+    {
+        ListBox listBox = new() { SelectionMode = SelectionMode.Multiple };
+        listBox.SetBinding(nameof(ListBox.SelectionMode), nameof(ConversionViewModel.Number));
+
+        InvalidOperationException exception = Should.Throw<InvalidOperationException>(() =>
+            listBox.BindingContext = new ConversionViewModel { Number = 99 });
+
+        exception.Message.ShouldContain("'99'");
+        exception.Message.ShouldContain(nameof(SelectionMode));
+        listBox.SelectionMode.ShouldBe(SelectionMode.Multiple);
+    }
+
+    [Fact]
+    public void IntSource_ToFlagsEnumTarget_CombinationOfMembers_SetsCombination()
+    {
+        SizeElement element = new();
+
+        element.SetBinding(nameof(SizeElement.Flags), nameof(ConversionViewModel.Number));
+        element.BindingContext = new ConversionViewModel { Number = (int)(Sides.Left | Sides.Right) };
+
+        element.Flags.ShouldBe(Sides.Left | Sides.Right);
+    }
+
+    [Fact]
+    public void EnumTargetTwoWay_ToStringAndIntSources_WritesBack()
+    {
+        SizeElement toText = new();
+        SizeElement toNumber = new();
+        ConversionViewModel viewModel = new() { Text = nameof(Size.Small), Number = (int)Size.Small };
+        toText.SetBinding(nameof(SizeElement.Size), nameof(ConversionViewModel.Text));
+        toNumber.SetBinding(nameof(SizeElement.Size), nameof(ConversionViewModel.Number));
+        toText.BindingContext = viewModel;
+        toNumber.BindingContext = viewModel;
+
+        toText.Size = Size.Large;
+        toNumber.Size = Size.Large;
+
+        viewModel.Text.ShouldBe(nameof(Size.Large));
+        viewModel.Number.ShouldBe((int)Size.Large);
+    }
+
+    [Fact]
+    public void TextBoxTwoWay_TextToEnumSource_ParsesNameAndLeavesSourceOnUnknownName()
+    {
+        TextBox textBox = new();
+        ConversionViewModel viewModel = new() { Size = Size.Small };
+        textBox.SetBinding(nameof(TextBox.Text), nameof(ConversionViewModel.Size));
+        textBox.BindingContext = viewModel;
+
+        textBox.Text = "large";
+        viewModel.Size.ShouldBe(Size.Large);
+
+        textBox.Text = "Huge";
+        viewModel.Size.ShouldBe(Size.Large);
+    }
+
+    [Fact]
+    public void StringFormatWithoutPlaceholder_ThrowsNamingFormat()
+    {
+        // "$0" is what C# leaves of $"${0:N0}".
         Label label = new();
 
-        label.SetBinding(nameof(Label.Text), new Binding(nameof(ConversionViewModel.Number)) { StringFormat = "$0" });
+        InvalidOperationException exception = Should.Throw<InvalidOperationException>(() =>
+            label.SetBinding(nameof(Label.Text), new Binding(nameof(ConversionViewModel.Number)) { StringFormat = "$0" }));
+
+        exception.Message.ShouldContain("'$0'");
+        exception.Message.ShouldContain("{0}");
+    }
+
+    [Fact]
+    public void StringFormatWithOnlyEscapedPlaceholder_Throws()
+    {
+        Label label = new();
+
+        Should.Throw<InvalidOperationException>(() =>
+            label.SetBinding(nameof(Label.Text), new Binding(nameof(ConversionViewModel.Number)) { StringFormat = "{{0}}" }));
+    }
+
+    [Theory]
+    [InlineData("{0:N0}", "1,234")]
+    [InlineData("[{0,6}]", "[  1234]")]
+    [InlineData("{{{0}}}", "{1234}")]
+    public void StringFormatWithPlaceholderVariants_FormatsValue(string format, string expected)
+    {
+        Label label = new();
+
+        label.SetBinding(nameof(Label.Text), new Binding(nameof(ConversionViewModel.Number)) { StringFormat = format });
         label.BindingContext = new ConversionViewModel { Number = 1234 };
 
-        label.Text.ShouldBe("$0");
+        label.Text.ShouldBe(expected);
     }
 
     [Fact]

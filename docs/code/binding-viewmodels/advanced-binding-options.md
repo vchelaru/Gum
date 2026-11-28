@@ -211,6 +211,8 @@ Binding binding = new(nameof(MyViewModel.Health))
 label.SetBinding(nameof(Label.Text), binding);
 ```
 
+`StringFormat` must contain a `{0}` placeholder where the value goes, or `SetBinding` throws. Write it as a plain string: an interpolated `$"HP: {0:N0}"` fills in `{0}` before the binding sees it.
+
 {% hint style="info" %}
 When `StringFormat` is set, the binding effectively becomes one-way for display purposes. Setting the target value does not attempt to parse the formatted string back to the source.
 {% endhint %}
@@ -256,6 +258,8 @@ textBox.SetBinding(nameof(TextBox.Text), nameof(MyViewModel.Score));
 ```
 
 In the example above, setting `vm.Score = 12` updates `textBox.Text` to `"12"`, and typing `"42"` into the textbox updates `vm.Score` to `42`. The standard numeric types are supported: `byte`, `int`, `float`, `double`, and `decimal`.
+
+A `string` or integer source also converts to an enum target property, such as `ListBox.SelectionMode`. A string matches a member name in any case, and a number matches a member value. A value that matches no member makes the binding throw, naming the enum and the value.
 
 ### Conversion Failures
 
